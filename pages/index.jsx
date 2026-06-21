@@ -847,7 +847,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "16px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "#9A8A7A", fontSize: 14, cursor: "pointer", padding: 0, marginBottom: 8, display: "block", touchAction: "manipulation" }}>← 戻る</button>
+        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
         <div style={{ fontSize: 22, fontWeight: "bold" }}>{emoji} 人生{category.name}</div>
         <div style={{ fontSize: 12, color: "#9A8A7A", marginTop: 3 }}>{entries.length}件記録済み</div>
       </div>
@@ -917,8 +917,11 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
                 onDrop={() => handleDrop(idx)}
                 onDragEnd={() => { setDragging(null); setDragOver(null); }}
                 onTouchStart={() => onTouchStart(idx)}
+                onContextMenu={e => e.preventDefault()}
                 style={{
                   background: C.white, borderRadius: 16, marginBottom: 12,
+                  WebkitUserSelect: "none", userSelect: "none",
+                  WebkitTouchCallout: "none",
                   border: (dragOver === idx || isTouchOver) ? `2px solid ${C.terra}` : `1px solid ${C.border}`,
                   opacity: (dragging === idx || isTouchDragging) ? 0.5 : 1,
                   transform: isTouchDragging ? "scale(1.02)" : "scale(1)",
@@ -1005,7 +1008,7 @@ function BrowseView({ onSelect, onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "16px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "#9A8A7A", fontSize: 14, cursor: "pointer", padding: 0, marginBottom: 8, display: "block", touchAction: "manipulation" }}>← 戻る</button>
+        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
         <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
         <div style={{ position: "relative" }}>
           <input value={query} onChange={e => setQuery(e.target.value)}
@@ -1116,7 +1119,7 @@ function MapView({ categories, onBack }) {
   return (
     <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       <div style={{ background: C.ink, color: C.white, padding: "16px 16px 12px", flexShrink: 0 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "#9A8A7A", fontSize: 14, cursor: "pointer", padding: 0, marginBottom: 8, display: "block", touchAction: "manipulation" }}>← 戻る</button>
+        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
         <div style={{ fontSize: 20, fontWeight: "bold" }}>マイマップ</div>
         <div style={{ display: "flex", gap: 6, marginTop: 10, overflowX: "auto", paddingBottom: 4 }}>
           {["すべて", ...categories.map(c => c.name)].map(name => (
@@ -1177,15 +1180,72 @@ const HOBBY_TAGS = [
   { id: "facility",   label: "テーマパーク・施設", emoji: "🎡" },
 ];
 
-// ===== ロゴヘッダー（共通）=====
+// ===== LJアイコンSVG =====
+function LJIcon({ size = 48, darkBg = true }) {
+  const gold = "#C8941A";
+  const brown = darkBg ? "#E8DDD0" : "#6B5344";
+  const green = "#7A9E7E";
+  const white = darkBg ? "#FFFFFF" : "#FFFFFF";
+  return (
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* 円弧 */}
+      <path d="M12 40 A28 28 0 1 1 40 12" stroke={gold} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      {/* ゴールドドット */}
+      <circle cx="40" cy="10" r="3" fill={gold}/>
+      {/* L文字 */}
+      <text x="10" y="52" fontFamily="Georgia, serif" fontSize="34" fontWeight="bold" fill={brown} letterSpacing="-1">L</text>
+      {/* J文字 */}
+      <text x="36" y="52" fontFamily="Georgia, serif" fontSize="34" fontWeight="bold" fill={brown} letterSpacing="-1">j</text>
+      {/* 本のページ線 */}
+      <path d="M8 58 Q40 53 72 58" stroke={brown} strokeWidth="1.2" fill="none" opacity="0.7"/>
+      <path d="M10 61 Q40 56 70 61" stroke={brown} strokeWidth="1" fill="none" opacity="0.5"/>
+      <path d="M12 64 Q40 59 68 64" stroke={brown} strokeWidth="0.8" fill="none" opacity="0.3"/>
+      {/* 植物の葉 */}
+      <path d="M58 28 Q65 18 60 12" stroke={green} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      <path d="M60 22 Q68 20 65 14" stroke={green} strokeWidth="1" fill="none" strokeLinecap="round"/>
+      <path d="M59 26 Q67 26 66 19" stroke={green} strokeWidth="1" fill="none" strokeLinecap="round"/>
+      <ellipse cx="63" cy="19" rx="4" ry="2.5" fill={green} opacity="0.7" transform="rotate(-30 63 19)"/>
+      <ellipse cx="61" cy="24" rx="4" ry="2.5" fill={green} opacity="0.6" transform="rotate(-10 61 24)"/>
+      <ellipse cx="64" cy="15" rx="3.5" ry="2" fill={green} opacity="0.8" transform="rotate(-50 64 15)"/>
+    </svg>
+  );
+}
+
+// ===== 横長ロゴ（ヘッダー用）=====
+function LogoBanner({ darkBg = true }) {
+  const textColor = darkBg ? "#E8DDD0" : "#6B5344";
+  const subColor = darkBg ? "#9A8A7A" : "#9A8A7A";
+  const goldColor = "#C8941A";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <LJIcon size={44} darkBg={darkBg} />
+      <div>
+        <div style={{ fontSize: 20, fontWeight: "bold", color: textColor, letterSpacing: 2, lineHeight: 1.1, fontFamily: "Georgia, 'Hiragino Mincho ProN', serif" }}>
+          人生ノート
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+          <div style={{ width: 16, height: 1, background: goldColor }} />
+          <div style={{ fontSize: 9, color: goldColor, letterSpacing: 2, fontFamily: "Georgia, serif" }}>Life Journal</div>
+          <div style={{ width: 16, height: 1, background: goldColor }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== ロゴヘッダー（認証画面用・縦型）=====
 function LogoHeader({ subtitle = "人生で最高だったものを記録しよう" }) {
   return (
     <div style={{ background: C.ink, padding: "48px 24px 32px", textAlign: "center" }}>
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 38 }}>📖</span>
-        <div style={{ textAlign: "left" }}>
-          <div style={{ fontSize: 27, fontWeight: "bold", color: C.white, letterSpacing: 2, lineHeight: 1 }}>人生ノート</div>
-          <div style={{ fontSize: 11, color: C.terra, letterSpacing: 4, marginTop: 3 }}>JINSEI NOTE</div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <LJIcon size={72} darkBg={true} />
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 26, fontWeight: "bold", color: "#E8DDD0", letterSpacing: 3, lineHeight: 1, fontFamily: "Georgia, 'Hiragino Mincho ProN', serif" }}>人生ノート</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 5 }}>
+            <div style={{ width: 20, height: 1, background: "#C8941A" }} />
+            <div style={{ fontSize: 10, color: "#C8941A", letterSpacing: 3, fontFamily: "Georgia, serif" }}>Life Journal</div>
+            <div style={{ width: 20, height: 1, background: "#C8941A" }} />
+          </div>
         </div>
       </div>
       <div style={{ fontSize: 13, color: "#9A8A7A", marginTop: 4 }}>{subtitle}</div>
@@ -1684,11 +1744,8 @@ function FriendsView() {
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
         {/* ⑧ ロゴ */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 22 }}>📖</span>
-          <span style={{ fontSize: 20, fontWeight: "bold", letterSpacing: 1 }}>人生ノート</span>
-        </div>
-        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 8 }}>👥 フレンド</div>
+        <LogoBanner darkBg={true} />
+        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>👥 フレンド</div>
       </div>
       <div style={{ padding: "60px 24px", textAlign: "center", color: C.muted }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>👥</div>
@@ -1703,16 +1760,157 @@ function FriendMapView() {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 22 }}>📖</span>
-          <span style={{ fontSize: 20, fontWeight: "bold", letterSpacing: 1 }}>人生ノート</span>
-        </div>
-        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 8 }}>🌐 フレンド地図</div>
+        <LogoBanner darkBg={true} />
+        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>🌐 フレンド地図</div>
       </div>
       <div style={{ padding: "60px 24px", textAlign: "center", color: C.muted }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🌐</div>
         <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>フレンド地図は近日公開</div>
         <div style={{ fontSize: 13, lineHeight: 1.7 }}>旅先で友達の記録が地図に現れ<br />「え、私もここ行ったよ！」が生まれます</div>
+      </div>
+    </div>
+  );
+}
+
+// ===== プロフィール編集画面 =====
+function ProfileEditScreen({ user, onSave, onClose }) {
+  const [name, setName] = useState(user.name || "");
+  const [birthdate, setBirthdate] = useState(user.birthdate || "");
+  const [hobbies, setHobbies] = useState(user.hobbies || []);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  function toggleHobby(id) {
+    setHobbies(prev => prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id]);
+  }
+
+  const age = birthdate ? new Date().getFullYear() - new Date(birthdate).getFullYear() : null;
+
+  async function handleSave() {
+    if (!name.trim()) { setError("お名前を入力してください"); return; }
+    setSaving(true);
+    const { error: dbError } = await supabase.from("profiles").upsert({
+      id: user.id,
+      name: name.trim(),
+      birthdate: birthdate || null,
+      hobbies: hobbies,
+    });
+    setSaving(false);
+    if (dbError) { setError("保存に失敗しました"); return; }
+    onSave({ ...user, name: name.trim(), birthdate, hobbies });
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 40 }}>
+      <div style={{ background: C.ink, padding: "20px 20px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <LogoBanner darkBg={true} />
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", borderRadius: 20, touchAction: "manipulation" }}>✕ 閉じる</button>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: "bold", color: C.white, marginTop: 16 }}>プロフィール編集</div>
+      </div>
+
+      <div style={{ padding: "24px 20px", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", width: "100%" }}>
+        {/* アバター */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: C.terra, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: C.white, marginBottom: 8 }}>
+            {name.charAt(0) || "?"}
+          </div>
+          <div style={{ fontSize: 12, color: C.muted }}>{user.email}</div>
+        </div>
+
+        {/* 名前 */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={labelStyle}>お名前 <span style={{ color: C.terra }}>*</span></label>
+          <input value={name} onChange={e => setName(e.target.value)}
+            placeholder="山田 太郎" style={inputStyle} autoComplete="name" />
+        </div>
+
+        {/* 生年月日 */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={labelStyle}>生年月日<span style={{ fontSize: 10, color: C.muted, fontWeight: "normal", marginLeft: 8 }}>任意</span></label>
+          <div style={{ position: "relative", width: "100%" }}>
+            <input type="date" value={birthdate} onChange={e => setBirthdate(e.target.value)}
+              max={new Date().toISOString().split("T")[0]} min="1900-01-01"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, zIndex: 2, cursor: "pointer", boxSizing: "border-box" }} />
+            <div style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${birthdate ? C.terra : C.border}`, borderRadius: 10, fontSize: 16, boxSizing: "border-box", background: birthdate ? "#FFF8F5" : C.white, color: birthdate ? C.ink : C.muted, display: "flex", alignItems: "center", gap: 8, minHeight: 48, pointerEvents: "none" }}>
+              <span>🎂</span>
+              <span>{birthdate ? new Date(birthdate + "T00:00:00").toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" }) : "生年月日を選択"}</span>
+            </div>
+          </div>
+          {age !== null && age >= 0 && age <= 120 && (
+            <div style={{ fontSize: 12, color: C.terra, marginTop: 6, fontWeight: "bold" }}>{age}歳</div>
+          )}
+        </div>
+
+        {/* 趣味タグ */}
+        <div style={{ marginBottom: 28 }}>
+          <label style={labelStyle}>好きなジャンル<span style={{ fontSize: 10, color: C.muted, fontWeight: "normal", marginLeft: 8 }}>任意・複数選択OK</span></label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+            {HOBBY_TAGS.map(h => {
+              const selected = hobbies.includes(h.id);
+              return (
+                <button key={h.id} onClick={() => toggleHobby(h.id)}
+                  style={{ padding: "8px 14px", borderRadius: 20, fontSize: 13, fontFamily: "inherit", cursor: "pointer", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 6, background: selected ? C.terra : C.white, color: selected ? C.white : "#555", border: `1.5px solid ${selected ? C.terra : C.border}`, fontWeight: selected ? "bold" : "normal" }}>
+                  <span>{h.emoji}</span><span>{h.label}</span>
+                  {selected && <span style={{ fontSize: 11 }}>✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ color: "#E57373", fontSize: 13, marginBottom: 14, background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 8, padding: "10px 14px" }}>⚠️ {error}</div>
+        )}
+
+        <button onClick={handleSave} disabled={saving} style={{ width: "100%", background: saving ? "#888" : C.ink, color: C.white, border: "none", borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+          {saving ? "保存中..." : "保存する"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ===== ユーザーメニュー =====
+function UserMenu({ user, onEdit, onLogout, onClose }) {
+  const age = user.birthdate ? new Date().getFullYear() - new Date(user.birthdate).getFullYear() : null;
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
+      <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
+        {/* プロフィールサマリー */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: C.white, flexShrink: 0 }}>
+            {user.name?.charAt(0) || "?"}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 17, fontWeight: "bold", color: C.ink }}>{user.name}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{user.email}</div>
+            {age && <div style={{ fontSize: 12, color: C.terra, marginTop: 2, fontWeight: "bold" }}>{age}歳</div>}
+            {user.hobbies?.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                {user.hobbies.slice(0, 4).map(id => {
+                  const h = HOBBY_TAGS.find(t => t.id === id);
+                  return h ? <span key={id} style={{ fontSize: 11, background: "#FFF3E0", color: C.terra, borderRadius: 10, padding: "2px 8px" }}>{h.emoji} {h.label}</span> : null;
+                })}
+                {user.hobbies.length > 4 && <span style={{ fontSize: 11, color: C.muted }}>+{user.hobbies.length - 4}</span>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* メニュー項目 */}
+        <button onClick={onEdit} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 4px", background: "none", border: "none", borderBottom: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+          <span style={{ fontSize: 20 }}>✏️</span>
+          <span style={{ fontSize: 15, color: C.ink, fontWeight: "bold" }}>プロフィールを編集</span>
+          <span style={{ marginLeft: "auto", color: C.muted }}>›</span>
+        </button>
+
+        <button onClick={onLogout} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 4px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", marginTop: 4 }}>
+          <span style={{ fontSize: 20 }}>🚪</span>
+          <span style={{ fontSize: 15, color: "#E57373", fontWeight: "bold" }}>ログアウト</span>
+        </button>
       </div>
     </div>
   );
@@ -1728,6 +1926,8 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCatInput, setNewCatInput] = useState("");
   const [activeTab, setActiveTab] = useState("list");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -1774,11 +1974,9 @@ export default function App() {
 
   function handleLogin(u) { setUser(u); }
   async function handleLogout() {
-    if (confirm("ログアウトしますか？")) {
-      await supabase.auth.signOut();
-      setUser(null);
-      setCategories([]);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
+    setCategories([]);
   }
 
   function addCategory(name) {
@@ -1830,6 +2028,15 @@ export default function App() {
 
   if (!user) return <AuthScreen onLogin={handleLogin} onPendingAuth={setPendingAuthUser} />;
 
+  // プロフィール編集画面
+  if (showProfileEdit) return (
+    <ProfileEditScreen
+      user={user}
+      onSave={(updated) => { setUser(updated); setShowProfileEdit(false); }}
+      onClose={() => setShowProfileEdit(false)}
+    />
+  );
+
   // サブ画面（ブラウズ・カテゴリ詳細）はナビを隠す
   if (showBrowse) return <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />;
   if (activeCategory) {
@@ -1873,15 +2080,11 @@ export default function App() {
       <div style={{ background: C.ink, padding: "28px 20px 20px", color: C.white }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 28 }}>📖</span>
-              <div>
-                <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: 2, lineHeight: 1 }}>人生ノート</div>
-                <div style={{ fontSize: 10, color: C.terra, letterSpacing: 3, marginTop: 1 }}>JINSEI NOTE</div>
-              </div>
-            </div>
-            <button onClick={handleLogout} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-              {user.name} ▾
+            <LogoBanner darkBg={true} />
+            <button onClick={() => setShowUserMenu(true)} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 16 }}>👤</span>
+              <span>{user.name?.split(" ")[0] || "メニュー"}</span>
+              <span>▾</span>
             </button>
           </div>
           {totalEntries > 0 && (
@@ -1985,6 +2188,23 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ユーザーメニュー */}
+      {showUserMenu && (
+        <UserMenu
+          user={user}
+          onEdit={() => { setShowUserMenu(false); setShowProfileEdit(true); }}
+          onLogout={async () => {
+            setShowUserMenu(false);
+            if (confirm("ログアウトしますか？")) {
+              await supabase.auth.signOut();
+              setUser(null);
+              setCategories([]);
+            }
+          }}
+          onClose={() => setShowUserMenu(false)}
+        />
       )}
 
       {/* ⑤ 下部ナビゲーション */}
