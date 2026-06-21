@@ -826,10 +826,12 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId })
     let savedId = entry.id;
     if (editingEntry) {
       // 既存エントリー更新
-      await supabase.from("entries").update(dbEntry).eq("id", entry.id);
+      const { error: updateError } = await supabase.from("entries").update(dbEntry).eq("id", entry.id);
+      if (updateError) { console.error("Entry update error:", updateError); alert("更新エラー: " + updateError.message); setSaving(false); return; }
     } else {
       // 新規エントリー追加
-      const { data: newEnt } = await supabase.from("entries").insert(dbEntry).select().single();
+      const { data: newEnt, error: insertError } = await supabase.from("entries").insert(dbEntry).select().single();
+      if (insertError) { console.error("Entry insert error:", insertError); alert("保存エラー: " + insertError.message); setSaving(false); return; }
       if (newEnt) {
         savedId = newEnt.id;
         if (entry.photo) {
