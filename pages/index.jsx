@@ -789,7 +789,7 @@ function useTouchDnD(entries, setEntries) {
 }
 
 // ===== カテゴリ詳細ビュー =====
-function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
+function CategoryView({ category, data, accentColor, onUpdate, onBack, userId }) {
   // ⑨ おすすめ度でソートされた状態で管理
   const [entries, setEntries] = useState(() => sortEntriesByRec(data.entries || []));
   const [showForm, setShowForm] = useState(false);
@@ -797,32 +797,67 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
   const [expandedId, setExpandedId] = useState(null);
   const [dragging, setDragging] = useState(null);
   const [dragOver, setDragOver] = useState(null);
-  const [sortMode, setSortMode] = useState("rank"); // "rank" | "date" ⑩
+  const [sortMode, setSortMode] = useState("rank");
+  const [saving, setSaving] = useState(false);
   const itemRefs = useRef([]);
   const { activeDrag, overIdx, onTouchStart, onTouchEnd, onTouchMove } = useTouchDnD(entries, setEntries);
 
   useEffect(() => { onUpdate({ ...data, entries }); }, [entries]);
 
-  // ⑨ エントリー保存時：おすすめ度変更なら自動ソート
-  function saveEntry(entry) {
+  // ⑨ エントリー保存（Supabase）
+  async function saveEntry(entry) {
+    setSaving(true);
+    // 写真はlocalStorageに保存（base64は大きいのでDB外）
+    if (entry.photo) {
+      try { localStorage.setItem(`photo_${entry.id}`, entry.photo); } catch {}
+    }
+    const dbEntry = {
+      user_id: userId,
+      category_id: category.id,
+      name: entry.name,
+      prefecture: entry.prefecture || "",
+      rec: entry.rec ?? 2,
+      comment: entry.comment || "",
+      visit_date: entry.visitDate || null,
+      place_data: entry.placeData || null,
+      rank_order: editingEntry ? entry.id : Date.now(),
+    };
+
+    let savedId = entry.id;
+    if (editingEntry) {
+      // 既存エントリー更新
+      await supabase.from("entries").update(dbEntry).eq("id", entry.id);
+    } else {
+      // 新規エントリー追加
+      const { data: newEnt } = await supabase.from("entries").insert(dbEntry).select().single();
+      if (newEnt) {
+        savedId = newEnt.id;
+        if (entry.photo) {
+          try { localStorage.setItem(`photo_${savedId}`, entry.photo); } catch {}
+        }
+      }
+    }
+
+    const finalEntry = { ...entry, id: savedId };
     let next;
     if (editingEntry) {
-      next = entries.map(e => e.id === entry.id ? entry : e);
+      next = entries.map(e => e.id === entry.id ? finalEntry : e);
     } else {
-      next = [...entries, entry];
+      next = [...entries, finalEntry];
     }
-    // おすすめ度でソート
     next = sortEntriesByRec(next);
     setEntries(next);
     setShowForm(false);
     setEditingEntry(null);
+    setSaving(false);
   }
 
-  function deleteEntry(id) {
-    if (confirm("削除しますか？")) {
-      setEntries(entries.filter(e => e.id !== id));
-      setExpandedId(null);
-    }
+  async function deleteEntry(id) {
+    if (!confirm("削除しますか？")) return;
+    await supabase.from("entries").delete().eq("id", id);
+    try { localStorage.removeItem(`photo_${id}`); } catch {}
+    setEntries(entries.filter(e => e.id !== id));
+    setExpandedId(null);
   }
 
   // デスクトップD&D
@@ -1967,10 +2002,53 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const [loading, setLoading] = useState(false);
+
+  // ===== Supabaseからデータ取得 =====
   useEffect(() => {
-    if (categories.length === 0 || !user) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(categories)); } catch {}
-  }, [categories]);
+    if (!user) return;
+    loadData();
+  }, [user]);
+
+  async function loadData() {
+    setLoading(true);
+    // カテゴリ取得
+    const { data: cats } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (!cats) { setLoading(false); return; }
+
+    // エントリーをまとめて取得
+    const catIds = cats.map(c => c.id);
+    const { data: ents } = catIds.length > 0
+      ? await supabase.from("entries").select("*").in("category_id", catIds).order("rank_order", { ascending: true })
+      : { data: [] };
+
+    // カテゴリにエントリーをマージ
+    const merged = cats.map(cat => ({
+      ...cat,
+      entries: sortEntriesByRec(
+        (ents || [])
+          .filter(e => e.category_id === cat.id)
+          .map(e => ({
+            id: e.id,
+            name: e.name,
+            prefecture: e.prefecture || "",
+            rec: e.rec ?? 2,
+            comment: e.comment || "",
+            visitDate: e.visit_date || "",
+            placeData: e.place_data || null,
+            photo: (() => { try { return localStorage.getItem(`photo_${e.id}`); } catch { return null; } })(),
+          }))
+      ),
+    }));
+
+    setCategories(merged);
+    setLoading(false);
+  }
 
   function handleLogin(u) { setUser(u); }
   async function handleLogout() {
@@ -1979,7 +2057,7 @@ export default function App() {
     setCategories([]);
   }
 
-  function addCategory(name) {
+  async function addCategory(name) {
     const normalized = normalizeTag(name);
     if (!normalized) return;
     if (categories.find(c => c.name === normalized)) {
@@ -1988,14 +2066,29 @@ export default function App() {
       setShowAddModal(false); setShowBrowse(false); setNewCatInput("");
       return;
     }
-    const cat = { id: Date.now(), name: normalized, entries: [] };
+    // Supabaseに保存
+    const { data: newCat, error } = await supabase
+      .from("categories")
+      .insert({ user_id: user.id, name: normalized })
+      .select()
+      .single();
+    if (error || !newCat) return;
+
+    const cat = { ...newCat, entries: [] };
     setCategories(prev => [...prev, cat]);
     setNewCatInput(""); setShowAddModal(false); setShowBrowse(false);
     setActiveCategory(cat);
   }
 
-  function updateCategory(updated) { setCategories(prev => prev.map(c => c.id === updated.id ? updated : c)); }
-  function deleteCategory(id) { if (confirm("このカテゴリを削除しますか？")) setCategories(prev => prev.filter(c => c.id !== id)); }
+  async function updateCategory(updated) {
+    setCategories(prev => prev.map(c => c.id === updated.id ? updated : c));
+  }
+
+  async function deleteCategory(id) {
+    if (!confirm("このカテゴリを削除しますか？")) return;
+    await supabase.from("categories").delete().eq("id", id);
+    setCategories(prev => prev.filter(c => c.id !== id));
+  }
 
   if (!authChecked) return (
     <div style={{ minHeight: "100vh", background: C.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -2048,6 +2141,7 @@ export default function App() {
         accentColor={accentColor}
         onUpdate={updated => { updateCategory(updated); setActiveCategory(updated); }}
         onBack={() => setActiveCategory(null)}
+        userId={user.id}
       />
     );
   }
@@ -2136,7 +2230,13 @@ export default function App() {
           </div>
         )}
 
-        {categories.length === 0 && (
+        {loading && (
+          <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontSize: 14 }}>データを読み込み中...</div>
+          </div>
+        )}
+        {!loading && categories.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>📖</div>
             <div style={{ fontSize: 16, fontWeight: "bold", color: "#555", marginBottom: 8 }}>人生ノートをはじめよう</div>
