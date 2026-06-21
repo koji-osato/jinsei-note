@@ -1419,7 +1419,7 @@ function ProfileSetupScreen({ initialName = "", initialEmail = "", onComplete })
 }
 
 // ===== 認証画面 =====
-function AuthScreen({ onLogin }) {
+function AuthScreen({ onLogin, onPendingAuth }) {
   // "login" | "register" | "verify" | "profile_setup"
   const [step, setStep] = useState("login");
   const [email, setEmail] = useState("");
@@ -1465,15 +1465,40 @@ function AuthScreen({ onLogin }) {
 
   async function handleGoogle() {
     setLoading(true);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-        queryParams: { access_type: "offline", prompt: "consent" },
-      },
-    });
-    if (oauthError) { setError(oauthError.message); setLoading(false); }
-    // リダイレクト後はonAuthStateChangeで処理
+    try {
+      // ポップアップ方式（Chromeのbounce tracking対策）
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: { access_type: "offline", prompt: "consent" },
+          skipBrowserRedirect: true, // リダイレクトをスキップしてURLを取得
+        },
+      });
+      if (oauthError) { setError(oauthError.message); setLoading(false); return; }
+      // ポップアップで開く
+      const popup = window.open(data.url, "google-login", "width=500,height=600,scrollbars=yes");
+      // ポップアップが閉じたらセッションを確認
+      const checkPopup = setInterval(async () => {
+        if (!popup || popup.closed) {
+          clearInterval(checkPopup);
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const { data: profile } = await supabase
+              .from("profiles").select("*").eq("id", session.user.id).single();
+            if (profile?.name) {
+              onLogin({ id: session.user.id, email: session.user.email, ...profile });
+            } else {
+              onPendingAuth(session.user);
+            }
+          }
+          setLoading(false);
+        }
+      }, 500);
+    } catch(e) {
+      setError("Googleログインに失敗しました");
+      setLoading(false);
+    }
   }
 
   function handleApple() {
@@ -1826,7 +1851,7 @@ export default function App() {
     );
   }
 
-  if (!user) return <AuthScreen onLogin={handleLogin} />;
+  if (!user) return <AuthScreen onLogin={handleLogin} onPendingAuth={setPendingAuthUser} />;
 
   // サブ画面（ブラウズ・カテゴリ詳細）はナビを隠す
   if (showBrowse) return <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />;
