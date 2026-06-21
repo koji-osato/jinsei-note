@@ -1466,74 +1466,16 @@ function AuthScreen({ onLogin, onPendingAuth }) {
   async function handleGoogle() {
     setLoading(true);
     setError("");
-    try {
-      // ポップアップ方式 + postMessage でセッションを受け取る
-      const callbackUrl = window.location.origin + "/auth/callback";
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: callbackUrl,
-          queryParams: { access_type: "offline", prompt: "consent" },
-          skipBrowserRedirect: true,
-        },
-      });
-      if (oauthError) { setError(oauthError.message); setLoading(false); return; }
-
-      // ポップアップを開く
-      const popup = window.open(data.url, "google-login", "width=500,height=650,scrollbars=yes,resizable=yes");
-
-      // postMessage でコールバックページからセッションを受け取る
-      function onMessage(event) {
-        if (event.origin !== window.location.origin) return;
-        if (event.data?.type === "SUPABASE_AUTH_SUCCESS") {
-          window.removeEventListener("message", onMessage);
-          clearInterval(fallbackCheck);
-          // セッションをSupabaseクライアントに設定
-          supabase.auth.setSession(event.data.session).then(async ({ data: { session } }) => {
-            if (session?.user) {
-              const { data: profile } = await supabase
-                .from("profiles").select("*").eq("id", session.user.id).single();
-              if (profile?.name) {
-                onLogin({ id: session.user.id, email: session.user.email, ...profile });
-              } else {
-                onPendingAuth(session.user);
-              }
-            }
-            setLoading(false);
-          });
-        }
-        if (event.data?.type === "SUPABASE_AUTH_ERROR") {
-          window.removeEventListener("message", onMessage);
-          clearInterval(fallbackCheck);
-          setError("Googleログインに失敗しました");
-          setLoading(false);
-        }
-      }
-      window.addEventListener("message", onMessage);
-
-      // フォールバック：ポップアップが閉じてもpostMessageが来なかった場合
-      const fallbackCheck = setInterval(async () => {
-        if (!popup || popup.closed) {
-          clearInterval(fallbackCheck);
-          window.removeEventListener("message", onMessage);
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            const { data: profile } = await supabase
-              .from("profiles").select("*").eq("id", session.user.id).single();
-            if (profile?.name) {
-              onLogin({ id: session.user.id, email: session.user.email, ...profile });
-            } else {
-              onPendingAuth(session.user);
-            }
-          }
-          setLoading(false);
-        }
-      }, 1000);
-
-    } catch(e) {
-      setError("Googleログインに失敗しました");
-      setLoading(false);
-    }
+    // リダイレクト方式（最もシンプルで確実）
+    // リダイレクト後は /auth/callback → onAuthStateChange の INITIAL_SESSION で処理
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/auth/callback",
+      },
+    });
+    if (oauthError) { setError(oauthError.message); setLoading(false); }
+    // ページ遷移するのでここ以降は実行されない
   }
 
   function handleApple() {
