@@ -1728,31 +1728,37 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("list");
 
   // Supabase Auth: セッション監視
+  const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
+
   useEffect(() => {
+    async function handleSession(sessionUser) {
+      if (!sessionUser) return;
+      const { data: profile } = await supabase
+        .from("profiles").select("*").eq("id", sessionUser.id).single();
+      if (profile?.name) {
+        // プロフィール設定済み → ホームへ
+        setUser({ id: sessionUser.id, email: sessionUser.email, ...profile });
+        setPendingAuthUser(null);
+      } else {
+        // プロフィール未設定 → プロフィール設定画面へ
+        setPendingAuthUser(sessionUser);
+      }
+    }
+
     // 初回セッション確認
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles").select("*").eq("id", session.user.id).single();
-        if (profile?.name) {
-          setUser({ id: session.user.id, email: session.user.email, ...profile });
-        }
-        // プロフィール未設定の場合はAuthScreenのprofile_setupで対応
-      }
+      if (session?.user) await handleSession(session.user);
       setAuthChecked(true);
     });
 
     // 認証状態の変化を監視（Googleログイン後のリダイレクト対応）
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles").select("*").eq("id", session.user.id).single();
-        if (profile?.name) {
-          setUser({ id: session.user.id, email: session.user.email, ...profile });
-        }
+        await handleSession(session.user);
       }
       if (event === "SIGNED_OUT") {
         setUser(null);
+        setPendingAuthUser(null);
         setCategories([]);
       }
     });
@@ -1791,7 +1797,35 @@ export default function App() {
   function updateCategory(updated) { setCategories(prev => prev.map(c => c.id === updated.id ? updated : c)); }
   function deleteCategory(id) { if (confirm("このカテゴリを削除しますか？")) setCategories(prev => prev.filter(c => c.id !== id)); }
 
-  if (!authChecked) return null;
+  if (!authChecked) return (
+    <div style={{ minHeight: "100vh", background: C.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📖</div>
+        <div style={{ fontSize: 14, color: C.muted }}>読み込み中...</div>
+      </div>
+    </div>
+  );
+
+  // Googleログイン後などプロフィール未設定の場合
+  if (pendingAuthUser) {
+    return (
+      <ProfileSetupScreen
+        initialName={pendingAuthUser.user_metadata?.full_name || pendingAuthUser.user_metadata?.name || ""}
+        initialEmail={pendingAuthUser.email || ""}
+        onComplete={async (profile) => {
+          await supabase.from("profiles").upsert({
+            id: pendingAuthUser.id,
+            name: profile.name,
+            birthdate: profile.birthdate || null,
+            hobbies: profile.hobbies || [],
+          });
+          setUser({ id: pendingAuthUser.id, email: pendingAuthUser.email, ...profile });
+          setPendingAuthUser(null);
+        }}
+      />
+    );
+  }
+
   if (!user) return <AuthScreen onLogin={handleLogin} />;
 
   // サブ画面（ブラウズ・カテゴリ詳細）はナビを隠す
