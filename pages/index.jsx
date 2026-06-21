@@ -222,13 +222,24 @@ function getSuggestions(input) {
 
 // ① iOSズーム防止: font-size:16px + touch-action:manipulation
 const inputStyle = {
-  width: "100%", padding: "12px 14px",
-  border: `1.5px solid ${C.border}`, borderRadius: 10,
-  fontSize: 16, // ←16px以上でiOSの自動ズームを防ぐ
-  boxSizing: "border-box", outline: "none",
-  fontFamily: "inherit", background: C.white,
+  display: "block",
+  width: "100%",
+  maxWidth: "100%",
+  padding: "12px 14px",
+  border: `1.5px solid ${C.border}`,
+  borderRadius: 10,
+  fontSize: 16,
+  lineHeight: "1.4",
+  boxSizing: "border-box",
+  outline: "none",
+  fontFamily: "inherit",
+  background: C.white,
   WebkitAppearance: "none",
+  MozAppearance: "none",
+  appearance: "none",
   touchAction: "manipulation",
+  minWidth: 0,
+  color: C.ink,
 };
 const labelStyle = {
   display: "block", fontSize: 11, fontWeight: "bold",
@@ -482,14 +493,14 @@ function PlacesInput({ onSelect, initialName = "" }) {
         <div style={{ marginTop: 8, background: "#FFF8F5", border: "1px solid #F0E8E0", borderRadius: 10, padding: "10px 12px", display: "flex", gap: 10, alignItems: "flex-start" }}>
           <span style={{ fontSize: 20, flexShrink: 0 }}>📍</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{selected.name}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{selected.address}</div>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink, marginBottom: 4 }}>{selected.name}</div>
             {selected.prefecture && (
-              <div style={{ fontSize: 12, color: C.terra, marginTop: 2, fontWeight: "bold" }}>📌 {selected.prefecture}</div>
+              <div style={{ fontSize: 12, color: C.terra, fontWeight: "bold", marginBottom: 3 }}>📌 {selected.prefecture}</div>
             )}
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 6, lineHeight: 1.4 }}>{selected.address}</div>
             {selected.googleMapsUrl && (
               <a href={selected.googleMapsUrl} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 12, color: "#4A90D9", marginTop: 5, display: "inline-block", textDecoration: "none" }}>
+                style={{ fontSize: 12, color: "#4A90D9", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 🗺 Googleマップで確認
               </a>
             )}
@@ -557,7 +568,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
   const PREFS = ["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄","海外"];
 
   return (
-    <div style={{ background: C.white, borderRadius: 16, padding: "20px 16px", border: `1px solid ${C.border}` }}>
+    <div style={{ background: C.white, borderRadius: 16, padding: "20px 16px", border: `1px solid ${C.border}`, width: "100%", boxSizing: "border-box", overflow: "hidden" }}>
       {/* 場所検索 */}
       <div style={{ marginBottom: 16 }}>
         <label style={labelStyle}>店名・場所名 *</label>
@@ -569,20 +580,86 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
         )}
       </div>
 
-      {/* ③ 都道府県・訪問日 レイアウト修正 */}
+      {/* ③ 都道府県：ネイティブselectをラッパーで完全に包む */}
       <div style={{ marginBottom: 16 }}>
         <label style={labelStyle}>都道府県</label>
-        <select value={prefecture} onChange={e => setPrefecture(e.target.value)}
-          style={{ ...inputStyle, color: prefecture ? C.ink : C.muted }}>
-          <option value="">選択してください</option>
-          {PREFS.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
+        <div style={{ position: "relative", width: "100%" }}>
+          <select
+            value={prefecture}
+            onChange={e => setPrefecture(e.target.value)}
+            style={{
+              position: "absolute",
+              top: 0, left: 0,
+              width: "100%", height: "100%",
+              opacity: 0,
+              zIndex: 2,
+              cursor: "pointer",
+            }}>
+            <option value="">選択してください</option>
+            {PREFS.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <div style={{
+            width: "100%",
+            padding: "12px 40px 12px 14px",
+            border: `1.5px solid ${prefecture ? C.terra : C.border}`,
+            borderRadius: 10,
+            fontSize: 16,
+            boxSizing: "border-box",
+            background: prefecture ? "#FFF8F5" : C.white,
+            color: prefecture ? C.ink : C.muted,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pointerEvents: "none",
+            minHeight: 48,
+          }}>
+            <span>{prefecture || "選択してください"}</span>
+            <span style={{ fontSize: 12, color: C.muted }}>▼</span>
+          </div>
+        </div>
       </div>
 
+      {/* ③ 訪問日：textで受け取りdateピッカーと重ねる */}
       <div style={{ marginBottom: 16 }}>
         <label style={labelStyle}>訪問日</label>
-        <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)}
-          style={inputStyle} />
+        <div style={{ position: "relative", width: "100%" }}>
+          <input
+            type="date"
+            value={visitDate}
+            onChange={e => setVisitDate(e.target.value)}
+            style={{
+              position: "absolute",
+              top: 0, left: 0,
+              width: "100%", height: "100%",
+              opacity: 0,
+              zIndex: 2,
+              cursor: "pointer",
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{
+            width: "100%",
+            padding: "12px 14px",
+            border: `1.5px solid ${visitDate ? C.terra : C.border}`,
+            borderRadius: 10,
+            fontSize: 16,
+            boxSizing: "border-box",
+            background: visitDate ? "#FFF8F5" : C.white,
+            color: visitDate ? C.ink : C.muted,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            minHeight: 48,
+            pointerEvents: "none",
+          }}>
+            <span>📅</span>
+            <span>
+              {visitDate
+                ? new Date(visitDate + "T00:00:00").toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })
+                : "日付を選択"}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* おすすめ度（⑨: 人生で必ず=最上位を上に表示） */}
@@ -774,7 +851,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
         <div style={{ fontSize: 12, color: "#9A8A7A", marginTop: 3 }}>{entries.length}件記録済み</div>
       </div>
 
-      <div style={{ padding: "14px 16px", maxWidth: 600, margin: "0 auto" }}>
+      <div style={{ padding: "14px 16px", maxWidth: 600, margin: "0 auto", boxSizing: "border-box", width: "100%" }}>
         {/* ⑩ ソート切替 */}
         {entries.length > 1 && (
           <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
@@ -801,7 +878,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
         )}
 
         {showForm && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box" }}>
             <EntryForm onSave={saveEntry} onCancel={() => setShowForm(false)} categoryName={category.name} />
           </div>
         )}
@@ -826,7 +903,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack }) {
             const isTouchOver = overIdx === idx && activeDrag !== null;
 
             if (isEditing) return (
-              <div key={entry.id} style={{ marginBottom: 12 }}>
+              <div key={entry.id} style={{ marginBottom: 12, width: "100%", boxSizing: "border-box" }}>
                 <EntryForm initial={entry} onSave={saveEntry} onCancel={() => setEditingEntry(null)} categoryName={category.name} />
               </div>
             );
@@ -1230,16 +1307,52 @@ function ProfileSetupScreen({ initialName = "", initialEmail = "", onComplete })
             autoComplete="name" />
         </div>
 
-        {/* 生年月日 */}
+        {/* 生年月日 - オーバーレイ方式（iOS幅問題対策）*/}
         <div style={{ marginBottom: 20 }}>
           <label style={labelStyle}>
             生年月日
             <span style={{ fontSize: 10, color: C.muted, fontWeight: "normal", marginLeft: 8 }}>任意</span>
           </label>
-          <input type="date" value={birthdate} onChange={e => setBirthdate(e.target.value)}
-            max={new Date().toISOString().split("T")[0]}
-            min="1900-01-01"
-            style={inputStyle} />
+          <div style={{ position: "relative", width: "100%" }}>
+            <input
+              type="date"
+              value={birthdate}
+              onChange={e => setBirthdate(e.target.value)}
+              max={new Date().toISOString().split("T")[0]}
+              min="1900-01-01"
+              style={{
+                position: "absolute",
+                top: 0, left: 0,
+                width: "100%", height: "100%",
+                opacity: 0,
+                zIndex: 2,
+                cursor: "pointer",
+                boxSizing: "border-box",
+              }}
+            />
+            <div style={{
+              width: "100%",
+              padding: "12px 14px",
+              border: `1.5px solid ${birthdate ? C.terra : C.border}`,
+              borderRadius: 10,
+              fontSize: 16,
+              boxSizing: "border-box",
+              background: birthdate ? "#FFF8F5" : C.white,
+              color: birthdate ? C.ink : C.muted,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minHeight: 48,
+              pointerEvents: "none",
+            }}>
+              <span>🎂</span>
+              <span>
+                {birthdate
+                  ? new Date(birthdate + "T00:00:00").toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })
+                  : "生年月日を選択"}
+              </span>
+            </div>
+          </div>
           {age !== null && age >= 0 && age <= 120 && (
             <div style={{ fontSize: 12, color: C.terra, marginTop: 6, fontWeight: "bold" }}>
               {age}歳
