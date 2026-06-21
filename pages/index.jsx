@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "../lib/supabase";
 
 const STORAGE_KEY = "jinsei-note-v3";
 
@@ -1425,66 +1426,72 @@ function AuthScreen({ onLogin }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
-  const [pendingProvider, setPendingProvider] = useState(null); // "google" | "apple"
+  const [pendingProvider, setPendingProvider] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  function handleSubmit() {
-    setError("");
-    if (!email.trim()) { setError("メールアドレスを入力してください"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("正しいメールアドレスを入力してください"); return; }
-    if (!password) { setError("パスワードを入力してください"); return; }
+  async function handleSubmit() {
+    setError(""); setLoading(true);
+    if (!email.trim()) { setError("メールアドレスを入力してください"); setLoading(false); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("正しいメールアドレスを入力してください"); setLoading(false); return; }
+    if (!password) { setError("パスワードを入力してください"); setLoading(false); return; }
 
     if (step === "register") {
-      if (password.length < 8) { setError("パスワードは8文字以上にしてください"); return; }
-      if (password !== confirmPassword) { setError("パスワードが一致しません"); return; }
-      // 実装時: await supabase.auth.signUp({ email, password })
-      // → Supabaseが確認メールを自動送信（Resend SMTP経由でiCloudにも届く）
+      if (password.length < 8) { setError("パスワードは8文字以上にしてください"); setLoading(false); return; }
+      if (password !== confirmPassword) { setError("パスワードが一致しません"); setLoading(false); return; }
+      const { error: signUpError } = await supabase.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      setLoading(false);
+      if (signUpError) { setError(signUpError.message); return; }
       setPendingEmail(email);
-      setPendingProvider(null);
       setStep("verify");
     } else {
-      // 実装時: const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      // → data.user.user_metadata からプロフィール取得
-      const savedProfile = (() => { try { return JSON.parse(localStorage.getItem("jinsei-note-profile") || "null"); } catch { return null; } })();
-      const user = { id: Date.now(), name: savedProfile?.name || email.split("@")[0], email, ...savedProfile };
-      try { localStorage.setItem("jinsei-note-user", JSON.stringify(user)); } catch {}
-      onLogin(user);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (signInError) { setError("メールアドレスまたはパスワードが正しくありません"); return; }
+      // プロフィール取得
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
+      if (!profile?.name) {
+        setPendingEmail(email);
+        setStep("profile_setup");
+      } else {
+        onLogin({ id: data.user.id, email: data.user.email, ...profile });
+      }
     }
   }
 
-  function handleGoogle() {
-    // 実装時: await supabase.auth.signInWithOAuth({ provider: 'google', options: { scopes: 'profile email' } })
-    // Googleから name・email・avatar_url が自動取得される
-    setPendingProvider("google");
-    const savedProfile = (() => { try { return JSON.parse(localStorage.getItem("jinsei-note-profile") || "null"); } catch { return null; } })();
-    if (savedProfile) {
-      const user = { id: Date.now(), name: "Googleユーザー", email: "google@example.com", ...savedProfile };
-      try { localStorage.setItem("jinsei-note-user", JSON.stringify(user)); } catch {}
-      onLogin(user);
-    } else {
-      setStep("profile_setup");
-    }
+  async function handleGoogle() {
+    setLoading(true);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: { access_type: "offline", prompt: "consent" },
+      },
+    });
+    if (oauthError) { setError(oauthError.message); setLoading(false); }
+    // リダイレクト後はonAuthStateChangeで処理
   }
 
   function handleApple() {
-    // 実装時: await supabase.auth.signInWithOAuth({ provider: 'apple' })
-    // ※ Apple Developer Program ($99/年) + ドメイン設定が必要
-    // 現在はプレースホルダー
     alert("「Appleでサインイン」は近日対応予定です。\n\nApple Developer Program への登録後に有効になります。");
   }
 
-  function handleProfileComplete(profile) {
-    try { localStorage.setItem("jinsei-note-profile", JSON.stringify(profile)); } catch {}
-    const user = {
-      id: Date.now(),
-      name: profile.name,
-      email: profile.email || pendingEmail || "google@example.com",
-      birthdate: profile.birthdate,
-      hobbies: profile.hobbies,
-    };
-    try { localStorage.setItem("jinsei-note-user", JSON.stringify(user)); } catch {}
-    onLogin(user);
+  async function handleProfileComplete(profile) {
+    // Supabaseのprofilesテーブルに保存
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser) {
+      await supabase.from("profiles").upsert({
+        id: currentUser.id,
+        name: profile.name,
+        birthdate: profile.birthdate || null,
+        hobbies: profile.hobbies || [],
+      });
+      onLogin({ id: currentUser.id, email: currentUser.email, ...profile });
+    }
   }
 
   // メール確認待ち画面
@@ -1492,11 +1499,11 @@ function AuthScreen({ onLogin }) {
     return <EmailVerifyScreen email={pendingEmail} onBack={() => setStep("register")} />;
   }
 
-  // プロフィール設定画面（Google/Apple認証後、または新規登録メール確認後）
+  // プロフィール設定画面
   if (step === "profile_setup") {
     return (
       <ProfileSetupScreen
-        initialName={pendingProvider === "google" ? "Googleユーザー" : ""}
+        initialName=""
         initialEmail={pendingEmail}
         onComplete={handleProfileComplete}
       />
@@ -1572,12 +1579,12 @@ function AuthScreen({ onLogin }) {
           </div>
         )}
 
-        <button onClick={handleSubmit} style={{
-          width: "100%", background: C.ink, color: C.white, border: "none",
+        <button onClick={handleSubmit} disabled={loading} style={{
+          width: "100%", background: loading ? "#888" : C.ink, color: C.white, border: "none",
           borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold",
-          cursor: "pointer", marginTop: isLogin ? 0 : 8, touchAction: "manipulation",
+          cursor: loading ? "not-allowed" : "pointer", marginTop: isLogin ? 0 : 8, touchAction: "manipulation",
         }}>
-          {isLogin ? "ログイン" : "アカウントを作成 →"}
+          {loading ? "処理中..." : isLogin ? "ログイン" : "アカウントを作成 →"}
         </button>
 
         {/* 区切り */}
@@ -1588,11 +1595,12 @@ function AuthScreen({ onLogin }) {
         </div>
 
         {/* Googleログイン */}
-        <button onClick={handleGoogle} style={{
+        <button onClick={handleGoogle} disabled={loading} style={{
           width: "100%", background: C.white, color: C.ink, border: `1.5px solid ${C.border}`,
-          borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer",
+          borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation",
+          opacity: loading ? 0.6 : 1,
         }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -1719,22 +1727,37 @@ export default function App() {
   const [newCatInput, setNewCatInput] = useState("");
   const [activeTab, setActiveTab] = useState("list");
 
-  // ⑥ 起動時に認証チェック
+  // Supabase Auth: セッション監視
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("jinsei-note-user");
-      if (saved) setUser(JSON.parse(saved));
-    } catch {}
-    setAuthChecked(true);
-  }, []);
+    // 初回セッション確認
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles").select("*").eq("id", session.user.id).single();
+        if (profile?.name) {
+          setUser({ id: session.user.id, email: session.user.email, ...profile });
+        }
+        // プロフィール未設定の場合はAuthScreenのprofile_setupで対応
+      }
+      setAuthChecked(true);
+    });
 
-  useEffect(() => {
-    if (!user) return;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setCategories(JSON.parse(saved));
-    } catch {}
-  }, [user]);
+    // 認証状態の変化を監視（Googleログイン後のリダイレクト対応）
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles").select("*").eq("id", session.user.id).single();
+        if (profile?.name) {
+          setUser({ id: session.user.id, email: session.user.email, ...profile });
+        }
+      }
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setCategories([]);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (categories.length === 0 || !user) return;
@@ -1742,11 +1765,11 @@ export default function App() {
   }, [categories]);
 
   function handleLogin(u) { setUser(u); }
-  function handleLogin(u) { setUser(u); }
-  function handleLogout() {
+  async function handleLogout() {
     if (confirm("ログアウトしますか？")) {
-      try { localStorage.removeItem("jinsei-note-user"); } catch {}
+      await supabase.auth.signOut();
       setUser(null);
+      setCategories([]);
     }
   }
 
