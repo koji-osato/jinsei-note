@@ -2355,6 +2355,10 @@ export default function App() {
   const [viewingUser, setViewingUser] = useState(null); // フレンドのリストを閲覧中
   const [friendCategories, setFriendCategories] = useState([]); // フレンドのカテゴリ
   const [followingUsers, setFollowingUsers] = useState([]); // フォロー中のフレンド一覧
+  const [friendTabMode, setFriendTabMode] = useState("select"); // "select" | "friend" | "category"
+  const [showFriendList, setShowFriendList] = useState(false); // フレンド選択モーダル
+  const [allFriendData, setAllFriendData] = useState([]); // 全フレンドのデータ
+  const [selectedCategory, setSelectedCategory] = useState(null); // カテゴリ横断選択
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2477,6 +2481,29 @@ export default function App() {
     const ids = follows.map(f => f.following_id);
     const { data: profiles } = await supabase.from("profiles").select("id,name,user_code").in("id", ids);
     setFollowingUsers(profiles || []);
+  }
+
+  // 全フレンドのカテゴリ・エントリーをまとめて取得
+  async function loadAllFriendData() {
+    if (followingUsers.length === 0) return;
+    const allData = await Promise.all(
+      followingUsers.map(async fu => {
+        const { data: cats } = await supabase.from("categories").select("*").eq("user_id", fu.id).order("created_at", { ascending: true });
+        if (!cats || cats.length === 0) return { user: fu, categories: [] };
+        const catIds = cats.map(c => c.id);
+        const { data: ents } = await supabase.from("entries").select("*").in("category_id", catIds).order("rank_order", { ascending: true });
+        const merged = cats.map(cat => ({
+          ...cat,
+          entries: sortEntriesByRec((ents || []).filter(e => e.category_id === cat.id).map(e => ({
+            id: e.id, name: e.name, prefecture: e.prefecture || "",
+            rec: e.rec ?? 2, comment: e.comment || "",
+            visitDate: e.visit_date || "", placeData: e.place_data || null, photo: null,
+          }))),
+        }));
+        return { user: fu, categories: merged };
+      })
+    );
+    setAllFriendData(allData);
   }
 
   function handleLogin(u) { setUser(u); }
@@ -2619,38 +2646,29 @@ export default function App() {
 
           {/* 自分 / フレンド タブ */}
           <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginTop: 14, gap: 3 }}>
-            <button onClick={() => { setViewingUser(null); setFriendCategories([]); }}
-              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !viewingUser ? "bold" : "normal", background: !viewingUser ? C.white : "transparent", color: !viewingUser ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
+            <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("select"); setSelectedCategory(null); }}
+              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !viewingUser && !selectedCategory ? "bold" : "normal", background: !viewingUser && !selectedCategory ? C.white : "transparent", color: !viewingUser && !selectedCategory ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
               自分
             </button>
-            <button onClick={() => { if (followingUsers.length > 0 && !viewingUser) loadFriendData(followingUsers[0]); }}
-              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !!viewingUser ? "bold" : "normal", background: !!viewingUser ? C.white : "transparent", color: !!viewingUser ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+            <button onClick={() => { if (followingUsers.length > 0) { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); } }}
+              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: viewingUser || selectedCategory ? "bold" : "normal", background: viewingUser || selectedCategory ? C.white : "transparent", color: viewingUser || selectedCategory ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
               フレンド {followingUsers.length > 0 ? `(${followingUsers.length})` : ""}
             </button>
           </div>
 
-          {/* フレンドタブ：フレンド選択 */}
-          {viewingUser && followingUsers.length > 1 && (
-            <div style={{ display: "flex", gap: 6, marginTop: 10, overflowX: "auto", paddingBottom: 2 }}>
-              {followingUsers.map(fu => (
-                <button key={fu.id} onClick={() => loadFriendData(fu)}
-                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, border: "none", fontSize: 11, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation", background: viewingUser?.id === fu.id ? C.terra : "rgba(255,255,255,0.15)", color: C.white }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: "bold" }}>
-                    {fu.name?.charAt(0)}
-                  </div>
-                  <span>{fu.name?.split(" ")[0]}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
+          {/* フレンドタブのサブ情報 */}
           {viewingUser && (
             <div style={{ fontSize: 11, color: "#9A8A7A", marginTop: 6 }}>
-              {viewingUser.name} さんの人生ノートを閲覧中
+              👤 {viewingUser.name} さんの人生ノートを閲覧中
+            </div>
+          )}
+          {selectedCategory && (
+            <div style={{ fontSize: 11, color: "#9A8A7A", marginTop: 6 }}>
+              👥 全フレンドの「人生{selectedCategory}」を閲覧中
             </div>
           )}
 
-          {!viewingUser && totalEntries > 0 && (
+          {!viewingUser && !selectedCategory && totalEntries > 0 && (
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <div style={{ background: "rgba(255,255,255,0.07)", border: "0.5px solid rgba(255,255,255,0.11)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.terra }}>
                 📝 {totalEntries}件
@@ -2664,7 +2682,119 @@ export default function App() {
       </div>
 
       <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto" }}>
-        {displayCategories.length > 0 && (
+
+        {/* フレンドタブ：選択画面 */}
+        {friendTabMode === "select" && followingUsers.length > 0 && !viewingUser && !selectedCategory && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>どちらで見ますか？</div>
+
+            {/* フレンドを選ぶ */}
+            <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px", marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>👤 フレンドを選んで見る</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {followingUsers.map(fu => (
+                  <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); }}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.border}`, background: "#FAFAF9", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left" }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0 }}>
+                      {fu.name?.charAt(0)}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{fu.name}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{fu.user_code}</div>
+                    </div>
+                    <span style={{ marginLeft: "auto", color: C.muted, fontSize: 16 }}>›</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* カテゴリを選ぶ */}
+            <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px" }}>
+              <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>📂 カテゴリで全フレンドを見る</div>
+              {/* 全フレンドが持つカテゴリの合計を収集 */}
+              {(() => {
+                const catSet = {};
+                allFriendData.forEach(fd => {
+                  fd.categories.forEach(cat => {
+                    if (!catSet[cat.name]) catSet[cat.name] = 0;
+                    catSet[cat.name]++;
+                  });
+                });
+                const catNames = Object.entries(catSet).sort((a,b) => b[1]-a[1]);
+                if (catNames.length === 0) return (
+                  <div style={{ textAlign: "center", color: C.muted, padding: "20px 0", fontSize: 13 }}>
+                    フレンドがまだ記録を追加していません
+                  </div>
+                );
+                return (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {catNames.map(([name, count]) => (
+                      <button key={name} onClick={() => { setSelectedCategory(name); setFriendTabMode("category"); }}
+                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        <span style={{ fontSize: 16 }}>{getTagEmoji(name)}</span>
+                        <span style={{ fontSize: 13, color: C.ink }}>人生{name}</span>
+                        <span style={{ fontSize: 11, color: C.terra, fontWeight: "bold" }}>{count}人</span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* フレンドタブ：カテゴリ横断ビュー */}
+        {friendTabMode === "category" && selectedCategory && (
+          <div>
+            <button onClick={() => { setSelectedCategory(null); setFriendTabMode("select"); loadAllFriendData(); }}
+              style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 16px", fontFamily: "inherit", touchAction: "manipulation" }}>
+              ← 戻る
+            </button>
+            <div style={{ fontSize: 16, fontWeight: "bold", color: C.ink, marginBottom: 16 }}>
+              {getTagEmoji(selectedCategory)} 全フレンドの人生{selectedCategory}
+            </div>
+            {allFriendData.filter(fd => fd.categories.some(c => c.name === selectedCategory)).length === 0 ? (
+              <div style={{ textAlign: "center", color: C.muted, padding: "40px 0" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+                <div>このカテゴリを持つフレンドがいません</div>
+              </div>
+            ) : (
+              allFriendData.filter(fd => fd.categories.some(c => c.name === selectedCategory)).map(fd => {
+                const cat = fd.categories.find(c => c.name === selectedCategory);
+                const top = cat?.entries?.[0];
+                return (
+                  <div key={fd.user.id} style={{ background: C.white, borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden" }}>
+                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.white, flexShrink: 0 }}>
+                        {fd.user.name?.charAt(0)}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink }}>{fd.user.name} さん</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginLeft: "auto" }}>{cat?.entries?.length || 0}件</div>
+                    </div>
+                    {cat?.entries?.map((entry, idx) => (
+                      <div key={entry.id} style={{ padding: "10px 16px", borderBottom: `1px solid #F5F0EB`, display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontSize: idx === 0 ? 22 : 18, flexShrink: 0 }}>
+                          {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx+1}.`}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{entry.name}</div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
+                            <RecBadge value={entry.rec} />
+                            {entry.prefecture && <span style={{ fontSize: 11, color: C.muted }}>{entry.prefecture}</span>}
+                          </div>
+                          {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 4, fontStyle: "italic" }}>「{entry.comment}」</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* 自分のリスト or フレンド個別リスト */}
+        {(friendTabMode !== "select" && friendTabMode !== "category" || (!viewingUser && !selectedCategory)) && displayCategories.length > 0 && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>
               {viewingUser ? `${viewingUser.name} さんのリスト` : "マイリスト"}
@@ -2688,7 +2818,6 @@ export default function App() {
                     </div>
                     {top && (
                       <div style={{ margin: "8px 10px 12px", background: "#FFF8F5", borderRadius: 10, padding: "7px 10px" }}>
-                        {/* ⑦ カード内も目立つランク表示 */}
                         <div style={{ fontSize: 10, color: C.terra, fontWeight: "bold", marginBottom: 2 }}>🥇 1位</div>
                         <div style={{ fontSize: 12, color: C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{top.name}</div>
                         <RecBadge value={top.rec} />
