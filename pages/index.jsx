@@ -2355,7 +2355,7 @@ export default function App() {
   const [viewingUser, setViewingUser] = useState(null); // フレンドのリストを閲覧中
   const [friendCategories, setFriendCategories] = useState([]); // フレンドのカテゴリ
   const [followingUsers, setFollowingUsers] = useState([]); // フォロー中のフレンド一覧
-  const [friendTabMode, setFriendTabMode] = useState("select"); // "select" | "friend" | "category"
+  const [friendTabMode, setFriendTabMode] = useState("self"); // "self" | "select" | "friend" | "category"
   const [showFriendList, setShowFriendList] = useState(false); // フレンド選択モーダル
   const [allFriendData, setAllFriendData] = useState([]); // 全フレンドのデータ
   const [selectedCategory, setSelectedCategory] = useState(null); // カテゴリ横断選択
@@ -2406,6 +2406,11 @@ export default function App() {
     loadData();
     loadFollowingUsers();
   }, [user]);
+
+  // フォロー中ユーザーが取得できたら全データも取得
+  useEffect(() => {
+    if (followingUsers.length > 0) loadAllFriendData();
+  }, [followingUsers]);
 
   async function loadData() {
     setLoading(true);
@@ -2646,11 +2651,11 @@ export default function App() {
 
           {/* 自分 / フレンド タブ */}
           <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginTop: 14, gap: 3 }}>
-            <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("select"); setSelectedCategory(null); }}
+            <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); }}
               style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !viewingUser && !selectedCategory ? "bold" : "normal", background: !viewingUser && !selectedCategory ? C.white : "transparent", color: !viewingUser && !selectedCategory ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
               自分
             </button>
-            <button onClick={() => { if (followingUsers.length > 0) { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); } }}
+            <button onClick={() => { if (followingUsers.length > 0) { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); } else { setFriendTabMode("select"); } }}
               style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: viewingUser || selectedCategory ? "bold" : "normal", background: viewingUser || selectedCategory ? C.white : "transparent", color: viewingUser || selectedCategory ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
               フレンド {followingUsers.length > 0 ? `(${followingUsers.length})` : ""}
             </button>
@@ -2684,7 +2689,7 @@ export default function App() {
       <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto" }}>
 
         {/* フレンドタブ：選択画面 */}
-        {friendTabMode === "select" && followingUsers.length > 0 && !viewingUser && !selectedCategory && (
+        {friendTabMode === "select" && !viewingUser && !selectedCategory && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>どちらで見ますか？</div>
 
@@ -2693,7 +2698,7 @@ export default function App() {
               <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>👤 フレンドを選んで見る</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {followingUsers.map(fu => (
-                  <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); }}
+                  <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); }}
                     style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.border}`, background: "#FAFAF9", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left" }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0 }}>
                       {fu.name?.charAt(0)}
@@ -2794,7 +2799,7 @@ export default function App() {
         )}
 
         {/* 自分のリスト or フレンド個別リスト */}
-        {(friendTabMode !== "select" && friendTabMode !== "category" || (!viewingUser && !selectedCategory)) && displayCategories.length > 0 && (
+        {(friendTabMode === "self" || friendTabMode === "friend") && displayCategories.length > 0 && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>
               {viewingUser ? `${viewingUser.name} さんのリスト` : "マイリスト"}
