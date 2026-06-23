@@ -1912,11 +1912,12 @@ function AddFollowModal({ user, onClose, onAdded }) {
 function FriendsView({ user }) {
   const [following, setFollowing] = useState([]); // 自分がフォローしている
   const [followers, setFollowers] = useState([]); // 自分をフォローしている
+  const [friends, setFriends] = useState([]); // 相互フォロー
   const [pendingIn, setPendingIn] = useState([]); // 承認待ち（受信）
   const [pendingOut, setPendingOut] = useState([]); // 承認待ち（送信）
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [tab, setTab] = useState("following");
+  const [tab, setTab] = useState("friends");
 
   useEffect(() => { loadFollows(); }, []);
 
@@ -1953,8 +1954,14 @@ function FriendsView({ user }) {
         (profiles || []).forEach(p => { profileMap[p.id] = p; });
       }
 
-      setFollowing((followingData || []).map(f => ({ ...f, profile: profileMap[f.following_id] })));
-      setFollowers((followersData || []).map(f => ({ ...f, profile: profileMap[f.follower_id] })));
+      const followingList = (followingData || []).map(f => ({ ...f, profile: profileMap[f.following_id] }));
+      const followersList = (followersData || []).map(f => ({ ...f, profile: profileMap[f.follower_id] }));
+      // 相互フォロー = フォロー中かつフォロワーでもある
+      const followingIds = new Set((followingData || []).map(f => f.following_id));
+      const friendsList = followersList.filter(f => followingIds.has(f.follower_id));
+      setFollowing(followingList);
+      setFollowers(followersList);
+      setFriends(friendsList);
       setPendingIn((pendingInData || []).map(f => ({ ...f, profile: profileMap[f.follower_id] })));
       setPendingOut((pendingOutData || []).map(f => ({ ...f, profile: profileMap[f.following_id] })));
     } catch(e) { console.error(e); }
@@ -1977,12 +1984,22 @@ function FriendsView({ user }) {
     loadFollows();
   }
 
+  async function followUser(targetId) {
+    await supabase.from("follows").insert({
+      follower_id: user.id,
+      following_id: targetId,
+      status: "pending",
+    });
+    loadFollows();
+  }
+
   async function cancelFollow(followId) {
     await supabase.from("follows").delete().eq("id", followId);
     loadFollows();
   }
 
   const tabs = [
+    ["friends", `フレンド ${friends.length}`],
     ["following", `フォロー中 ${following.length}`],
     ["followers", `フォロワー ${followers.length}`],
     ["pendingIn", `承認待ち ${pendingIn.length}${pendingIn.length > 0 ? " 🔴" : ""}`],
@@ -2032,6 +2049,20 @@ function FriendsView({ user }) {
           </div>
         ) : (
           <>
+            {tab === "friends" && (
+              friends.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                  <div style={{ fontSize: 56, marginBottom: 16 }}>🤝</div>
+                  <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>フレンドはまだいません</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.7 }}>相互フォローするとフレンドになります</div>
+                </div>
+              ) : friends.map(f => (
+                <UserCard key={f.id} profile={f.profile} action={
+                  <span style={{ fontSize: 12, color: C.terra, background: "#FFF3E0", borderRadius: 10, padding: "4px 10px", fontWeight: "bold" }}>🤝 フレンド</span>
+                } />
+              ))
+            )}
+
             {tab === "following" && (
               following.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
@@ -2056,9 +2087,24 @@ function FriendsView({ user }) {
                   <div style={{ fontSize: 40, marginBottom: 12 }}>👤</div>
                   <div>フォロワーはまだいません</div>
                 </div>
-              ) : followers.map(f => (
-                <UserCard key={f.id} profile={f.profile} action={null} />
-              ))
+              ) : followers.map(f => {
+                const isFollowing = following.some(fw => fw.following_id === f.follower_id);
+                const isPending = pendingOut.some(p => p.following_id === f.follower_id);
+                return (
+                  <UserCard key={f.id} profile={f.profile} action={
+                    isFollowing ? (
+                      <span style={{ fontSize: 12, color: C.terra, background: "#FFF3E0", borderRadius: 10, padding: "4px 10px" }}>フォロー中</span>
+                    ) : isPending ? (
+                      <span style={{ fontSize: 12, color: C.muted, background: "#F5F5F5", borderRadius: 10, padding: "4px 10px" }}>申請中</span>
+                    ) : (
+                      <button onClick={() => followUser(f.follower_id)}
+                        style={{ background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        フォロー
+                      </button>
+                    )
+                  } />
+                );
+              })
             )}
 
             {tab === "pendingIn" && (
