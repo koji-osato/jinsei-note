@@ -820,7 +820,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId })
       comment: entry.comment || "",
       visit_date: entry.visitDate || null,
       place_data: entry.placeData || null,
-      rank_order: editingEntry ? entry.id : Date.now(),
+      rank_order: 0,
     };
 
     let savedId = entry.id;
@@ -1776,24 +1776,323 @@ function BottomNav({ activeTab, onTabChange }) {
 }
 
 // ===== フレンドリスト（スタブ） =====
-function FriendsView() {
+// ===== QRコード生成（シンプル実装）=====
+function QRDisplay({ value, size = 160 }) {
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}&color=2C2420&bgcolor=F7F3EE`;
+  return <img src={qrUrl} alt="QRコード" style={{ width: size, height: size, borderRadius: 8 }} />;
+}
+
+// ===== フレンド申請モーダル =====
+function AddFriendModal({ user, onClose, onAdded }) {
+  const [tab, setTab] = useState("search"); // "search" | "qr" | "invite"
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [sending, setSending] = useState(null);
+  const [done, setDone] = useState(null);
+  const inviteUrl = `https://jinsei-note.jp/invite?ref=${user.user_code || user.id}`;
+
+  async function handleSearch() {
+    if (!query.trim()) return;
+    setSearching(true);
+    setResults([]);
+    const isEmail = query.includes("@");
+    let q = supabase.from("profiles").select("id, name, user_code, birthdate, hobbies");
+    if (isEmail) {
+      // メールはauth.usersにあるのでprofilesと結合
+      const { data: users } = await supabase.rpc("search_user_by_email", { search_email: query.trim() });
+      setResults(users || []);
+    } else {
+      const { data } = await q.ilike("user_code", `%${query.trim()}%`).neq("id", user.id).limit(5);
+      setResults(data || []);
+    }
+    setSearching(false);
+  }
+
+  async function sendRequest(targetId) {
+    setSending(targetId);
+    const { error } = await supabase.from("friendships").insert({
+      requester_id: user.id,
+      receiver_id: targetId,
+      status: "pending",
+    });
+    setSending(null);
+    if (!error) { setDone(targetId); onAdded?.(); }
+  }
+
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
-        {/* ⑧ ロゴ */}
-        <LogoBanner darkBg={true} />
-        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>👥 フレンド</div>
-      </div>
-      <div style={{ padding: "60px 24px", textAlign: "center", color: C.muted }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>👥</div>
-        <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>フレンド機能は近日公開</div>
-        <div style={{ fontSize: 13, lineHeight: 1.7 }}>友達の人生ランキングを<br />旅先でチェックできるようになります</div>
+    <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
+      <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, maxHeight: "80vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ fontSize: 17, fontWeight: "bold", color: C.ink }}>フレンドを追加</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, color: C.muted, cursor: "pointer" }}>✕</button>
+        </div>
+
+        {/* タブ */}
+        <div style={{ display: "flex", background: "#F0EDE8", borderRadius: 10, padding: 3, marginBottom: 20, gap: 3 }}>
+          {[["search","🔍 検索"],["qr","📷 QR"],["invite","🔗 招待"]].map(([t, label]) => (
+            <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: tab === t ? "bold" : "normal", background: tab === t ? C.white : "transparent", color: tab === t ? C.ink : C.muted }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* 検索タブ */}
+        {tab === "search" && (
+          <div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <input value={query} onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                placeholder="ユーザーID（LJ-XXXXXX）またはメールアドレス"
+                style={{ ...inputStyle, flex: 1 }} />
+              <button onClick={handleSearch} disabled={searching}
+                style={{ background: C.terra, color: C.white, border: "none", borderRadius: 10, padding: "0 16px", fontSize: 14, fontWeight: "bold", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation" }}>
+                {searching ? "…" : "検索"}
+              </button>
+            </div>
+            {results.map(u => (
+              <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
+                  {u.name?.charAt(0) || "?"}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: "bold", color: C.ink }}>{u.name}</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{u.user_code}</div>
+                </div>
+                <button onClick={() => sendRequest(u.id)} disabled={!!sending || done === u.id}
+                  style={{ background: done === u.id ? "#E8F5E9" : C.ink, color: done === u.id ? "#388E3C" : C.white, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                  {done === u.id ? "✓ 申請済" : sending === u.id ? "…" : "申請する"}
+                </button>
+              </div>
+            ))}
+            {results.length === 0 && query && !searching && (
+              <div style={{ textAlign: "center", color: C.muted, padding: "30px 0", fontSize: 14 }}>ユーザーが見つかりませんでした</div>
+            )}
+          </div>
+        )}
+
+        {/* QRコードタブ */}
+        {tab === "qr" && (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>このQRコードを相手に読み取ってもらう</div>
+            <div style={{ display: "inline-block", padding: 16, background: "#F7F3EE", borderRadius: 16, marginBottom: 16 }}>
+              <QRDisplay value={inviteUrl} size={180} />
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>あなたのユーザーID</div>
+            <div style={{ fontSize: 18, fontWeight: "bold", color: C.ink, letterSpacing: 2 }}>{user.user_code || "未設定"}</div>
+          </div>
+        )}
+
+        {/* 招待リンクタブ */}
+        {tab === "invite" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>招待リンクをシェアしてフレンドに追加してもらう</div>
+            <div style={{ background: "#F7F3EE", border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 16, fontSize: 13, color: C.ink, wordBreak: "break-all" }}>
+              {inviteUrl}
+            </div>
+            <button onClick={() => { navigator.clipboard?.writeText(inviteUrl); alert("コピーしました！"); }}
+              style={{ width: "100%", background: C.ink, color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation" }}>
+              📋 リンクをコピー
+            </button>
+            {navigator.share && (
+              <button onClick={() => navigator.share({ title: "人生ノート", text: "フレンドになりませんか？", url: inviteUrl })}
+                style={{ width: "100%", background: C.white, color: C.ink, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                📤 シェアする
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function FriendMapView() {
+// ===== フレンドリスト =====
+function FriendsView({ user }) {
+  const [friends, setFriends] = useState([]);
+  const [pending, setPending] = useState([]); // 受信した申請
+  const [sent, setSent] = useState([]); // 送信した申請
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [tab, setTab] = useState("friends"); // "friends" | "pending" | "sent"
+
+  useEffect(() => { loadFriends(); }, []);
+
+  async function loadFriends() {
+    setLoading(true);
+    // 承認済みフレンド
+    const { data: accepted } = await supabase
+      .from("friendships")
+      .select("*, requester:requester_id(id,name,user_code,hobbies), receiver:receiver_id(id,name,user_code,hobbies)")
+      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .eq("status", "accepted");
+
+    // 受信した申請
+    const { data: pendingData } = await supabase
+      .from("friendships")
+      .select("*, requester:requester_id(id,name,user_code)")
+      .eq("receiver_id", user.id)
+      .eq("status", "pending");
+
+    // 送信した申請
+    const { data: sentData } = await supabase
+      .from("friendships")
+      .select("*, receiver:receiver_id(id,name,user_code)")
+      .eq("requester_id", user.id)
+      .eq("status", "pending");
+
+    // フレンドリストを整形（自分以外のユーザー情報を取得）
+    const friendList = (accepted || []).map(f => {
+      const isRequester = f.requester_id === user.id;
+      return isRequester ? f.receiver : f.requester;
+    }).filter(Boolean);
+
+    setFriends(friendList);
+    setPending(pendingData || []);
+    setSent(sentData || []);
+    setLoading(false);
+  }
+
+  async function acceptRequest(friendshipId) {
+    await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
+    loadFriends();
+  }
+
+  async function rejectRequest(friendshipId) {
+    await supabase.from("friendships").update({ status: "rejected" }).eq("id", friendshipId);
+    loadFriends();
+  }
+
+  async function removeFriend(friendId) {
+    if (!confirm("フレンドを削除しますか？")) return;
+    await supabase.from("friendships")
+      .delete()
+      .or(`and(requester_id.eq.${user.id},receiver_id.eq.${friendId}),and(requester_id.eq.${friendId},receiver_id.eq.${user.id})`);
+    loadFriends();
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 16px" }}>
+        <LogoBanner darkBg={true} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+          <div style={{ fontSize: 20, fontWeight: "bold" }}>👥 フレンド</div>
+          <button onClick={() => setShowAdd(true)} style={{ background: C.terra, border: "none", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "bold", color: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+            ＋ 追加
+          </button>
+        </div>
+        {/* タブ */}
+        <div style={{ display: "flex", gap: 4, marginTop: 14 }}>
+          {[["friends", `フレンド ${friends.length}`], ["pending", `申請受信 ${pending.length}`], ["sent", "申請送信"]].map(([t, label]) => (
+            <button key={t} onClick={() => setTab(t)} style={{ padding: "5px 12px", borderRadius: 20, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: tab === t ? C.terra : "rgba(255,255,255,0.1)", color: C.white, fontWeight: tab === t ? "bold" : "normal", touchAction: "manipulation" }}>
+              {label}{t === "pending" && pending.length > 0 ? ` 🔴` : ""}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: "16px", maxWidth: 600, margin: "0 auto" }}>
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+            <div>読み込み中...</div>
+          </div>
+        ) : (
+          <>
+            {/* フレンド一覧 */}
+            {tab === "friends" && (
+              friends.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                  <div style={{ fontSize: 56, marginBottom: 16 }}>👥</div>
+                  <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>まだフレンドがいません</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>「＋ 追加」からフレンドを探しましょう</div>
+                  <button onClick={() => setShowAdd(true)} style={{ background: C.terra, color: C.white, border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                    フレンドを追加する
+                  </button>
+                </div>
+              ) : (
+                friends.map(f => (
+                  <div key={f.id} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: C.white, flexShrink: 0 }}>
+                      {f.name?.charAt(0) || "?"}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: "bold", color: C.ink }}>{f.name}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{f.user_code}</div>
+                    </div>
+                    <button onClick={() => removeFriend(f.id)} style={{ background: "none", border: `1px solid #FFCDD2`, borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#E57373", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                      削除
+                    </button>
+                  </div>
+                ))
+              )
+            )}
+
+            {/* 受信した申請 */}
+            {tab === "pending" && (
+              pending.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+                  <div>フレンド申請はありません</div>
+                </div>
+              ) : (
+                pending.map(req => (
+                  <div key={req.id} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#7F77DD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
+                        {req.requester?.name?.charAt(0) || "?"}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 15, fontWeight: "bold", color: C.ink }}>{req.requester?.name}</div>
+                        <div style={{ fontSize: 12, color: C.muted }}>{req.requester?.user_code}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => acceptRequest(req.id)} style={{ flex: 1, background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        ✓ 承認する
+                      </button>
+                      <button onClick={() => rejectRequest(req.id)} style={{ flex: 1, background: "#FFF5F5", color: "#E57373", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        断る
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+
+            {/* 送信した申請 */}
+            {tab === "sent" && (
+              sent.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>📤</div>
+                  <div>送信した申請はありません</div>
+                </div>
+              ) : (
+                sent.map(req => (
+                  <div key={req.id} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#5DCAA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
+                      {req.receiver?.name?.charAt(0) || "?"}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: "bold", color: C.ink }}>{req.receiver?.name}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{req.receiver?.user_code}</div>
+                    </div>
+                    <span style={{ fontSize: 12, color: "#F5A623", background: "#FFF8E1", borderRadius: 10, padding: "4px 10px" }}>承認待ち</span>
+                  </div>
+                ))
+              )
+            )}
+          </>
+        )}
+      </div>
+
+      {showAdd && <AddFriendModal user={user} onClose={() => setShowAdd(false)} onAdded={loadFriends} />}
+    </div>
+  );
+}
+
+function FriendMapView({ user }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
@@ -2157,13 +2456,13 @@ export default function App() {
   );
   if (activeTab === "friends") return (
     <>
-      <FriendsView />
+      <FriendsView user={user} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
   if (activeTab === "friendsmap") return (
     <>
-      <FriendMapView />
+      <FriendMapView user={user} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
