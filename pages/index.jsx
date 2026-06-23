@@ -789,7 +789,7 @@ function useTouchDnD(entries, setEntries) {
 }
 
 // ===== カテゴリ詳細ビュー =====
-function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, readOnly = false }) {
+function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, readOnly = false, ownerName = null }) {
   // ⑨ おすすめ度でソートされた状態で管理
   const [entries, setEntries] = useState(() => sortEntriesByRec(data.entries || []));
   const [showForm, setShowForm] = useState(false);
@@ -885,13 +885,18 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "16px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
+        {ownerName && (
+          <div style={{ fontSize: 11, color: C.terra, fontWeight: "bold", marginBottom: 4, letterSpacing: 0.5 }}>
+            👤 {ownerName} さんの人生ノート
+          </div>
+        )}
         <div style={{ fontSize: 22, fontWeight: "bold" }}>{emoji} 人生{category.name}</div>
         <div style={{ fontSize: 12, color: "#9A8A7A", marginTop: 3 }}>{entries.length}件記録済み</div>
       </div>
 
       <div style={{ padding: "14px 16px", maxWidth: 600, margin: "0 auto", boxSizing: "border-box", width: "100%" }}>
         {/* ⑩ ソート切替 */}
-        {entries.length > 1 && (
+        {!readOnly && entries.length > 1 && (
           <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
             {[["rank","順位順"],["date","訪問日順"]].map(([mode, label]) => (
               <button key={mode} onClick={() => setSortMode(mode)} style={{
@@ -948,12 +953,12 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
 
             return (
               <div key={entry.id} ref={el => itemRefs.current[idx] = el}
-                draggable
-                onDragStart={() => handleDragStart(idx)}
-                onDragOver={e => handleDragOver(e, idx)}
-                onDrop={() => handleDrop(idx)}
-                onDragEnd={() => { setDragging(null); setDragOver(null); }}
-                onTouchStart={() => onTouchStart(idx)}
+                draggable={!readOnly}
+                onDragStart={() => !readOnly && handleDragStart(idx)}
+                onDragOver={e => !readOnly && handleDragOver(e, idx)}
+                onDrop={() => !readOnly && handleDrop(idx)}
+                onDragEnd={() => { if (!readOnly) { setDragging(null); setDragOver(null); } }}
+                onTouchStart={() => !readOnly && onTouchStart(idx)}
                 onContextMenu={e => e.preventDefault()}
                 style={{
                   background: C.white, borderRadius: 16, marginBottom: 12,
@@ -1004,7 +1009,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
                     </div>
                   </div>
 
-                  <div style={{ color: "#CCC", fontSize: 20, flexShrink: 0, alignSelf: "center", userSelect: "none" }}>⠿</div>
+                  {!readOnly && <div style={{ color: "#CCC", fontSize: 20, flexShrink: 0, alignSelf: "center", userSelect: "none" }}>⠿</div>}
                 </div>
 
                 {isExpanded && (
@@ -2571,6 +2576,7 @@ export default function App() {
         onBack={() => setActiveCategory(null)}
         userId={isFriendView ? null : user.id}
         readOnly={isFriendView}
+        ownerName={isFriendView ? viewingUser?.name : null}
       />
     );
   }
