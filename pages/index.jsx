@@ -2555,6 +2555,9 @@ export default function App() {
   );
 
   // サブ画面（ブラウズ・カテゴリ詳細）はナビを隠す
+  // 表示中のカテゴリ（自分orフレンド）- activeCategoryより前に定義必須
+  const displayCategories = viewingUser ? friendCategories : categories;
+
   if (showBrowse) return <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />;
   if (activeCategory) {
     const isFriendView = !!viewingUser;
@@ -2592,8 +2595,6 @@ export default function App() {
     </>
   );
 
-  // 表示中のカテゴリ（自分orフレンド）
-  const displayCategories = viewingUser ? friendCategories : categories;
   const totalEntries = categories.reduce((sum, c) => sum + (c.entries?.length || 0), 0);
 
   return (
@@ -2610,22 +2611,25 @@ export default function App() {
             </button>
           </div>
 
-          {/* ユーザー切り替えタブ */}
-          {followingUsers.length > 0 && (
-            <div style={{ display: "flex", gap: 6, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
-              {/* 自分 */}
-              <button onClick={() => { setViewingUser(null); setFriendCategories([]); }}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation", background: !viewingUser ? C.terra : "rgba(255,255,255,0.15)", color: C.white, fontWeight: !viewingUser ? "bold" : "normal" }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: "bold" }}>
-                  {user.name?.charAt(0)}
-                </div>
-                <span>自分</span>
-              </button>
-              {/* フォロー中フレンド */}
+          {/* 自分 / フレンド タブ */}
+          <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginTop: 14, gap: 3 }}>
+            <button onClick={() => { setViewingUser(null); setFriendCategories([]); }}
+              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !viewingUser ? "bold" : "normal", background: !viewingUser ? C.white : "transparent", color: !viewingUser ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
+              自分
+            </button>
+            <button onClick={() => { if (followingUsers.length > 0 && !viewingUser) loadFriendData(followingUsers[0]); }}
+              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !!viewingUser ? "bold" : "normal", background: !!viewingUser ? C.white : "transparent", color: !!viewingUser ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+              フレンド {followingUsers.length > 0 ? `(${followingUsers.length})` : ""}
+            </button>
+          </div>
+
+          {/* フレンドタブ：フレンド選択 */}
+          {viewingUser && followingUsers.length > 1 && (
+            <div style={{ display: "flex", gap: 6, marginTop: 10, overflowX: "auto", paddingBottom: 2 }}>
               {followingUsers.map(fu => (
                 <button key={fu.id} onClick={() => loadFriendData(fu)}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation", background: viewingUser?.id === fu.id ? C.terra : "rgba(255,255,255,0.15)", color: C.white, fontWeight: viewingUser?.id === fu.id ? "bold" : "normal" }}>
-                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: "bold" }}>
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, border: "none", fontSize: 11, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation", background: viewingUser?.id === fu.id ? C.terra : "rgba(255,255,255,0.15)", color: C.white }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: "bold" }}>
                     {fu.name?.charAt(0)}
                   </div>
                   <span>{fu.name?.split(" ")[0]}</span>
@@ -2634,9 +2638,8 @@ export default function App() {
             </div>
           )}
 
-          {/* 閲覧中フレンドの表示 */}
           {viewingUser && (
-            <div style={{ fontSize: 12, color: "#9A8A7A", marginTop: 8 }}>
+            <div style={{ fontSize: 11, color: "#9A8A7A", marginTop: 6 }}>
               {viewingUser.name} さんの人生ノートを閲覧中
             </div>
           )}
