@@ -2010,6 +2010,7 @@ function FriendsView({ user }) {
   ];
 
   const tabs = [
+    ["friends", `フレンド ${friends.length}`],
     ["following", `フォロー中 ${following.length}${pendingOut.length > 0 ? ` (+${pendingOut.length})` : ""}`],
     ["followers", `フォロワー ${followers.length}${pendingIn.length > 0 ? ` 🔴${pendingIn.length}` : ""}`],
   ];
@@ -2057,6 +2058,21 @@ function FriendsView({ user }) {
           </div>
         ) : (
           <>
+            {/* フレンドタブ：相互フォロー */}
+            {tab === "friends" && (
+              friends.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                  <div style={{ fontSize: 56, marginBottom: 16 }}>🤝</div>
+                  <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>フレンドはまだいません</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.7 }}>相互フォローするとフレンドになります</div>
+                </div>
+              ) : friends.map(f => (
+                <UserCard key={f.id} profile={f.profile} action={
+                  <span style={{ fontSize: 12, color: C.terra, background: "#FFF3E0", borderRadius: 10, padding: "4px 10px", fontWeight: "bold" }}>🤝 フレンド</span>
+                } />
+              ))
+            )}
+
             {/* フォロー中タブ：承認済み + 申請中 */}
             {tab === "following" && (
               followingAll.length === 0 ? (
