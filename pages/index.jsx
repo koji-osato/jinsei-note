@@ -1921,36 +1921,71 @@ function FriendsView({ user }) {
 
   async function loadFriends() {
     setLoading(true);
-    // 承認済みフレンド
-    const { data: accepted } = await supabase
-      .from("friendships")
-      .select("*, requester:requester_id(id,name,user_code,hobbies), receiver:receiver_id(id,name,user_code,hobbies)")
-      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .eq("status", "accepted");
+    try {
+      // 承認済みフレンド
+      const { data: accepted, error: e1 } = await supabase
+        .from("friendships")
+        .select("*")
+        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq("status", "accepted");
 
-    // 受信した申請
-    const { data: pendingData } = await supabase
-      .from("friendships")
-      .select("*, requester:requester_id(id,name,user_code)")
-      .eq("receiver_id", user.id)
-      .eq("status", "pending");
+      // 受信した申請
+      const { data: pendingData, error: e2 } = await supabase
+        .from("friendships")
+        .select("*")
+        .eq("receiver_id", user.id)
+        .eq("status", "pending");
 
-    // 送信した申請
-    const { data: sentData } = await supabase
-      .from("friendships")
-      .select("*, receiver:receiver_id(id,name,user_code)")
-      .eq("requester_id", user.id)
-      .eq("status", "pending");
+      // 送信した申請
+      const { data: sentData, error: e3 } = await supabase
+        .from("friendships")
+        .select("*")
+        .eq("requester_id", user.id)
+        .eq("status", "pending");
 
-    // フレンドリストを整形（自分以外のユーザー情報を取得）
-    const friendList = (accepted || []).map(f => {
-      const isRequester = f.requester_id === user.id;
-      return isRequester ? f.receiver : f.requester;
-    }).filter(Boolean);
+      if (e1) console.error("accepted error:", e1);
+      if (e2) console.error("pending error:", e2);
+      if (e3) console.error("sent error:", e3);
 
-    setFriends(friendList);
-    setPending(pendingData || []);
-    setSent(sentData || []);
+      // 関連ユーザーのプロフィールを別途取得
+      const allUserIds = [
+        ...(accepted || []).flatMap(f => [f.requester_id, f.receiver_id]),
+        ...(pendingData || []).map(f => f.requester_id),
+        ...(sentData || []).map(f => f.receiver_id),
+      ].filter(id => id !== user.id);
+      const uniqueIds = [...new Set(allUserIds)];
+
+      let profileMap = {};
+      if (uniqueIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, name, user_code, hobbies")
+          .in("id", uniqueIds);
+        (profiles || []).forEach(p => { profileMap[p.id] = p; });
+      }
+
+      // フレンドリストを整形
+      const friendList = (accepted || []).map(f => {
+        const friendId = f.requester_id === user.id ? f.receiver_id : f.requester_id;
+        return profileMap[friendId] || null;
+      }).filter(Boolean);
+
+      // 申請リストを整形
+      const pendingWithProfile = (pendingData || []).map(f => ({
+        ...f,
+        requester: profileMap[f.requester_id] || null,
+      }));
+      const sentWithProfile = (sentData || []).map(f => ({
+        ...f,
+        receiver: profileMap[f.receiver_id] || null,
+      }));
+
+      setFriends(friendList);
+      setPending(pendingWithProfile);
+      setSent(sentWithProfile);
+    } catch(e) {
+      console.error("loadFriends error:", e);
+    }
     setLoading(false);
   }
 
