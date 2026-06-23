@@ -789,7 +789,7 @@ function useTouchDnD(entries, setEntries) {
 }
 
 // ===== カテゴリ詳細ビュー =====
-function CategoryView({ category, data, accentColor, onUpdate, onBack, userId }) {
+function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, readOnly = false }) {
   // ⑨ おすすめ度でソートされた状態で管理
   const [entries, setEntries] = useState(() => sortEntriesByRec(data.entries || []));
   const [showForm, setShowForm] = useState(false);
@@ -905,7 +905,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId })
           </div>
         )}
 
-        {!showForm && !editingEntry && (
+        {!readOnly && !showForm && !editingEntry && (
           <button onClick={() => setShowForm(true)} style={{
             width: "100%", background: C.terra, color: C.white, border: "none",
             borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold",
@@ -997,10 +997,10 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId })
                         style={{ fontSize: 13, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", touchAction: "manipulation" }}>
                         🗺 地図
                       </a>
-                      <button onClick={() => setExpandedId(prev => prev === entry.id ? null : entry.id)}
+                      {!readOnly && <button onClick={() => setExpandedId(prev => prev === entry.id ? null : entry.id)}
                         style={{ fontSize: 13, color: C.muted, background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
                         {isExpanded ? "閉じる ▲" : "編集・削除 ▼"}
-                      </button>
+                      </button>}
                     </div>
                   </div>
 
@@ -1998,12 +1998,20 @@ function FriendsView({ user }) {
     loadFollows();
   }
 
+  // フォロー中（承認済み）+ 申請中を合わせたリスト
+  const followingAll = [
+    ...following.map(f => ({ ...f, status: "accepted" })),
+    ...pendingOut.map(f => ({ ...f, status: "pending" })),
+  ];
+  // フォロワー（承認済み）+ 承認待ちを合わせたリスト
+  const followersAll = [
+    ...pendingIn.map(f => ({ ...f, isPending: true })),
+    ...followers.map(f => ({ ...f, isPending: false })),
+  ];
+
   const tabs = [
-    ["friends", `フレンド ${friends.length}`],
-    ["following", `フォロー中 ${following.length}`],
-    ["followers", `フォロワー ${followers.length}`],
-    ["pendingIn", `承認待ち ${pendingIn.length}${pendingIn.length > 0 ? " 🔴" : ""}`],
-    ["pendingOut", "申請中"],
+    ["following", `フォロー中 ${following.length}${pendingOut.length > 0 ? ` (+${pendingOut.length})` : ""}`],
+    ["followers", `フォロワー ${followers.length}${pendingIn.length > 0 ? ` 🔴${pendingIn.length}` : ""}`],
   ];
 
   function UserCard({ profile, action }) {
@@ -2032,9 +2040,9 @@ function FriendsView({ user }) {
             ＋ フォロー
           </button>
         </div>
-        <div style={{ display: "flex", gap: 4, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
+        <div style={{ display: "flex", gap: 4, marginTop: 14 }}>
           {tabs.map(([t, label]) => (
-            <button key={t} onClick={() => setTab(t)} style={{ padding: "5px 10px", borderRadius: 20, border: "none", fontSize: 11, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", background: tab === t ? C.terra : "rgba(255,255,255,0.1)", color: C.white, fontWeight: tab === t ? "bold" : "normal", touchAction: "manipulation" }}>
+            <button key={t} onClick={() => setTab(t)} style={{ padding: "6px 16px", borderRadius: 20, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", background: tab === t ? C.terra : "rgba(255,255,255,0.1)", color: C.white, fontWeight: tab === t ? "bold" : "normal", touchAction: "manipulation" }}>
               {label}
             </button>
           ))}
@@ -2049,22 +2057,9 @@ function FriendsView({ user }) {
           </div>
         ) : (
           <>
-            {tab === "friends" && (
-              friends.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
-                  <div style={{ fontSize: 56, marginBottom: 16 }}>🤝</div>
-                  <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>フレンドはまだいません</div>
-                  <div style={{ fontSize: 13, lineHeight: 1.7 }}>相互フォローするとフレンドになります</div>
-                </div>
-              ) : friends.map(f => (
-                <UserCard key={f.id} profile={f.profile} action={
-                  <span style={{ fontSize: 12, color: C.terra, background: "#FFF3E0", borderRadius: 10, padding: "4px 10px", fontWeight: "bold" }}>🤝 フレンド</span>
-                } />
-              ))
-            )}
-
+            {/* フォロー中タブ：承認済み + 申請中 */}
             {tab === "following" && (
-              following.length === 0 ? (
+              followingAll.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
                   <div style={{ fontSize: 56, marginBottom: 16 }}>👥</div>
                   <div style={{ fontSize: 16, fontWeight: "bold", color: "#666", marginBottom: 8 }}>まだフォローしていません</div>
@@ -2072,83 +2067,88 @@ function FriendsView({ user }) {
                     ユーザーを探す
                   </button>
                 </div>
-              ) : following.map(f => (
-                <UserCard key={f.id} profile={f.profile} action={
-                  <button onClick={() => unfollow(f.id)} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, color: C.muted, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                    フォロー解除
-                  </button>
-                } />
-              ))
+              ) : (
+                <>
+                  {pendingOut.length > 0 && (
+                    <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 8 }}>申請中</div>
+                  )}
+                  {pendingOut.map(f => (
+                    <UserCard key={`p-${f.id}`} profile={f.profile} action={
+                      <button onClick={() => cancelFollow(f.id)} style={{ background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#E57373", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        取り消す
+                      </button>
+                    } />
+                  ))}
+                  {pendingOut.length > 0 && following.length > 0 && (
+                    <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 8, marginTop: 16 }}>フォロー中</div>
+                  )}
+                  {following.map(f => (
+                    <UserCard key={f.id} profile={f.profile} action={
+                      <button onClick={() => unfollow(f.id)} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, color: C.muted, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        解除
+                      </button>
+                    } />
+                  ))}
+                </>
+              )
             )}
 
+            {/* フォロワータブ：承認待ち + 承認済み */}
             {tab === "followers" && (
-              followers.length === 0 ? (
+              followersAll.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
                   <div style={{ fontSize: 40, marginBottom: 12 }}>👤</div>
                   <div>フォロワーはまだいません</div>
                 </div>
-              ) : followers.map(f => {
-                const isFollowing = following.some(fw => fw.following_id === f.follower_id);
-                const isPending = pendingOut.some(p => p.following_id === f.follower_id);
-                return (
-                  <UserCard key={f.id} profile={f.profile} action={
-                    isFollowing ? (
-                      <span style={{ fontSize: 12, color: C.terra, background: "#FFF3E0", borderRadius: 10, padding: "4px 10px" }}>フォロー中</span>
-                    ) : isPending ? (
-                      <span style={{ fontSize: 12, color: C.muted, background: "#F5F5F5", borderRadius: 10, padding: "4px 10px" }}>申請中</span>
-                    ) : (
-                      <button onClick={() => followUser(f.follower_id)}
-                        style={{ background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                        フォロー
-                      </button>
-                    )
-                  } />
-                );
-              })
-            )}
-
-            {tab === "pendingIn" && (
-              pendingIn.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-                  <div>フォロー申請はありません</div>
-                </div>
-              ) : pendingIn.map(f => (
-                <div key={f.id} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#7F77DD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
-                      {f.profile?.name?.charAt(0) || "?"}
+              ) : (
+                <>
+                  {pendingIn.length > 0 && (
+                    <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 8 }}>承認待ち</div>
+                  )}
+                  {pendingIn.map(f => (
+                    <div key={`pi-${f.id}`} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1.5px solid ${C.terra}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#7F77DD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
+                          {f.profile?.name?.charAt(0) || "?"}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 15, fontWeight: "bold", color: C.ink }}>{f.profile?.name}</div>
+                          <div style={{ fontSize: 12, color: C.muted }}>{f.profile?.user_code}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => acceptFollow(f.id)} style={{ flex: 1, background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                          ✓ 承認する
+                        </button>
+                        <button onClick={() => rejectFollow(f.id)} style={{ flex: 1, background: "#FFF5F5", color: "#E57373", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                          断る
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: "bold", color: C.ink }}>{f.profile?.name}</div>
-                      <div style={{ fontSize: 12, color: C.muted }}>{f.profile?.user_code}</div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => acceptFollow(f.id)} style={{ flex: 1, background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                      ✓ 承認する
-                    </button>
-                    <button onClick={() => rejectFollow(f.id)} style={{ flex: 1, background: "#FFF5F5", color: "#E57373", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                      断る
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-
-            {tab === "pendingOut" && (
-              pendingOut.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>📤</div>
-                  <div>申請中のフォローはありません</div>
-                </div>
-              ) : pendingOut.map(f => (
-                <UserCard key={f.id} profile={f.profile} action={
-                  <button onClick={() => cancelFollow(f.id)} style={{ background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#E57373", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                    取り消す
-                  </button>
-                } />
-              ))
+                  ))}
+                  {pendingIn.length > 0 && followers.length > 0 && (
+                    <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 8, marginTop: 16 }}>フォロワー</div>
+                  )}
+                  {followers.map(f => {
+                    const isFollowing = following.some(fw => fw.following_id === f.follower_id);
+                    const isPending = pendingOut.some(p => p.following_id === f.follower_id);
+                    return (
+                      <UserCard key={f.id} profile={f.profile} action={
+                        isFollowing ? (
+                          <span style={{ fontSize: 12, color: C.terra, background: "#FFF3E0", borderRadius: 10, padding: "4px 10px" }}>フォロー中</span>
+                        ) : isPending ? (
+                          <span style={{ fontSize: 12, color: C.muted, background: "#F5F5F5", borderRadius: 10, padding: "4px 10px" }}>申請中</span>
+                        ) : (
+                          <button onClick={() => followUser(f.follower_id)}
+                            style={{ background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                            フォロー
+                          </button>
+                        )
+                      } />
+                    );
+                  })}
+                </>
+              )
             )}
           </>
         )}
@@ -2331,6 +2331,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("list");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null); // フレンドのリストを閲覧中
+  const [friendCategories, setFriendCategories] = useState([]); // フレンドのカテゴリ
+  const [followingUsers, setFollowingUsers] = useState([]); // フォロー中のフレンド一覧
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2376,6 +2379,7 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     loadData();
+    loadFollowingUsers();
   }, [user]);
 
   async function loadData() {
@@ -2416,6 +2420,42 @@ export default function App() {
 
     setCategories(merged);
     setLoading(false);
+  }
+
+  // フレンドのデータを読み込む
+  async function loadFriendData(targetUser) {
+    setViewingUser(targetUser);
+    setFriendCategories([]);
+    const { data: cats } = await supabase
+      .from("categories").select("*")
+      .eq("user_id", targetUser.id)
+      .order("created_at", { ascending: true });
+    if (!cats) return;
+    const catIds = cats.map(c => c.id);
+    const { data: ents } = catIds.length > 0
+      ? await supabase.from("entries").select("*").in("category_id", catIds).order("rank_order", { ascending: true })
+      : { data: [] };
+    const merged = cats.map(cat => ({
+      ...cat,
+      entries: sortEntriesByRec(
+        (ents || []).filter(e => e.category_id === cat.id).map(e => ({
+          id: e.id, name: e.name, prefecture: e.prefecture || "",
+          rec: e.rec ?? 2, comment: e.comment || "",
+          visitDate: e.visit_date || "", placeData: e.place_data || null, photo: null,
+        }))
+      ),
+    }));
+    setFriendCategories(merged);
+  }
+
+  // フォロー中フレンド一覧を取得
+  async function loadFollowingUsers() {
+    const { data: follows } = await supabase
+      .from("follows").select("following_id").eq("follower_id", user.id).eq("status", "accepted");
+    if (!follows || follows.length === 0) { setFollowingUsers([]); return; }
+    const ids = follows.map(f => f.following_id);
+    const { data: profiles } = await supabase.from("profiles").select("id,name,user_code").in("id", ids);
+    setFollowingUsers(profiles || []);
   }
 
   function handleLogin(u) { setUser(u); }
@@ -2501,15 +2541,17 @@ export default function App() {
   // サブ画面（ブラウズ・カテゴリ詳細）はナビを隠す
   if (showBrowse) return <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />;
   if (activeCategory) {
-    const accentColor = getAccentColor(categories.findIndex(c => c.id === activeCategory.id));
+    const isFriendView = !!viewingUser;
+    const accentColor = getAccentColor(displayCategories.findIndex(c => c.id === activeCategory.id));
     return (
       <CategoryView
         category={activeCategory}
-        data={categories.find(c => c.id === activeCategory.id) || activeCategory}
+        data={displayCategories.find(c => c.id === activeCategory.id) || activeCategory}
         accentColor={accentColor}
-        onUpdate={updated => { updateCategory(updated); setActiveCategory(updated); }}
+        onUpdate={isFriendView ? () => {} : (updated => { updateCategory(updated); setActiveCategory(updated); })}
         onBack={() => setActiveCategory(null)}
-        userId={user.id}
+        userId={isFriendView ? null : user.id}
+        readOnly={isFriendView}
       />
     );
   }
@@ -2534,12 +2576,14 @@ export default function App() {
     </>
   );
 
+  // 表示中のカテゴリ（自分orフレンド）
+  const displayCategories = viewingUser ? friendCategories : categories;
   const totalEntries = categories.reduce((sum, c) => sum + (c.entries?.length || 0), 0);
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
-      {/* ⑧ ヘッダー with ロゴ */}
-      <div style={{ background: C.ink, padding: "28px 20px 20px", color: C.white }}>
+      {/* ヘッダー */}
+      <div style={{ background: C.ink, padding: "28px 20px 16px", color: C.white }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <LogoBanner darkBg={true} />
@@ -2549,8 +2593,40 @@ export default function App() {
               <span>▾</span>
             </button>
           </div>
-          {totalEntries > 0 && (
-            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+
+          {/* ユーザー切り替えタブ */}
+          {followingUsers.length > 0 && (
+            <div style={{ display: "flex", gap: 6, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
+              {/* 自分 */}
+              <button onClick={() => { setViewingUser(null); setFriendCategories([]); }}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation", background: !viewingUser ? C.terra : "rgba(255,255,255,0.15)", color: C.white, fontWeight: !viewingUser ? "bold" : "normal" }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: "bold" }}>
+                  {user.name?.charAt(0)}
+                </div>
+                <span>自分</span>
+              </button>
+              {/* フォロー中フレンド */}
+              {followingUsers.map(fu => (
+                <button key={fu.id} onClick={() => loadFriendData(fu)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap", touchAction: "manipulation", background: viewingUser?.id === fu.id ? C.terra : "rgba(255,255,255,0.15)", color: C.white, fontWeight: viewingUser?.id === fu.id ? "bold" : "normal" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: "bold" }}>
+                    {fu.name?.charAt(0)}
+                  </div>
+                  <span>{fu.name?.split(" ")[0]}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 閲覧中フレンドの表示 */}
+          {viewingUser && (
+            <div style={{ fontSize: 12, color: "#9A8A7A", marginTop: 8 }}>
+              {viewingUser.name} さんの人生ノートを閲覧中
+            </div>
+          )}
+
+          {!viewingUser && totalEntries > 0 && (
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <div style={{ background: "rgba(255,255,255,0.07)", border: "0.5px solid rgba(255,255,255,0.11)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.terra }}>
                 📝 {totalEntries}件
               </div>
@@ -2563,11 +2639,13 @@ export default function App() {
       </div>
 
       <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto" }}>
-        {categories.length > 0 && (
+        {displayCategories.length > 0 && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>マイリスト</div>
+            <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>
+              {viewingUser ? `${viewingUser.name} さんのリスト` : "マイリスト"}
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {categories.map((cat, idx) => {
+              {displayCategories.map((cat, idx) => {
                 const emoji = getTagEmoji(cat.name);
                 const count = cat.entries?.length || 0;
                 const top = cat.entries?.[0];
@@ -2577,8 +2655,8 @@ export default function App() {
                     style={{ background: C.white, borderRadius: 16, overflow: "hidden", cursor: "pointer", border: `1px solid ${C.border}`, position: "relative" }}>
                     <div style={{ height: 4, background: accent }} />
                     <div style={{ padding: "12px 12px 0" }}>
-                      <button onClick={e => { e.stopPropagation(); deleteCategory(cat.id); }}
-                        style={{ position: "absolute", top: 12, right: 10, background: "none", border: "none", color: "#CCC", fontSize: 14, cursor: "pointer", padding: 4, touchAction: "manipulation" }}>✕</button>
+                      {!viewingUser && <button onClick={e => { e.stopPropagation(); deleteCategory(cat.id); }}
+                        style={{ position: "absolute", top: 12, right: 10, background: "none", border: "none", color: "#CCC", fontSize: 14, cursor: "pointer", padding: 4, touchAction: "manipulation" }}>✕</button>}
                       <div style={{ fontSize: 30, marginBottom: 6 }}>{emoji}</div>
                       <div style={{ fontWeight: "bold", fontSize: 14, color: C.ink }}>人生{cat.name}</div>
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{count}件</div>
@@ -2604,7 +2682,7 @@ export default function App() {
             <div style={{ fontSize: 14 }}>データを読み込み中...</div>
           </div>
         )}
-        {!loading && categories.length === 0 && (
+        {!loading && displayCategories.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>📖</div>
             <div style={{ fontSize: 16, fontWeight: "bold", color: "#555", marginBottom: 8 }}>人生ノートをはじめよう</div>
