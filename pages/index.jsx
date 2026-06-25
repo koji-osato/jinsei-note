@@ -356,24 +356,12 @@ function RankBadge({ rank }) {
       <span style={{ fontSize:8, fontWeight:900, color:"#FFF", letterSpacing:0.5 }}>{labels[rank-1]}</span>
     </div>
   );
-  if (rank === 2) return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-      <span style={{ fontSize: 32 }}>🥈</span>
-      <span style={{ fontSize: 10, fontWeight: "bold", color: "#7B7B7B", marginTop: -2 }}>2位</span>
-    </div>
-  );
-  if (rank === 3) return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-      <span style={{ fontSize: 32 }}>🥉</span>
-      <span style={{ fontSize: 10, fontWeight: "bold", color: "#A0622A", marginTop: -2 }}>3位</span>
-    </div>
-  );
   return (
     <div style={{
-      minWidth: 40, height: 40, borderRadius: "50%",
-      background: "#F0EDE8", color: "#888",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: "bold", fontSize: 15, flexShrink: 0,
+      width:38, height:38, borderRadius:"50%",
+      background: C.border, color: C.sub,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontWeight:"bold", fontSize:14, flexShrink:0,
     }}>{rank}</div>
   );
 }
@@ -2968,7 +2956,7 @@ export default function App() {
   const totalEntries = categories.reduce((sum, c) => sum + (c.entries?.length || 0), 0);
   const filteredCategories = activeBigCat === "all"
     ? displayCategories
-    : displayCategories.filter(c => c.bigCat === activeBigCat);
+    : displayCategories.filter(c => (c.bigCat || c.big_cat || "eat") === activeBigCat);
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
