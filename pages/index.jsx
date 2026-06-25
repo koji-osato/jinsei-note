@@ -2679,6 +2679,12 @@ export default function App() {
   const [allFriendData, setAllFriendData] = useState([]); // 全フレンドのデータ
   const [selectedCategory, setSelectedCategory] = useState(null); // カテゴリ横断選択
   const [activeBigCat, setActiveBigCat] = useState("all"); // 大カテゴリフィルター
+  const [friendSearchQuery, setFriendSearchQuery] = useState("");
+  const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [crossCatFilterUser, setCrossCatFilterUser] = useState(null);
+  const [crossCatFilterRec, setCrossCatFilterRec] = useState(null);
+  const [friendViewSortCat, setFriendViewSortCat] = useState(null);
+  const [friendViewSortRec, setFriendViewSortRec] = useState(null);
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2954,9 +2960,72 @@ export default function App() {
   );
 
   const totalEntries = categories.reduce((sum, c) => sum + (c.entries?.length || 0), 0);
-  const filteredCategories = activeBigCat === "all"
-    ? displayCategories
-    : displayCategories.filter(c => (c.bigCat || c.big_cat || "eat") === activeBigCat);
+  const isFriendMode = friendTabMode !== "self";
+
+  // 自分の大カテゴリ集計
+  const bigCatStats = BIG_CATS.map(bc => ({
+    ...bc,
+    count: categories.filter(c => (c.bigCat || c.big_cat || "eat") === bc.id)
+      .reduce((s, c) => s + (c.entries?.length || 0), 0),
+  })).filter(bc => bc.count > 0);
+
+  // 全エントリー（★順）
+  const allEntriesByStar = categories.flatMap(cat =>
+    (cat.entries || []).map(e => ({ ...e, categoryName: cat.name, bigCat: cat.bigCat || cat.big_cat }))
+  ).sort((a, b) => (b.star ?? 0) - (a.star ?? 0));
+
+  // 大カテゴリ別エントリー（★順）
+  const bigCatEntries = activeBigCat && activeBigCat !== "all"
+    ? allEntriesByStar.filter(e => e.bigCat === activeBigCat)
+    : [];
+
+  const filteredFriendUsers = friendSearchQuery.trim()
+    ? followingUsers.filter(u => u.name?.includes(friendSearchQuery.trim()) || u.user_code?.includes(friendSearchQuery.trim()))
+    : followingUsers;
+
+  // フレンドの登録数（allFriendDataから）
+  function getFriendCount(userId) {
+    const fd = allFriendData.find(f => f.user.id === userId);
+    return fd ? fd.categories.reduce((s, c) => s + (c.entries?.length || 0), 0) : 0;
+  }
+
+  // 全フレンドのカテゴリ集計
+  const friendCatStats = {};
+  allFriendData.forEach(fd => {
+    fd.categories.forEach(cat => {
+      if (!friendCatStats[cat.name]) friendCatStats[cat.name] = { count: 0, users: [] };
+      friendCatStats[cat.name].count++;
+      friendCatStats[cat.name].users.push(fd.user.name);
+    });
+  });
+  const friendCatList = Object.entries(friendCatStats)
+    .sort((a, b) => b[1].count - a[1].count)
+    .filter(([name]) => !catSearchQuery.trim() || name.includes(catSearchQuery.trim()));
+
+  // フレンド選択後の表示エントリー（訪問日新しい順）
+  const friendViewEntries = viewingUser && friendCategories.length > 0
+    ? friendCategories.flatMap(cat =>
+        (cat.entries || []).map(e => ({ ...e, categoryName: cat.name }))
+      ).sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""))
+    : [];
+
+  // カテゴリ横断エントリー（訪問日新しい順）
+  const crossCatViewEntries = selectedCategory
+    ? allFriendData.flatMap(fd => {
+        const cat = fd.categories.find(c => c.name === selectedCategory);
+        return (cat?.entries || []).map(e => ({ ...e, categoryName: selectedCategory, ownerName: fd.user.name, ownerId: fd.user.id }));
+      }).sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""))
+    : [];
+
+
+  const crossCatFiltered = crossCatViewEntries
+    .filter(e => !crossCatFilterUser || e.ownerId === crossCatFilterUser)
+    .filter(e => !crossCatFilterRec || e.rec === crossCatFilterRec);
+
+
+  const friendViewFiltered = friendViewEntries
+    .filter(e => !friendViewSortCat || e.categoryName === friendViewSortCat)
+    .filter(e => !friendViewSortRec || e.rec === friendViewSortRec);
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
@@ -2974,223 +3043,312 @@ export default function App() {
 
           {/* 自分 / フレンド タブ */}
           <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginTop: 14, gap: 3 }}>
-            <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); }}
-              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !viewingUser && !selectedCategory ? "bold" : "normal", background: !viewingUser && !selectedCategory ? C.white : "transparent", color: !viewingUser && !selectedCategory ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
+            <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); setActiveBigCat("all"); }}
+              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !isFriendMode ? "bold" : "normal", background: !isFriendMode ? C.white : "transparent", color: !isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
               自分
             </button>
-            <button onClick={() => { if (followingUsers.length > 0) { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); } else { setFriendTabMode("select"); } }}
-              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: viewingUser || selectedCategory ? "bold" : "normal", background: viewingUser || selectedCategory ? C.white : "transparent", color: viewingUser || selectedCategory ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+            <button onClick={() => { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); }}
+              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: isFriendMode ? "bold" : "normal", background: isFriendMode ? C.white : "transparent", color: isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
               フレンド {followingUsers.length > 0 ? `(${followingUsers.length})` : ""}
             </button>
           </div>
-
-          {/* フレンドタブのサブ情報 */}
-          {viewingUser && (
-            <div style={{ fontSize: 11, color: "#9A8A7A", marginTop: 6 }}>
-              👤 {viewingUser.name} さんの人生ノートを閲覧中
-            </div>
-          )}
-          {selectedCategory && (
-            <div style={{ fontSize: 11, color: "#9A8A7A", marginTop: 6 }}>
-              👥 全フレンドの「人生{selectedCategory}」を閲覧中
-            </div>
-          )}
-
-          {!viewingUser && !selectedCategory && totalEntries > 0 && (
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <div style={{ background: "rgba(255,255,255,0.07)", border: "0.5px solid rgba(255,255,255,0.11)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.terra }}>
-                📝 {totalEntries}件
-              </div>
-              <div style={{ background: "rgba(255,255,255,0.07)", border: "0.5px solid rgba(255,255,255,0.11)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.terra }}>
-                📂 {categories.length}カテゴリ
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* 大カテゴリタブ（自分のリスト表示時のみ） */}
-      {!viewingUser && !selectedCategory && (
-        <div style={{ background: C.white, borderBottom: `1px solid ${C.border}`, overflowX: "auto" }}>
-          <div style={{ display: "flex", padding: "0 16px", gap: 0, minWidth: "max-content" }}>
-            {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
-              <button key={bc.id} onClick={() => setActiveBigCat(bc.id)} style={{
-                flexShrink: 0, display: "flex", alignItems: "center", gap: 5,
-                padding: "12px 14px", border: "none", background: "none",
-                cursor: "pointer", fontFamily: "inherit",
-                borderBottom: activeBigCat === bc.id ? `2px solid ${C.ink}` : "2px solid transparent",
-                marginBottom: -1,
-              }}>
-                <span style={{ fontSize: 14 }}>{bc.icon}</span>
-                <span style={{ fontSize: 12, fontWeight: activeBigCat === bc.id ? 700 : 400, color: activeBigCat === bc.id ? C.ink : C.sub, whiteSpace: "nowrap" }}>
-                  {bc.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <div style={{ padding: "16px", maxWidth: 600, margin: "0 auto" }}>
 
-      <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto" }}>
-
-        {/* フレンドタブ：選択画面 */}
-        {friendTabMode === "select" && !viewingUser && !selectedCategory && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>どちらで見ますか？</div>
-
-            {/* フレンドを選ぶ */}
-            <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px", marginBottom: 12 }}>
-              <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>👤 フレンドを選んで見る</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {followingUsers.map(fu => (
-                  <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); }}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.border}`, background: "#FAFAF9", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0 }}>
-                      {fu.name?.charAt(0)}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{fu.name}</div>
-                      <div style={{ fontSize: 11, color: C.muted }}>{fu.user_code}</div>
-                    </div>
-                    <span style={{ marginLeft: "auto", color: C.muted, fontSize: 16 }}>›</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* カテゴリを選ぶ */}
-            <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px" }}>
-              <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>📂 カテゴリで全フレンドを見る</div>
-              {/* 全フレンドが持つカテゴリの合計を収集 */}
-              {(() => {
-                const catSet = {};
-                allFriendData.forEach(fd => {
-                  fd.categories.forEach(cat => {
-                    if (!catSet[cat.name]) catSet[cat.name] = 0;
-                    catSet[cat.name]++;
-                  });
-                });
-                const catNames = Object.entries(catSet).sort((a,b) => b[1]-a[1]);
-                if (catNames.length === 0) return (
-                  <div style={{ textAlign: "center", color: C.muted, padding: "20px 0", fontSize: 13 }}>
-                    フレンドがまだ記録を追加していません
-                  </div>
-                );
-                return (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {catNames.map(([name, count]) => (
-                      <button key={name} onClick={() => { setSelectedCategory(name); setFriendTabMode("category"); }}
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                        <span style={{ fontSize: 16 }}>{getTagEmoji(name)}</span>
-                        <span style={{ fontSize: 13, color: C.ink }}>人生{name}</span>
-                        <span style={{ fontSize: 11, color: C.terra, fontWeight: "bold" }}>{count}人</span>
-                      </button>
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-        )}
-
-        {/* フレンドタブ：カテゴリ横断ビュー */}
-        {friendTabMode === "category" && selectedCategory && (
+        {/* ===== 自分タブ ===== */}
+        {!isFriendMode && (
           <div>
-            <button onClick={() => { setSelectedCategory(null); setFriendTabMode("select"); loadAllFriendData(); }}
-              style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 16px", fontFamily: "inherit", touchAction: "manipulation" }}>
-              ← 戻る
-            </button>
-            <div style={{ fontSize: 16, fontWeight: "bold", color: C.ink, marginBottom: 16 }}>
-              {getTagEmoji(selectedCategory)} 全フレンドの人生{selectedCategory}
-            </div>
-            {allFriendData.filter(fd => fd.categories.some(c => c.name === selectedCategory)).length === 0 ? (
-              <div style={{ textAlign: "center", color: C.muted, padding: "40px 0" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-                <div>このカテゴリを持つフレンドがいません</div>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
+                <div style={{ fontSize: 14 }}>読み込み中...</div>
+              </div>
+            ) : categories.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                <div style={{ fontSize: 56, marginBottom: 16 }}>📖</div>
+                <div style={{ fontSize: 16, fontWeight: "bold", color: "#555", marginBottom: 8 }}>人生ノートをはじめよう</div>
+                <div style={{ fontSize: 13, lineHeight: 1.8 }}>「人生うどん」「人生夕日」など<br />自分だけのランキングを作れます</div>
               </div>
             ) : (
-              allFriendData.filter(fd => fd.categories.some(c => c.name === selectedCategory)).map(fd => {
-                const cat = fd.categories.find(c => c.name === selectedCategory);
-                const top = cat?.entries?.[0];
-                return (
-                  <div key={fd.user.id} style={{ background: C.white, borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 12, overflow: "hidden" }}>
-                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: C.white, flexShrink: 0 }}>
-                        {fd.user.name?.charAt(0)}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink }}>{fd.user.name} さん</div>
-                      <div style={{ fontSize: 11, color: C.muted, marginLeft: "auto" }}>{cat?.entries?.length || 0}件</div>
-                    </div>
-                    {cat?.entries?.map((entry, idx) => (
-                      <div key={entry.id} style={{ padding: "10px 16px", borderBottom: `1px solid #F5F0EB`, display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ fontSize: idx === 0 ? 22 : 18, flexShrink: 0 }}>
-                          {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx+1}.`}
+              <>
+                {/* 大カテゴリ一覧 */}
+                {activeBigCat === "all" && (
+                  <>
+                    {/* 総記録数 */}
+                    <button onClick={() => setActiveBigCat("__all_entries__")} style={{
+                      width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "16px", background: C.white, borderRadius: 16, border: `1px solid ${C.border}`,
+                      marginBottom: 12, cursor: "pointer", fontFamily: "inherit",
+                      boxShadow: "0 2px 12px rgba(24,22,15,0.06)",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📝</div>
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>すべての記録</div>
+                          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>訪問日の新しい順</div>
                         </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 18, fontWeight: 800, color: C.terra }}>{totalEntries}</span>
+                        <span style={{ fontSize: 11, color: C.sub }}>件</span>
+                        <span style={{ color: C.muted }}>›</span>
+                      </div>
+                    </button>
+
+                    {/* 大カテゴリ別 */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {BIG_CATS.map((bc, idx) => {
+                        const count = categories.filter(c => (c.bigCat || c.big_cat || "eat") === bc.id)
+                          .reduce((s, c) => s + (c.entries?.length || 0), 0);
+                        if (count === 0) return null;
+                        const grad = ["#D4845A,#C8A040","#6890C8,#8870C0","#50A888,#3890B0","#C86878,#B05090","#78A850,#50A870","#8878C8,#C878A8"][idx] || "#999,#666";
+                        const [gs, ge] = grad.split(",");
+                        return (
+                          <button key={bc.id} onClick={() => setActiveBigCat(bc.id)} style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "14px 16px", background: C.white, borderRadius: 16,
+                            border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
+                            boxShadow: "0 2px 10px rgba(24,22,15,0.05)",
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${gs},${ge})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{bc.icon}</div>
+                              <div style={{ textAlign: "left" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{bc.label}</div>
+                                <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>★順で見る</div>
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontSize: 18, fontWeight: 800, color: gs }}>{count}</span>
+                              <span style={{ fontSize: 11, color: C.sub }}>件</span>
+                              <span style={{ color: C.muted }}>›</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* 全記録一覧（訪問日順）*/}
+                {activeBigCat === "__all_entries__" && (
+                  <div>
+                    <button onClick={() => setActiveBigCat("all")} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
+                    {allEntriesByStar.sort((a,b)=>(b.visitDate||"").localeCompare(a.visitDate||"")).map((entry, i) => (
+                      <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}`, display: "flex", gap: 10, alignItems: "flex-start" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{entry.name}</div>
-                          <div style={{ display: "flex", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
-                            <RecBadge value={entry.rec} />
-                            {entry.prefecture && <span style={{ fontSize: 11, color: C.muted }}>{entry.prefecture}</span>}
+                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+                            {entry.star > 0 && <StarDisplay value={entry.star}/>}
+                            <RecBadge value={entry.rec}/>
+                            {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                            {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
                           </div>
-                          {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 4, fontStyle: "italic" }}>「{entry.comment}」</div>}
                         </div>
                       </div>
                     ))}
                   </div>
-                );
-              })
+                )}
+
+                {/* 大カテゴリ別★順 */}
+                {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (
+                  <div>
+                    <button onClick={() => setActiveBigCat("all")} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>
+                      {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
+                    </div>
+                    {/* カテゴリ絞り込み */}
+                    <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
+                      <button onClick={() => setActiveBigCat(activeBigCat)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: `1.5px solid ${C.ink}`, background: C.ink, color: C.white, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
+                      {categories.filter(c => (c.bigCat||c.big_cat||"eat") === activeBigCat).map(cat => (
+                        <button key={cat.id} onClick={() => setActiveCategory(cat)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: `1px solid ${C.border}`, background: C.white, color: C.sub, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                          {cat.name}
+                        </button>
+                      ))}
+                    </div>
+                    {bigCatEntries.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>記録がありません</div>
+                    ) : bigCatEntries.map((entry, i) => (
+                      <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}`, display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: i===0?"linear-gradient(135deg,#D4A843,#E8C060)":i===1?"linear-gradient(135deg,#9AA8B8,#B8C4D0)":i===2?"linear-gradient(135deg,#A06030,#C08050)":C.border, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ fontSize: 8, fontWeight: 900, color: i<3?"#FFF":C.muted }}>{["1ST","2ND","3RD"][i]||`${i+1}`}</span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+                            {entry.star > 0 && <StarDisplay value={entry.star}/>}
+                            <RecBadge value={entry.rec}/>
+                            {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
 
-        {/* 自分のリスト or フレンド個別リスト */}
-        {(friendTabMode === "self" || friendTabMode === "friend") && displayCategories.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 12 }}>
-              {viewingUser ? `${viewingUser.name} さんのリスト` : "マイリスト"}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {filteredCategories.map((cat, idx) => {
-                const emoji = getTagEmoji(cat.name);
-                const count = cat.entries?.length || 0;
-                const top = cat.entries?.[0];
-                const accent = getAccentColor(idx);
-                return (
-                  <div key={cat.id} onClick={() => { setActiveCategory(cat); setActiveTab("list"); }}
-                    style={{ background: C.white, borderRadius: 16, overflow: "hidden", cursor: "pointer", border: `1px solid ${C.border}`, position: "relative" }}>
-                    <div style={{ height: 4, background: accent }} />
-                    <div style={{ padding: "12px 12px 0" }}>
-                      {!viewingUser && <button onClick={e => { e.stopPropagation(); deleteCategory(cat.id); }}
-                        style={{ position: "absolute", top: 12, right: 10, background: "none", border: "none", color: "#CCC", fontSize: 14, cursor: "pointer", padding: 4, touchAction: "manipulation" }}>✕</button>}
-                      <div style={{ fontSize: 30, marginBottom: 6 }}>{emoji}</div>
-                      <div style={{ fontWeight: "bold", fontSize: 14, color: C.ink }}>人生{cat.name}</div>
-                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{count}件</div>
-                    </div>
-                    {top && (
-                      <div style={{ margin: "8px 10px 12px", background: "#FFF8F5", borderRadius: 10, padding: "7px 10px" }}>
-                        <div style={{ fontSize: 10, color: C.terra, fontWeight: "bold", marginBottom: 2 }}>🥇 1位</div>
-                        <div style={{ fontSize: 12, color: C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{top.name}</div>
-                        <RecBadge value={top.rec} />
-                      </div>
-                    )}
+        {/* ===== フレンドタブ ===== */}
+        {isFriendMode && (
+          <div>
+            {/* フレンド選択画面 */}
+            {friendTabMode === "select" && (
+              <div>
+                {/* フレンドで探す */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>👤 フレンドで探す</div>
+                  <div style={{ position: "relative", marginBottom: 10 }}>
+                    <input value={friendSearchQuery} onChange={e=>setFriendSearchQuery(e.target.value)}
+                      placeholder="名前・ユーザーIDで検索"
+                      style={{ ...inputStyle, paddingLeft: 36 }}/>
+                    <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                  {followingUsers.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>フォロー中のユーザーがいません</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {filteredFriendUsers.sort((a,b) => getFriendCount(b.id)-getFriendCount(a.id)).map(fu => (
+                        <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); setFriendViewSortCat(null); setFriendViewSortRec(null); }}
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                          <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
+                            {fu.name?.charAt(0)}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{fu.name}</div>
+                            <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{fu.user_code} · {getFriendCount(fu.id)}件の記録</div>
+                          </div>
+                          <span style={{ color: C.muted }}>›</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-        {loading && (
-          <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
-            <div style={{ fontSize: 14 }}>データを読み込み中...</div>
-          </div>
-        )}
-        {!loading && displayCategories.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>📖</div>
-            <div style={{ fontSize: 16, fontWeight: "bold", color: "#555", marginBottom: 8 }}>人生ノートをはじめよう</div>
-            <div style={{ fontSize: 13, lineHeight: 1.8 }}>「人生うどん」「人生夕日」など<br />自分だけのランキングを作れます</div>
+                {/* カテゴリで探す */}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>📂 カテゴリで探す</div>
+                  <div style={{ position: "relative", marginBottom: 10 }}>
+                    <input value={catSearchQuery} onChange={e=>setCatSearchQuery(e.target.value)}
+                      placeholder="カテゴリ名で検索"
+                      style={{ ...inputStyle, paddingLeft: 36 }}/>
+                    <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+                  </div>
+                  {friendCatList.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>
+                      {allFriendData.length === 0 ? "フレンドのデータを読み込み中..." : "カテゴリが見つかりません"}
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {friendCatList.map(([name, stat]) => (
+                        <button key={name} onClick={() => { setSelectedCategory(name); setFriendTabMode("category"); setCrossCatFilterUser(null); setCrossCatFilterRec(null); }}
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                            {getTagEmoji(name)}
+                          </div>
+                          <div style={{ flex: 1, textAlign: "left" }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>人生{name}</div>
+                            <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{stat.count}人が記録</div>
+                          </div>
+                          <span style={{ color: C.muted }}>›</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* フレンド個別ビュー */}
+            {friendTabMode === "friend" && viewingUser && (
+              <div>
+                <button onClick={() => { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); }}
+                  style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 4 }}>👤 {viewingUser.name} さんの記録</div>
+                <div style={{ fontSize: 11, color: C.sub, marginBottom: 14 }}>訪問日の新しい順</div>
+
+                {/* ソートフィルター */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                  <select value={friendViewSortCat||""} onChange={e=>setFriendViewSortCat(e.target.value||null)}
+                    style={{ ...inputStyle, width: "auto", fontSize: 12, padding: "6px 10px" }}>
+                    <option value="">カテゴリ: すべて</option>
+                    {[...new Set(friendViewEntries.map(e=>e.categoryName))].map(n=><option key={n} value={n}>{n}</option>)}
+                  </select>
+                  <select value={friendViewSortRec||""} onChange={e=>setFriendViewSortRec(e.target.value?parseInt(e.target.value):null)}
+                    style={{ ...inputStyle, width: "auto", fontSize: 12, padding: "6px 10px" }}>
+                    <option value="">おすすめ度: すべて</option>
+                    {REC_LEVELS.map(r=><option key={r.value} value={r.value}>{r.short}</option>)}
+                  </select>
+                </div>
+
+                {friendViewFiltered.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>記録がありません</div>
+                ) : friendViewFiltered.map((entry, i) => (
+                  <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      <RecBadge value={entry.rec}/>
+                      {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                      {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
+                    </div>
+                    {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* カテゴリ横断ビュー */}
+            {friendTabMode === "category" && selectedCategory && (
+              <div>
+                <button onClick={() => { setSelectedCategory(null); setFriendTabMode("select"); }}
+                  style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 4 }}>
+                  {getTagEmoji(selectedCategory)} 全フレンドの人生{selectedCategory}
+                </div>
+                <div style={{ fontSize: 11, color: C.sub, marginBottom: 14 }}>訪問日の新しい順</div>
+
+                {/* フィルター */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                  <select value={crossCatFilterUser||""} onChange={e=>setCrossCatFilterUser(e.target.value||null)}
+                    style={{ ...inputStyle, width: "auto", fontSize: 12, padding: "6px 10px" }}>
+                    <option value="">フレンド: すべて</option>
+                    {[...new Set(crossCatViewEntries.map(e=>e.ownerId))].map(id => {
+                      const name = crossCatViewEntries.find(e=>e.ownerId===id)?.ownerName;
+                      return <option key={id} value={id}>{name}</option>;
+                    })}
+                  </select>
+                  <select value={crossCatFilterRec||""} onChange={e=>setCrossCatFilterRec(e.target.value?parseInt(e.target.value):null)}
+                    style={{ ...inputStyle, width: "auto", fontSize: 12, padding: "6px 10px" }}>
+                    <option value="">おすすめ度: すべて</option>
+                    {REC_LEVELS.map(r=><option key={r.value} value={r.value}>{r.short}</option>)}
+                  </select>
+                </div>
+
+                {crossCatFiltered.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
+                    <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+                    <div>記録がありません</div>
+                  </div>
+                ) : crossCatFiltered.map((entry, i) => (
+                  <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.terra, marginBottom: 3 }}>👤 {entry.ownerName}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      <RecBadge value={entry.rec}/>
+                      {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                      {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
+                    </div>
+                    {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
