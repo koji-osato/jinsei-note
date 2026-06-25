@@ -656,7 +656,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
   const starPct = (star / 5) * 100;
   const starLabel = star === 0 ? "未評価" : star < 2 ? "もう一度考えるかも" : star < 3 ? "まあまあ良かった" : star < 4 ? "良かった！" : star < 4.5 ? "とても良かった！" : star < 5 ? "最高レベル！" : "🏆 完璧・人生最高";
 
-  const canNext1 = (MAPS_KEY ? placeData?.name : name.trim()).length > 0;
+  const canNext1 = MAPS_KEY ? !!(placeData?.name?.length > 0) : name.trim().length > 0;
   const canNext2 = star > 0 && rec !== null;
 
   function handleSave() {
