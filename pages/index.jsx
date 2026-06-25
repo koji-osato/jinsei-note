@@ -3344,8 +3344,8 @@ export default function App() {
                                 )}
                                 {/* 編集・削除ボタン */}
                                 <div style={{ display: "flex", gap: 8 }}>
-                                  <button onClick={() => { setActiveCategory(catObj); setActiveTab("list"); }} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                    ✏️ 編集・並び替え
+                                  <button onClick={() => setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                    ✏️ 編集
                                   </button>
                                   <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                                     🗑 削除
