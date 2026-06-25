@@ -2702,6 +2702,7 @@ export default function App() {
   const [expandedYears, setExpandedYears] = useState({}); // 年アコーディオン
   const [expandedMonths, setExpandedMonths] = useState({}); // 月アコーディオン
   const [addEntryForCat, setAddEntryForCat] = useState(null); // エントリー追加対象カテゴリ
+  const [newCatBigCat, setNewCatBigCat] = useState("eat"); // 新規カテゴリの大カテゴリ
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2873,7 +2874,7 @@ export default function App() {
     // Supabaseに保存
     const { data: newCat, error } = await supabase
       .from("categories")
-      .insert({ user_id: user.id, name: normalized })
+      .insert({ user_id: user.id, name: normalized, big_cat: newCatBigCat })
       .select()
       .single();
     if (error || !newCat) return;
@@ -3547,10 +3548,27 @@ export default function App() {
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowAddModal(false)} />
           <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
             <div style={{ fontWeight: "bold", fontSize: 16, color: C.ink, marginBottom: 16 }}>カテゴリ名を入力</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <span style={{ fontSize: 14, color: "#888", whiteSpace: "nowrap" }}>人生</span>
               <div style={{ flex: 1 }}>
                 <CategoryInput value={newCatInput} onChange={setNewCatInput} onSelect={name => addCategory(name)} placeholder="うどん、夕日、スキー場..." />
+              </div>
+            </div>
+            {/* 大カテゴリ選択 */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.sub, letterSpacing: 0.5, marginBottom: 8 }}>体験カテゴリ</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                {BIG_CATS.map(bc => (
+                  <button key={bc.id} onClick={() => setNewCatBigCat(bc.id)} style={{
+                    padding: "8px 6px", borderRadius: 10, border: `1.5px solid ${newCatBigCat===bc.id ? C.ink : C.border}`,
+                    background: newCatBigCat===bc.id ? C.ink : C.white,
+                    cursor: "pointer", fontFamily: "inherit",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                  }}>
+                    <span style={{ fontSize: 18 }}>{bc.icon}</span>
+                    <span style={{ fontSize: 9, fontWeight: newCatBigCat===bc.id ? 700 : 400, color: newCatBigCat===bc.id ? C.white : C.sub, textAlign: "center", lineHeight: 1.2 }}>{bc.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
