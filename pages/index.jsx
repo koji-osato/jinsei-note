@@ -2688,6 +2688,8 @@ export default function App() {
   const [activeCatFilter, setActiveCatFilter] = useState(null); // 小カテゴリ絞り込み
   const [expandedEntryId, setExpandedEntryId] = useState(null); // 展開エントリー
   const [editingHomeEntry, setEditingHomeEntry] = useState(null); // ホームから直接編集
+  const [expandedYears, setExpandedYears] = useState({}); // 年アコーディオン
+  const [expandedMonths, setExpandedMonths] = useState({}); // 月アコーディオン
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -3135,60 +3137,121 @@ export default function App() {
                 )}
 
                 {/* 全記録一覧（訪問日順）*/}
-                {activeBigCat === "__all_entries__" && (
-                  <div>
-                    <button onClick={() => { setActiveBigCat("all"); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
-                    {[...allEntriesByStar].sort((a,b)=>(b.visitDate||"").localeCompare(a.visitDate||"")).map((entry, i) => {
-                      const isOpen = expandedEntryId === entry.id;
-                      const catObj = categories.find(c => c.name === entry.categoryName);
-                      return (
-                        <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 16, marginBottom: 8, border: `1px solid ${isOpen ? C.terra : C.border}`, overflow: "hidden", boxShadow: isOpen ? `0 4px 16px rgba(232,147,90,0.12)` : "0 2px 8px rgba(24,22,15,0.05)" }}>
-                          <div onClick={() => setExpandedEntryId(isOpen ? null : entry.id)} style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                              <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-                                {entry.star > 0 && <StarDisplay value={entry.star}/>}
-                                <RecBadge value={entry.rec}/>
-                                {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                                {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
-                              </div>
+                {activeBigCat === "__all_entries__" && (() => {
+                  const sorted = [...allEntriesByStar].sort((a,b)=>(b.visitDate||"").localeCompare(a.visitDate||""));
+                  // 訪問日なしのエントリーを分ける
+                  const withDate = sorted.filter(e => e.visitDate);
+                  const noDate = sorted.filter(e => !e.visitDate);
+
+                  // 年→月→エントリーのグループ化
+                  const byYear = {};
+                  withDate.forEach(e => {
+                    const [y, m] = e.visitDate.split("-");
+                    if (!byYear[y]) byYear[y] = {};
+                    if (!byYear[y][m]) byYear[y][m] = [];
+                    byYear[y][m].push(e);
+                  });
+                  const years = Object.keys(byYear).sort((a,b) => b-a);
+
+                  function EntryCard({ entry }) {
+                    const isOpen = expandedEntryId === entry.id;
+                    const catObj = categories.find(c => c.name === entry.categoryName);
+                    return (
+                      <div style={{ background: C.white, borderRadius: 14, marginBottom: 6, border: `1px solid ${isOpen ? C.terra : C.border}`, overflow: "hidden" }}>
+                        <div onClick={() => setExpandedEntryId(isOpen ? null : entry.id)} style={{ padding: "12px 14px", display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                            <div style={{ display: "flex", gap: 6, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
+                              {entry.star > 0 && <StarDisplay value={entry.star}/>}
+                              <RecBadge value={entry.rec}/>
+                              {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
                             </div>
-                            <span style={{ color: C.muted, fontSize: 14, flexShrink: 0 }}>{isOpen ? "▲" : "▼"}</span>
                           </div>
-                          {isOpen && (
-                            <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 16px 14px", background: "#FAFAF8" }}>
-                              {entry.comment && (
-                                <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "10px 12px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>
-                                  「{entry.comment}」
-                                </div>
-                              )}
-                              {entry.tags?.length > 0 && (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                                  {entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}
-                                </div>
-                              )}
-                              {entry.photo && (
-                                <div style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden" }}>
-                                  <img src={entry.photo} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}/>
-                                </div>
-                              )}
-                              <div style={{ display: "flex", gap: 8 }}>
-                                <button onClick={() => setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                  ✏️ 編集
-                                </button>
-                                <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                  🗑 削除
-                                </button>
-                              </div>
-                            </div>
-                          )}
+                          <span style={{ color: C.muted, fontSize: 12, flexShrink: 0 }}>{isOpen ? "▲" : "▼"}</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        {isOpen && (
+                          <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 14px 14px", background: "#FAFAF8" }}>
+                            {entry.visitDate && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📅 {entry.visitDate}</div>}
+                            {entry.comment && <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "9px 11px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>「{entry.comment}」</div>}
+                            {entry.tags?.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>{entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}</div>}
+                            {entry.photo && <div style={{ marginBottom: 8, borderRadius: 10, overflow: "hidden" }}><img src={entry.photo} alt="" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }}/></div>}
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button onClick={() => setEditingHomeEntry({ ...entry, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>✏️ 編集</button>
+                              <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>🗑 削除</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div>
+                      <button onClick={() => { setActiveBigCat("all"); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
+
+                      {/* 年グループ */}
+                      {years.map(year => {
+                        const isYearOpen = expandedYears[year] !== false; // デフォルト開く
+                        const months = Object.keys(byYear[year]).sort((a,b) => b-a);
+                        const yearCount = months.reduce((s, m) => s + byYear[year][m].length, 0);
+                        return (
+                          <div key={year} style={{ marginBottom: 12 }}>
+                            {/* 年ヘッダー */}
+                            <button onClick={() => setExpandedYears(prev => ({ ...prev, [year]: !isYearOpen }))}
+                              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: C.ink, borderRadius: isYearOpen ? "14px 14px 0 0" : 14, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 16, fontWeight: 800, color: C.white }}>{year}年</span>
+                                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>{yearCount}件</span>
+                              </div>
+                              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>{isYearOpen ? "▲" : "▼"}</span>
+                            </button>
+
+                            {/* 月グループ */}
+                            {isYearOpen && (
+                              <div style={{ border: `1px solid ${C.border}`, borderTop: "none", borderRadius: "0 0 14px 14px", overflow: "hidden" }}>
+                                {months.map((month, mi) => {
+                                  const monthKey = `${year}-${month}`;
+                                  const isMonthOpen = expandedMonths[monthKey] !== false; // デフォルト開く
+                                  const monthEntries = byYear[year][month];
+                                  const monthName = parseInt(month) + "月";
+                                  return (
+                                    <div key={month} style={{ borderTop: mi > 0 ? `1px solid ${C.border}` : "none" }}>
+                                      {/* 月ヘッダー */}
+                                      <button onClick={() => setExpandedMonths(prev => ({ ...prev, [monthKey]: !isMonthOpen }))}
+                                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#F5F2EF", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{year}年{monthName}</span>
+                                          <span style={{ fontSize: 11, color: C.sub }}>{monthEntries.length}件</span>
+                                        </div>
+                                        <span style={{ color: C.muted, fontSize: 11 }}>{isMonthOpen ? "▲" : "▼"}</span>
+                                      </button>
+                                      {/* エントリー */}
+                                      {isMonthOpen && (
+                                        <div style={{ padding: "8px 10px" }}>
+                                          {monthEntries.map(entry => <EntryCard key={entry.id} entry={entry}/>)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* 訪問日なし */}
+                      {noDate.length > 0 && (
+                        <div style={{ marginBottom: 12 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 8, letterSpacing: 0.5 }}>訪問日未設定</div>
+                          {noDate.map(entry => <EntryCard key={entry.id} entry={entry}/>)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* 大カテゴリ別★順 */}
                 {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (
