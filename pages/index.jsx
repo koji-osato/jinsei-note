@@ -5,27 +5,58 @@ const STORAGE_KEY = "jinsei-note-v3";
 
 // ===== カラー定数 =====
 const C = {
-  ink: "#2C2420",
-  terra: "#C0784A",
-  cream: "#F7F3EE",
-  white: "#FFFFFF",
-  border: "#EDE8E3",
-  muted: "#AAA",
-  gold: "#F5A623",
-  silver: "#9B9B9B",
-  bronze: "#C0784A",
+  ink:    "#18160F",
+  terra:  "#E8935A",
+  gold:   "#D4A843",
+  cream:  "#FAFAF8",
+  white:  "#FFFFFF",
+  border: "#EEEBE6",
+  muted:  "#B8B0A8",
+  sub:    "#8A8078",
 };
 
-// ===== おすすめ度定義（⑨: 人生で必ず=3が最上位） =====
+// ===== おすすめ度定義 =====
 const REC_LEVELS = [
-  { value: 3, label: "人生で必ず行くべき",   short: "人生で必ず",   color: "#E65100", bg: "#FFF3E0", border: "#FFCC80" },
-  { value: 2, label: "好きなら行って損なし", short: "好きなら行って", color: "#1565C0", bg: "#F3F8FF", border: "#BBDEFB" },
-  { value: 1, label: "良い思い出になる",     short: "良い思い出",   color: "#33691E", bg: "#F1F8E9", border: "#C5E1A5" },
+  { value: 3, label: "人生で必ず",    short: "人生で必ず",    color: "#C07040", bg: "#FFF3EC", bar: "#E8935A" },
+  { value: 2, label: "好きなら行って", short: "好きなら行って", color: "#4878A8", bg: "#EEF4FF", bar: "#7CA8D8" },
+  { value: 1, label: "良い思い出",    short: "良い思い出",    color: "#488858", bg: "#EEF7EE", bar: "#78B880" },
 ];
 
-// おすすめ度スコアで降順ソート（rec=3が1位）
+// ===== 大カテゴリ =====
+const BIG_CATS = [
+  { id:"eat",   label:"食べる・飲む", icon:"🍽" },
+  { id:"see",   label:"見る・感じる", icon:"👁" },
+  { id:"do",    label:"やる・体験",   icon:"🎯" },
+  { id:"relax", label:"整う・癒し",   icon:"♨️" },
+  { id:"enjoy", label:"楽しむ",       icon:"🎉" },
+  { id:"stay",  label:"泊まる",       icon:"🏨" },
+];
+
+// ===== 体験タグ =====
+const EXPERIENCE_TAGS = {
+  "シーン": ["#一人旅","#デート","#家族","#友達","#仕事後"],
+  "感情":   ["#感動した","#また行きたい","#人生変わった","#泣いた"],
+  "状況":   ["#穴場","#行列必至","#予約必須","#ふらっと行ける"],
+  "季節":   ["#春限定","#夏限定","#秋限定","#冬がベスト"],
+  "価値":   ["#遠征する価値あり","#近くに寄ったら","#わざわざ行く価値あり"],
+};
+
+// ★スコアで降順ソート（デフォルト）
+function sortEntriesByStar(entries) {
+  return [...entries].sort((a, b) => (b.star ?? 0) - (a.star ?? 0));
+}
+// おすすめ度でソート
 function sortEntriesByRec(entries) {
   return [...entries].sort((a, b) => (b.rec ?? 2) - (a.rec ?? 2));
+}
+// 日付の新しい順
+function sortEntriesByDate(entries) {
+  return [...entries].sort((a, b) => {
+    if (!a.visitDate && !b.visitDate) return 0;
+    if (!a.visitDate) return 1;
+    if (!b.visitDate) return -1;
+    return b.visitDate.localeCompare(a.visitDate);
+  });
 }
 
 // ===== タグ辞書 =====
@@ -253,20 +284,76 @@ function RecBadge({ value, large }) {
   if (!rec) return null;
   return (
     <span style={{
-      fontSize: large ? 13 : 11, fontWeight: "bold",
-      padding: large ? "4px 12px" : "3px 8px", borderRadius: 20,
-      color: rec.color, background: rec.bg, border: `1px solid ${rec.border}`,
-      whiteSpace: "nowrap", display: "inline-block",
+      fontSize: large ? 13 : 10, fontWeight: 700,
+      padding: large ? "4px 12px" : "3px 9px", borderRadius: 20,
+      color: rec.color, background: rec.bg,
+      whiteSpace: "nowrap", display: "inline-block", letterSpacing: 0.2,
     }}>{rec.short}</span>
   );
 }
 
-// ⑦ 順位バッジ（目立つデザイン）
+// ===== ★表示 =====
+function StarDisplay({ value, size = "small" }) {
+  if (!value || value === 0) return null;
+  const isLarge = size === "large";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 3,
+      fontSize: isLarge ? 14 : 11, fontWeight: 700,
+      color: "#C8941A",
+    }}>
+      <span>★</span>
+      <span>{value.toFixed(1)}</span>
+    </span>
+  );
+}
+
+// ===== ランクバー =====
+function RankBar({ rank, rec }) {
+  const r = REC_LEVELS.find(rv => rv.value === rec) || REC_LEVELS[1];
+  const ws = [100, 72, 54, 42, 34];
+  const w = ws[Math.min(rank - 1, 4)];
+  const labels = ["1ST","2ND","3RD","4TH","5TH"];
+  const rankBgs = [
+    "linear-gradient(135deg,#D4A843,#E8C060)",
+    "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
+    "linear-gradient(135deg,#A06030,#C08050)",
+  ];
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+      <div style={{
+        width:28, height:28, borderRadius:8, flexShrink:0,
+        background: rank <= 3 ? rankBgs[rank-1] : C.border,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        boxShadow: rank <= 3 ? "0 2px 8px rgba(0,0,0,0.15),inset 0 1px 0 rgba(255,255,255,0.3)" : "none",
+      }}>
+        <span style={{ fontSize:8, fontWeight:900, color: rank <= 3 ? "#FFF" : C.muted, letterSpacing:0.5 }}>
+          {labels[rank-1] || `${rank}`}
+        </span>
+      </div>
+      <div style={{ flex:1, height:4, background:C.border, borderRadius:2, overflow:"hidden" }}>
+        <div style={{ width:`${w}%`, height:"100%", borderRadius:2, background:`linear-gradient(90deg,${r.bar},${r.bar}88)` }}/>
+      </div>
+    </div>
+  );
+}
+
+// ===== ランクバッジ =====
 function RankBadge({ rank }) {
-  if (rank === 1) return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-      <span style={{ fontSize: 32 }}>🥇</span>
-      <span style={{ fontSize: 10, fontWeight: "bold", color: "#C8941A", marginTop: -2 }}>1位</span>
+  const rankBgs = [
+    "linear-gradient(135deg,#D4A843,#E8C060)",
+    "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
+    "linear-gradient(135deg,#A06030,#C08050)",
+  ];
+  const labels = ["1ST","2ND","3RD"];
+  if (rank <= 3) return (
+    <div style={{
+      width:38, height:38, borderRadius:12, flexShrink:0,
+      background: rankBgs[rank-1],
+      display:"flex", alignItems:"center", justifyContent:"center",
+      boxShadow:"0 3px 10px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.3)",
+    }}>
+      <span style={{ fontSize:8, fontWeight:900, color:"#FFF", letterSpacing:0.5 }}>{labels[rank-1]}</span>
     </div>
   );
   if (rank === 2) return (
@@ -539,24 +626,26 @@ function resizeImage(file, maxSize = 800) {
 
 // ===== エントリーフォーム =====
 function EntryForm({ onSave, onCancel, initial, categoryName }) {
+  const [step, setStep] = useState(1);
   const [name, setName] = useState(initial?.name || "");
   const [prefecture, setPrefecture] = useState(initial?.prefecture || "");
   const [placeData, setPlaceData] = useState(initial?.placeData || null);
   const [rec, setRec] = useState(initial?.rec ?? 3);
+  const [star, setStar] = useState(initial?.star ?? 0);
+  const [tags, setTags] = useState(initial?.tags || []);
+  const [tagGroup, setTagGroup] = useState("シーン");
+  const [customTag, setCustomTag] = useState("");
+  const [showTags, setShowTags] = useState(false);
   const [comment, setComment] = useState(initial?.comment || "");
   const [visitDate, setVisitDate] = useState(initial?.visitDate || "");
   const [photo, setPhoto] = useState(initial?.photo || null);
   const fileInputRef = useRef(null);
 
-  // ② サジェスト選択時に都道府県を自動セット
+  const PREFS = ["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄","海外"];
+
   function handlePlaceSelect(place) {
-    if (place) {
-      setPlaceData(place);
-      setName(place.name);
-      setPrefecture(place.prefecture || "");
-    } else {
-      setPlaceData(null);
-    }
+    if (place) { setPlaceData(place); setName(place.name); setPrefecture(place.prefecture || ""); }
+    else setPlaceData(null);
   }
 
   async function handlePhotoChange(e) {
@@ -566,177 +655,255 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
     setPhoto(resized);
   }
 
-  const PREFS = ["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄","海外"];
+  function toggleTag(tag) {
+    setTags(prev => prev.includes(tag) ? prev.filter(t=>t!==tag) : [...prev, tag]);
+  }
+
+  function addCustomTag() {
+    const t = customTag.trim().startsWith("#") ? customTag.trim() : `#${customTag.trim()}`;
+    if (t.length > 1 && !tags.includes(t)) setTags(prev=>[...prev,t]);
+    setCustomTag("");
+  }
+
+  const starPct = (star / 5) * 100;
+  const starLabel = star === 0 ? "未評価" : star < 2 ? "もう一度考えるかも" : star < 3 ? "まあまあ良かった" : star < 4 ? "良かった！" : star < 4.5 ? "とても良かった！" : star < 5 ? "最高レベル！" : "🏆 完璧・人生最高";
+
+  const canNext1 = (MAPS_KEY ? placeData?.name : name.trim()).length > 0;
+  const canNext2 = star > 0 && rec !== null;
+
+  function handleSave() {
+    const finalName = (MAPS_KEY ? placeData?.name : name)?.trim() || name.trim();
+    if (!finalName) return;
+    onSave({ name: finalName, prefecture, placeData: placeData || null, rec, star, tags, comment, visitDate, photo, id: initial?.id || Date.now() });
+  }
+
+  // ステップドット
+  function StepDot({ n }) {
+    const done = step > n; const active = step === n;
+    return (
+      <div style={{ display:"flex", alignItems:"center" }}>
+        <div style={{ width:24, height:24, borderRadius:"50%", background: done?C.ink:active?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:active?"0 3px 10px rgba(232,147,90,0.4)":"none" }}>
+          {done ? <span style={{ fontSize:12, color:"#FFF" }}>✓</span>
+                : <span style={{ fontSize:10, fontWeight:800, color:active?"#FFF":C.muted }}>{n}</span>}
+        </div>
+        {n < 3 && <div style={{ width:32, height:2, background:step>n?C.ink:C.border }}/>}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: C.white, borderRadius: 16, padding: "20px 16px", border: `1px solid ${C.border}`, width: "100%", boxSizing: "border-box", overflow: "hidden" }}>
-      {/* 場所検索 */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>店名・場所名 *</label>
-        <PlacesInput onSelect={handlePlaceSelect} initialName={initial?.name || ""} />
-        {!MAPS_KEY && (
-          <input value={name} onChange={e => setName(e.target.value)}
-            placeholder={`例：おすすめの${categoryName}`}
-            style={{ ...inputStyle, marginTop: 8 }} />
+    <div style={{ background:C.white, borderRadius:18, border:`1px solid ${C.border}`, width:"100%", boxSizing:"border-box", overflow:"hidden", boxShadow:"0 4px 20px rgba(24,22,15,0.08)" }}>
+      {/* ステップヘッダー */}
+      <div style={{ padding:"16px 16px 12px", borderBottom:`1px solid ${C.border}`, background:"#FAFAF8" }}>
+        <div style={{ fontSize:12, fontWeight:700, color:C.sub, marginBottom:10 }}>
+          {step===1?"場所を選ぶ":step===2?"評価する":"詳細を記録"}
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:0 }}>
+          <StepDot n={1}/><StepDot n={2}/><StepDot n={3}/>
+        </div>
+      </div>
+
+      <div style={{ padding:"16px" }}>
+
+        {/* STEP 1: 場所 */}
+        {step === 1 && (
+          <div>
+            <div style={{ marginBottom:14 }}>
+              <label style={labelStyle}>場所・店名 *</label>
+              <PlacesInput onSelect={handlePlaceSelect} initialName={initial?.name || ""}/>
+              {!MAPS_KEY && (
+                <input value={name} onChange={e=>setName(e.target.value)}
+                  placeholder={`例：おすすめの${categoryName}`}
+                  style={{ ...inputStyle, marginTop:8 }}/>
+              )}
+            </div>
+            {/* 都道府県 */}
+            <div style={{ marginBottom:14 }}>
+              <label style={labelStyle}>都道府県</label>
+              <div style={{ position:"relative" }}>
+                <select value={prefecture} onChange={e=>setPrefecture(e.target.value)}
+                  style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0, zIndex:2, cursor:"pointer" }}>
+                  <option value="">選択</option>
+                  {PREFS.map(p=><option key={p} value={p}>{p}</option>)}
+                </select>
+                <div style={{ padding:"12px 14px", border:`1.5px solid ${prefecture?C.terra:C.border}`, borderRadius:10, fontSize:16, background:prefecture?"#FFF8F5":C.white, color:prefecture?C.ink:C.muted, display:"flex", alignItems:"center", justifyContent:"space-between", minHeight:48, pointerEvents:"none" }}>
+                  <span>{prefecture||"選択してください"}</span><span style={{ fontSize:12, color:C.muted }}>▼</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: 評価 */}
+        {step === 2 && (
+          <div>
+            {/* ★スライダー */}
+            <div style={{ marginBottom:20 }}>
+              <label style={labelStyle}>⭐ 自分の評価（自分だけに見えます）</label>
+              <div style={{ background:"#F8F6F4", borderRadius:16, padding:"16px", border:`1px solid ${C.border}` }}>
+                {/* 星表示 */}
+                <div style={{ display:"flex", justifyContent:"center", gap:4, marginBottom:12 }}>
+                  {[1,2,3,4,5].map(i=>{
+                    const filled = star >= i;
+                    const partial = !filled && i === Math.floor(star)+1 && (star%1)>0;
+                    return (
+                      <div key={i} style={{ position:"relative", width:32, height:32 }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ position:"absolute" }}>
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#EEEBE6" stroke="#E0DDD8" strokeWidth="1"/>
+                        </svg>
+                        {(filled||partial) && (
+                          <div style={{ position:"absolute", overflow:"hidden", width:filled?"100%":`${(star%1)*100}%` }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill={C.gold} stroke={C.gold} strokeWidth="1"/>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ textAlign:"center", marginBottom:12 }}>
+                  <span style={{ fontSize:32, fontWeight:900, color:C.ink, fontFamily:"Georgia,serif" }}>{star.toFixed(1)}</span>
+                  <span style={{ fontSize:12, color:C.sub, marginLeft:4 }}>/ 5.0</span>
+                </div>
+                <input type="range" min="0" max="5" step="0.1" value={star} onChange={e=>setStar(parseFloat(e.target.value))}
+                  style={{ width:"100%", height:6, borderRadius:3, WebkitAppearance:"none", appearance:"none", background:`linear-gradient(90deg,${C.gold} ${starPct}%,#EEEBE6 ${starPct}%)`, outline:"none", cursor:"pointer" }}/>
+                <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
+                  {[0,1,2,3,4,5].map(n=><span key={n} style={{ fontSize:9, color:C.muted, fontWeight:600 }}>{n}</span>)}
+                </div>
+                <div style={{ textAlign:"center", fontSize:11, color:C.sub, marginTop:8 }}>{starLabel}</div>
+              </div>
+            </div>
+
+            {/* おすすめ度 */}
+            <div style={{ marginBottom:4 }}>
+              <label style={labelStyle}>👥 おすすめ度（フレンドにも見えます）</label>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {REC_LEVELS.map(r=>(
+                  <button key={r.value} onClick={()=>setRec(r.value)} style={{
+                    width:"100%", borderRadius:14, padding:"12px 16px",
+                    fontSize:14, fontFamily:"inherit", cursor:"pointer",
+                    textAlign:"left", display:"flex", alignItems:"center", gap:12,
+                    fontWeight:rec===r.value?700:400,
+                    border:`1.5px solid ${rec===r.value?r.color:C.border}`,
+                    background:rec===r.value?r.bg:C.white,
+                    color:rec===r.value?r.color:C.sub,
+                    boxShadow:rec===r.value?`0 3px 12px ${r.color}20`:"none",
+                  }}>
+                    <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${rec===r.value?r.color:C.border}`, background:rec===r.value?r.color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      {rec===r.value && <span style={{ fontSize:10, color:"#FFF" }}>✓</span>}
+                    </div>
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:rec===r.value?700:500 }}>{r.label}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: 詳細 */}
+        {step === 3 && (
+          <div>
+            {/* コメント */}
+            <div style={{ marginBottom:14 }}>
+              <label style={labelStyle}>コメント（任意）</label>
+              <textarea value={comment} onChange={e=>setComment(e.target.value)}
+                placeholder="どんな体験でしたか？" rows={3}
+                style={{ ...inputStyle, resize:"vertical" }}/>
+            </div>
+
+            {/* 訪問日 */}
+            <div style={{ marginBottom:14 }}>
+              <label style={labelStyle}>訪問日（任意）</label>
+              <div style={{ position:"relative" }}>
+                <input type="date" value={visitDate} onChange={e=>setVisitDate(e.target.value)}
+                  style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0, zIndex:2, cursor:"pointer", boxSizing:"border-box" }}/>
+                <div style={{ padding:"12px 14px", border:`1.5px solid ${visitDate?C.terra:C.border}`, borderRadius:10, fontSize:16, background:visitDate?"#FFF8F5":C.white, color:visitDate?C.ink:C.muted, display:"flex", alignItems:"center", gap:8, minHeight:48, pointerEvents:"none" }}>
+                  <span>📅</span>
+                  <span>{visitDate?new Date(visitDate+"T00:00:00").toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric"}):"日付を選択"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* タグ */}
+            <div style={{ marginBottom:14 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                <label style={{ ...labelStyle, marginBottom:0 }}>タグ（任意）</label>
+                <button onClick={()=>setShowTags(!showTags)} style={{ fontSize:12, color:C.terra, background:"none", border:"none", cursor:"pointer", fontWeight:600 }}>
+                  {showTags?"閉じる":"タグを追加"}
+                </button>
+              </div>
+              {tags.length > 0 && (
+                <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:8 }}>
+                  {tags.map(t=>(
+                    <button key={t} onClick={()=>toggleTag(t)} style={{ fontSize:11, fontWeight:600, padding:"3px 9px", borderRadius:20, background:`linear-gradient(135deg,${C.terra}18,${C.gold}18)`, color:C.terra, border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
+                      {t} <span style={{ fontSize:10 }}>✕</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showTags && (
+                <div style={{ background:"#F8F6F4", borderRadius:14, padding:"12px", border:`1px solid ${C.border}` }}>
+                  {/* グループタブ */}
+                  <div style={{ display:"flex", gap:6, overflowX:"auto", marginBottom:10 }}>
+                    {Object.keys(EXPERIENCE_TAGS).map(g=>(
+                      <button key={g} onClick={()=>setTagGroup(g)} style={{ flexShrink:0, padding:"5px 12px", borderRadius:20, border:"none", background:tagGroup===g?C.ink:"#EEEBE6", color:tagGroup===g?"#FFF":C.sub, fontSize:11, fontWeight:tagGroup===g?700:400, cursor:"pointer", fontFamily:"inherit" }}>{g}</button>
+                    ))}
+                  </div>
+                  {/* タグボタン */}
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10 }}>
+                    {EXPERIENCE_TAGS[tagGroup].map(t=>{
+                      const on = tags.includes(t);
+                      return (
+                        <button key={t} onClick={()=>toggleTag(t)} style={{ padding:"6px 12px", borderRadius:20, border:`1.5px solid ${on?C.ink:C.border}`, background:on?C.ink:C.white, color:on?"#FFF":C.sub, fontSize:11, fontWeight:on?700:400, cursor:"pointer", fontFamily:"inherit" }}>{t}</button>
+                      );
+                    })}
+                  </div>
+                  {/* 自由入力 */}
+                  <div style={{ display:"flex", gap:8 }}>
+                    <input value={customTag} onChange={e=>setCustomTag(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomTag()}
+                      placeholder="#自由入力" style={{ ...inputStyle, fontSize:13, padding:"8px 12px", flex:1 }}/>
+                    <button onClick={addCustomTag} style={{ background:C.ink, color:"#FFF", border:"none", borderRadius:10, padding:"0 14px", fontSize:13, fontWeight:700, cursor:"pointer" }}>追加</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 写真 */}
+            <div style={{ marginBottom:4 }}>
+              <label style={labelStyle}>写真（任意）</label>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={{ display:"none" }}/>
+              {photo ? (
+                <div style={{ position:"relative", borderRadius:12, overflow:"hidden", border:`1px solid ${C.border}` }}>
+                  <img src={photo} alt="写真" style={{ width:"100%", height:160, objectFit:"cover", display:"block" }}/>
+                  <button onClick={()=>setPhoto(null)} style={{ position:"absolute", top:8, right:8, background:"rgba(0,0,0,0.55)", border:"none", borderRadius:"50%", width:30, height:30, color:"#fff", fontSize:14, cursor:"pointer" }}>✕</button>
+                </div>
+              ) : (
+                <button onClick={()=>fileInputRef.current?.click()} style={{ width:"100%", height:80, border:`2px dashed ${C.border}`, borderRadius:12, background:"#FAFAF9", cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, touchAction:"manipulation" }}>
+                  <span style={{ fontSize:22 }}>📷</span>
+                  <span style={{ fontSize:12, color:C.muted }}>タップして写真を追加</span>
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
-      {/* ③ 都道府県：ネイティブselectをラッパーで完全に包む */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>都道府県</label>
-        <div style={{ position: "relative", width: "100%" }}>
-          <select
-            value={prefecture}
-            onChange={e => setPrefecture(e.target.value)}
-            style={{
-              position: "absolute",
-              top: 0, left: 0,
-              width: "100%", height: "100%",
-              opacity: 0,
-              zIndex: 2,
-              cursor: "pointer",
-            }}>
-            <option value="">選択してください</option>
-            {PREFS.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <div style={{
-            width: "100%",
-            padding: "12px 40px 12px 14px",
-            border: `1.5px solid ${prefecture ? C.terra : C.border}`,
-            borderRadius: 10,
-            fontSize: 16,
-            boxSizing: "border-box",
-            background: prefecture ? "#FFF8F5" : C.white,
-            color: prefecture ? C.ink : C.muted,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            pointerEvents: "none",
-            minHeight: 48,
-          }}>
-            <span>{prefecture || "選択してください"}</span>
-            <span style={{ fontSize: 12, color: C.muted }}>▼</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ③ 訪問日：textで受け取りdateピッカーと重ねる */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>訪問日</label>
-        <div style={{ position: "relative", width: "100%" }}>
-          <input
-            type="date"
-            value={visitDate}
-            onChange={e => setVisitDate(e.target.value)}
-            style={{
-              position: "absolute",
-              top: 0, left: 0,
-              width: "100%", height: "100%",
-              opacity: 0,
-              zIndex: 2,
-              cursor: "pointer",
-              boxSizing: "border-box",
-            }}
-          />
-          <div style={{
-            width: "100%",
-            padding: "12px 14px",
-            border: `1.5px solid ${visitDate ? C.terra : C.border}`,
-            borderRadius: 10,
-            fontSize: 16,
-            boxSizing: "border-box",
-            background: visitDate ? "#FFF8F5" : C.white,
-            color: visitDate ? C.ink : C.muted,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            minHeight: 48,
-            pointerEvents: "none",
-          }}>
-            <span>📅</span>
-            <span>
-              {visitDate
-                ? new Date(visitDate + "T00:00:00").toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })
-                : "日付を選択"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* おすすめ度（⑨: 人生で必ず=最上位を上に表示） */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>おすすめ度 *</label>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {REC_LEVELS.map(r => (
-            <button key={r.value} onClick={() => setRec(r.value)} style={{
-              width: "100%", borderRadius: 10, padding: "12px 16px",
-              fontSize: 14, fontFamily: "inherit", cursor: "pointer",
-              textAlign: "left", display: "flex", alignItems: "center", gap: 10,
-              fontWeight: rec === r.value ? "bold" : "normal",
-              border: rec === r.value ? `2px solid ${r.color}` : `1.5px solid ${C.border}`,
-              background: rec === r.value ? r.bg : C.white,
-              color: rec === r.value ? r.color : "#888",
-            }}>
-              <span style={{ fontSize: 18 }}>
-                {r.value === 3 ? "🥇" : r.value === 2 ? "🥈" : "🥉"}
-              </span>
-              <span>{r.label}</span>
-              {rec === r.value && <span style={{ marginLeft: "auto", fontSize: 16 }}>✓</span>}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>一言コメント</label>
-        <textarea value={comment} onChange={e => setComment(e.target.value)}
-          placeholder="ここが最高だった！" rows={3}
-          style={{ ...inputStyle, resize: "vertical" }} />
-      </div>
-
-      {/* 写真 */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={labelStyle}>写真（1枚）</label>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: "none" }} />
-        {photo ? (
-          <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}` }}>
-            <img src={photo} alt="写真" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
-            <button onClick={() => setPhoto(null)}
-              style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%", width: 32, height: 32, color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              ✕
-            </button>
-            <button onClick={() => fileInputRef.current?.click()}
-              style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.55)", border: "none", borderRadius: 8, padding: "5px 12px", color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
-              変更
-            </button>
-          </div>
+      {/* ボタン */}
+      <div style={{ padding:"12px 16px 16px", borderTop:`1px solid ${C.border}`, background:"#FAFAF8", display:"flex", gap:8 }}>
+        {step > 1 && (
+          <button onClick={()=>setStep(s=>s-1)} style={{ flex:1, padding:"13px", borderRadius:14, border:`1.5px solid ${C.border}`, background:C.white, fontSize:14, fontWeight:700, color:C.ink, cursor:"pointer" }}>戻る</button>
+        )}
+        {step < 3 ? (
+          <button onClick={()=>(step===1?canNext1:canNext2)&&setStep(s=>s+1)} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:(step===1?canNext1:canNext2)?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, fontSize:14, fontWeight:700, color:(step===1?canNext1:canNext2)?"#FFF":C.muted, cursor:(step===1?canNext1:canNext2)?"pointer":"not-allowed", boxShadow:(step===1?canNext1:canNext2)?`0 4px 16px rgba(232,147,90,0.35)`:"none" }}>次へ →</button>
         ) : (
-          <button onClick={() => fileInputRef.current?.click()} style={{
-            width: "100%", height: 100, border: `2px dashed ${C.border}`, borderRadius: 10,
-            background: "#FAFAF9", cursor: "pointer", fontFamily: "inherit",
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
-            touchAction: "manipulation",
-          }}>
-            <span style={{ fontSize: 28 }}>📷</span>
-            <span style={{ fontSize: 13, color: C.muted }}>タップして写真を追加</span>
-          </button>
+          <button onClick={handleSave} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:`linear-gradient(135deg,${C.terra},${C.gold})`, fontSize:14, fontWeight:700, color:"#FFF", cursor:"pointer", boxShadow:`0 4px 16px rgba(232,147,90,0.35)` }}>✓ 記録する</button>
         )}
-      </div>
-
-      <div style={{ display: "flex", gap: 10 }}>
-        <button
-          onClick={() => {
-            const finalName = (MAPS_KEY ? placeData?.name : name)?.trim() || name.trim();
-            if (!finalName) return;
-            onSave({ name: finalName, prefecture, placeData: placeData || null, rec, comment, visitDate, photo, id: initial?.id || Date.now() });
-          }}
-          style={{ flex: 2, background: C.ink, color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 16, fontWeight: "bold", cursor: "pointer", touchAction: "manipulation" }}>
-          保存する
-        </button>
-        <button onClick={onCancel}
-          style={{ flex: 1, background: "#F0F0F0", color: "#555", border: "none", borderRadius: 12, padding: "14px", fontSize: 16, cursor: "pointer", touchAction: "manipulation" }}>
-          キャンセル
-        </button>
+        {step === 1 && (
+          <button onClick={onCancel} style={{ flex:1, padding:"13px", borderRadius:14, border:`1.5px solid ${C.border}`, background:C.white, fontSize:14, color:C.sub, cursor:"pointer" }}>キャンセル</button>
+        )}
       </div>
     </div>
   );
@@ -817,6 +984,8 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
       name: entry.name,
       prefecture: entry.prefecture || "",
       rec: entry.rec ?? 2,
+      star: entry.star ?? 0,
+      tags: entry.tags || [],
       comment: entry.comment || "",
       visit_date: entry.visitDate || null,
       place_data: entry.placeData || null,
@@ -847,7 +1016,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
     } else {
       next = [...entries, finalEntry];
     }
-    next = sortEntriesByRec(next);
+    next = sortEntriesByStar(next);
     setEntries(next);
     setShowForm(false);
     setEditingEntry(null);
@@ -976,15 +1145,23 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
                   <RankBadge rank={idx + 1} />
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: "bold", fontSize: 17, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
+                    <div style={{ fontWeight: "bold", fontSize: 17, color: C.ink, marginBottom: 6, fontFamily: "Georgia, serif" }}>{entry.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                      {!readOnly && entry.star > 0 && <StarDisplay value={entry.star}/>}
                       <RecBadge value={entry.rec} large />
                       {entry.prefecture && (
-                        <span style={{ fontSize: 12, color: "#888", background: "#F5F5F5", padding: "3px 10px", borderRadius: 10 }}>{entry.prefecture}</span>
+                        <span style={{ fontSize: 11, color: C.sub, background: C.border, padding: "3px 9px", borderRadius: 10 }}>{entry.prefecture}</span>
                       )}
                     </div>
+                    {entry.tags?.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>
+                        {entry.tags.map(t => (
+                          <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>
+                        ))}
+                      </div>
+                    )}
                     {entry.visitDate && (
-                      <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>📅 {entry.visitDate}</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>📅 {entry.visitDate}</div>
                     )}
                     {entry.photo && (
                       <div style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}` }}>
@@ -2513,6 +2690,7 @@ export default function App() {
   const [showFriendList, setShowFriendList] = useState(false); // フレンド選択モーダル
   const [allFriendData, setAllFriendData] = useState([]); // 全フレンドのデータ
   const [selectedCategory, setSelectedCategory] = useState(null); // カテゴリ横断選択
+  const [activeBigCat, setActiveBigCat] = useState("all"); // 大カテゴリフィルター
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2568,37 +2746,37 @@ export default function App() {
 
   async function loadData() {
     setLoading(true);
-    // カテゴリ取得
     const { data: cats } = await supabase
-      .from("categories")
-      .select("*")
+      .from("categories").select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
-
     if (!cats) { setLoading(false); return; }
 
-    // エントリーをまとめて取得
     const catIds = cats.map(c => c.id);
     const { data: ents } = catIds.length > 0
-      ? await supabase.from("entries").select("*").in("category_id", catIds).order("rank_order", { ascending: true })
+      ? await supabase.from("entries").select("*").in("category_id", catIds)
       : { data: [] };
 
-    // カテゴリにエントリーをマージ
+    function mapEntry(e) {
+      return {
+        id: e.id,
+        name: e.name,
+        prefecture: e.prefecture || "",
+        rec: e.rec ?? 2,
+        star: e.star ?? 0,
+        tags: e.tags || [],
+        comment: e.comment || "",
+        visitDate: e.visit_date || "",
+        placeData: e.place_data || null,
+        photo: (() => { try { return localStorage.getItem(`photo_${e.id}`); } catch { return null; } })(),
+      };
+    }
+
     const merged = cats.map(cat => ({
       ...cat,
-      entries: sortEntriesByRec(
-        (ents || [])
-          .filter(e => e.category_id === cat.id)
-          .map(e => ({
-            id: e.id,
-            name: e.name,
-            prefecture: e.prefecture || "",
-            rec: e.rec ?? 2,
-            comment: e.comment || "",
-            visitDate: e.visit_date || "",
-            placeData: e.place_data || null,
-            photo: (() => { try { return localStorage.getItem(`photo_${e.id}`); } catch { return null; } })(),
-          }))
+      bigCat: cat.big_cat || "eat",
+      entries: sortEntriesByStar(
+        (ents || []).filter(e => e.category_id === cat.id).map(mapEntry)
       ),
     }));
 
@@ -2788,6 +2966,9 @@ export default function App() {
   );
 
   const totalEntries = categories.reduce((sum, c) => sum + (c.entries?.length || 0), 0);
+  const filteredCategories = activeBigCat === "all"
+    ? displayCategories
+    : displayCategories.filter(c => c.bigCat === activeBigCat);
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
@@ -2839,6 +3020,28 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {/* 大カテゴリタブ（自分のリスト表示時のみ） */}
+      {!viewingUser && !selectedCategory && (
+        <div style={{ background: C.white, borderBottom: `1px solid ${C.border}`, overflowX: "auto" }}>
+          <div style={{ display: "flex", padding: "0 16px", gap: 0, minWidth: "max-content" }}>
+            {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
+              <button key={bc.id} onClick={() => setActiveBigCat(bc.id)} style={{
+                flexShrink: 0, display: "flex", alignItems: "center", gap: 5,
+                padding: "12px 14px", border: "none", background: "none",
+                cursor: "pointer", fontFamily: "inherit",
+                borderBottom: activeBigCat === bc.id ? `2px solid ${C.ink}` : "2px solid transparent",
+                marginBottom: -1,
+              }}>
+                <span style={{ fontSize: 14 }}>{bc.icon}</span>
+                <span style={{ fontSize: 12, fontWeight: activeBigCat === bc.id ? 700 : 400, color: activeBigCat === bc.id ? C.ink : C.sub, whiteSpace: "nowrap" }}>
+                  {bc.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto" }}>
 
@@ -2959,7 +3162,7 @@ export default function App() {
               {viewingUser ? `${viewingUser.name} さんのリスト` : "マイリスト"}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {displayCategories.map((cat, idx) => {
+              {filteredCategories.map((cat, idx) => {
                 const emoji = getTagEmoji(cat.name);
                 const count = cat.entries?.length || 0;
                 const top = cat.entries?.[0];
