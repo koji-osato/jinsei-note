@@ -2685,6 +2685,8 @@ export default function App() {
   const [crossCatFilterRec, setCrossCatFilterRec] = useState(null);
   const [friendViewSortCat, setFriendViewSortCat] = useState(null);
   const [friendViewSortRec, setFriendViewSortRec] = useState(null);
+  const [activeCatFilter, setActiveCatFilter] = useState(null); // 小カテゴリ絞り込み
+  const [expandedEntryId, setExpandedEntryId] = useState(null); // 展開エントリー
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -3134,59 +3136,136 @@ export default function App() {
                 {/* 全記録一覧（訪問日順）*/}
                 {activeBigCat === "__all_entries__" && (
                   <div>
-                    <button onClick={() => setActiveBigCat("all")} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                    <button onClick={() => { setActiveBigCat("all"); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
                     <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
-                    {allEntriesByStar.sort((a,b)=>(b.visitDate||"").localeCompare(a.visitDate||"")).map((entry, i) => (
-                      <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}`, display: "flex", gap: 10, alignItems: "flex-start" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-                            {entry.star > 0 && <StarDisplay value={entry.star}/>}
-                            <RecBadge value={entry.rec}/>
-                            {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                            {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
+                    {[...allEntriesByStar].sort((a,b)=>(b.visitDate||"").localeCompare(a.visitDate||"")).map((entry, i) => {
+                      const isOpen = expandedEntryId === entry.id;
+                      const catObj = categories.find(c => c.name === entry.categoryName);
+                      return (
+                        <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 16, marginBottom: 8, border: `1px solid ${isOpen ? C.terra : C.border}`, overflow: "hidden", boxShadow: isOpen ? `0 4px 16px rgba(232,147,90,0.12)` : "0 2px 8px rgba(24,22,15,0.05)" }}>
+                          <div onClick={() => setExpandedEntryId(isOpen ? null : entry.id)} style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                              <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+                                {entry.star > 0 && <StarDisplay value={entry.star}/>}
+                                <RecBadge value={entry.rec}/>
+                                {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                                {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
+                              </div>
+                            </div>
+                            <span style={{ color: C.muted, fontSize: 14, flexShrink: 0 }}>{isOpen ? "▲" : "▼"}</span>
                           </div>
+                          {isOpen && (
+                            <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 16px 14px", background: "#FAFAF8" }}>
+                              {entry.comment && (
+                                <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "10px 12px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>
+                                  「{entry.comment}」
+                                </div>
+                              )}
+                              {entry.tags?.length > 0 && (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                                  {entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}
+                                </div>
+                              )}
+                              {entry.photo && (
+                                <div style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden" }}>
+                                  <img src={entry.photo} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}/>
+                                </div>
+                              )}
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => { setActiveCategory(catObj); setActiveTab("list"); }} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                  ✏️ 編集・並び替え
+                                </button>
+                                <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                  🗑 削除
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* 大カテゴリ別★順 */}
                 {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (
                   <div>
-                    <button onClick={() => setActiveBigCat("all")} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                    <button onClick={() => { setActiveBigCat("all"); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
                     <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>
                       {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
                     </div>
-                    {/* カテゴリ絞り込み */}
+                    {/* 小カテゴリ絞り込みタブ */}
                     <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
-                      <button onClick={() => setActiveBigCat(activeBigCat)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: `1.5px solid ${C.ink}`, background: C.ink, color: C.white, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
+                      <button onClick={() => setActiveCatFilter(null)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${!activeCatFilter ? C.ink : C.border}`, background: !activeCatFilter ? C.ink : C.white, color: !activeCatFilter ? C.white : C.sub, fontSize: 12, fontWeight: !activeCatFilter ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
                       {categories.filter(c => (c.bigCat||c.big_cat||"eat") === activeBigCat).map(cat => (
-                        <button key={cat.id} onClick={() => setActiveCategory(cat)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: `1px solid ${C.border}`, background: C.white, color: C.sub, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                        <button key={cat.id} onClick={() => setActiveCatFilter(cat.name)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${activeCatFilter===cat.name ? C.ink : C.border}`, background: activeCatFilter===cat.name ? C.ink : C.white, color: activeCatFilter===cat.name ? C.white : C.sub, fontSize: 12, fontWeight: activeCatFilter===cat.name ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>
                           {cat.name}
                         </button>
                       ))}
                     </div>
-                    {bigCatEntries.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>記録がありません</div>
-                    ) : bigCatEntries.map((entry, i) => (
-                      <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}`, display: "flex", gap: 10, alignItems: "flex-start" }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: i===0?"linear-gradient(135deg,#D4A843,#E8C060)":i===1?"linear-gradient(135deg,#9AA8B8,#B8C4D0)":i===2?"linear-gradient(135deg,#A06030,#C08050)":C.border, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <span style={{ fontSize: 8, fontWeight: 900, color: i<3?"#FFF":C.muted }}>{["1ST","2ND","3RD"][i]||`${i+1}`}</span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-                            {entry.star > 0 && <StarDisplay value={entry.star}/>}
-                            <RecBadge value={entry.rec}/>
-                            {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                    {/* エントリーリスト（アコーディオン）*/}
+                    {(() => {
+                      const filtered = activeCatFilter
+                        ? bigCatEntries.filter(e => e.categoryName === activeCatFilter)
+                        : bigCatEntries;
+                      if (filtered.length === 0) return <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>記録がありません</div>;
+                      return filtered.map((entry, i) => {
+                        const isOpen = expandedEntryId === entry.id;
+                        const catObj = categories.find(c => c.name === entry.categoryName);
+                        return (
+                          <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 16, marginBottom: 8, border: `1px solid ${isOpen ? C.terra : C.border}`, overflow: "hidden", boxShadow: isOpen ? `0 4px 16px rgba(232,147,90,0.12)` : "0 2px 8px rgba(24,22,15,0.05)" }}>
+                            {/* メイン行（タップで展開）*/}
+                            <div onClick={() => setExpandedEntryId(isOpen ? null : entry.id)} style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
+                              <div style={{ width: 28, height: 28, borderRadius: 8, background: i===0&&!activeCatFilter?"linear-gradient(135deg,#D4A843,#E8C060)":i===1&&!activeCatFilter?"linear-gradient(135deg,#9AA8B8,#B8C4D0)":i===2&&!activeCatFilter?"linear-gradient(135deg,#A06030,#C08050)":C.border, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <span style={{ fontSize: 8, fontWeight: 900, color: (i<3&&!activeCatFilter)?"#FFF":C.muted }}>{["1ST","2ND","3RD"][i]||`${i+1}`}</span>
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                                <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+                                  {entry.star > 0 && <StarDisplay value={entry.star}/>}
+                                  <RecBadge value={entry.rec}/>
+                                  {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                                </div>
+                              </div>
+                              <span style={{ color: C.muted, fontSize: 14, flexShrink: 0 }}>{isOpen ? "▲" : "▼"}</span>
+                            </div>
+                            {/* 展開パネル */}
+                            {isOpen && (
+                              <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 16px 14px", background: "#FAFAF8" }}>
+                                {entry.visitDate && <div style={{ fontSize: 12, color: C.sub, marginBottom: 8 }}>📅 {entry.visitDate}</div>}
+                                {entry.comment && (
+                                  <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "10px 12px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>
+                                    「{entry.comment}」
+                                  </div>
+                                )}
+                                {entry.tags?.length > 0 && (
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                                    {entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}
+                                  </div>
+                                )}
+                                {entry.photo && (
+                                  <div style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden" }}>
+                                    <img src={entry.photo} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}/>
+                                  </div>
+                                )}
+                                {/* 編集・削除ボタン */}
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <button onClick={() => { setActiveCategory(catObj); setActiveTab("list"); }} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                    ✏️ 編集・並び替え
+                                  </button>
+                                  <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                                    🗑 削除
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </>
