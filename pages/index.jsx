@@ -455,12 +455,23 @@ function PlacesInput({ onSelect, initialName = "" }) {
   const sessionTokenRef = useRef(null); // Session Token でコスト削減
 
   useEffect(() => {
-    loadGoogleMaps(() => {
-      acRef.current = new window.google.maps.places.AutocompleteService();
-      psRef.current = new window.google.maps.places.PlacesService(mapDivRef.current);
-      // Session Token 生成（1記録につき1トークン = コスト最小化）
-      sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-    });
+    function init() {
+      try {
+        acRef.current = new window.google.maps.places.AutocompleteService();
+        // mapDivRefがnullの場合はdocument.createElement("div")を使う
+        const mapDiv = mapDivRef.current || document.createElement("div");
+        psRef.current = new window.google.maps.places.PlacesService(mapDiv);
+        sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+      } catch(e) {
+        console.warn("PlacesInput init error:", e);
+      }
+    }
+    // すでにAPIが読み込まれている場合はすぐ初期化
+    if (window.google?.maps?.places?.AutocompleteService) {
+      init();
+    } else {
+      loadGoogleMaps(init);
+    }
   }, []);
 
   useEffect(() => {
@@ -2690,6 +2701,7 @@ export default function App() {
   const [editingHomeEntry, setEditingHomeEntry] = useState(null); // ホームから直接編集
   const [expandedYears, setExpandedYears] = useState({}); // 年アコーディオン
   const [expandedMonths, setExpandedMonths] = useState({}); // 月アコーディオン
+  const [addEntryForCat, setAddEntryForCat] = useState(null); // エントリー追加対象カテゴリ
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2854,7 +2866,7 @@ export default function App() {
     if (!normalized) return;
     if (categories.find(c => c.name === normalized)) {
       const existing = categories.find(c => c.name === normalized);
-      setActiveCategory(existing);
+      setAddEntryForCat(existing);
       setShowAddModal(false); setShowBrowse(false); setNewCatInput("");
       return;
     }
@@ -2866,10 +2878,11 @@ export default function App() {
       .single();
     if (error || !newCat) return;
 
-    const cat = { ...newCat, entries: [] };
+    const cat = { ...newCat, entries: [], bigCat: newCat.big_cat || "eat" };
     setCategories(prev => [...prev, cat]);
     setNewCatInput(""); setShowAddModal(false); setShowBrowse(false);
-    setActiveCategory(cat);
+    // CategoryViewではなくEntryFormモーダルを開く
+    setAddEntryForCat(cat);
   }
 
   async function updateCategory(updated) {
@@ -3257,8 +3270,21 @@ export default function App() {
                 {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (
                   <div>
                     <button onClick={() => { setActiveBigCat("all"); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>
-                      {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
+                        {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
+                      </div>
+                      <button onClick={() => {
+                        // 絞り込み中のカテゴリがあればそれを使う、なければ選択モーダル
+                        if (activeCatFilter) {
+                          const cat = categories.find(c => c.name === activeCatFilter);
+                          if (cat) setAddEntryForCat(cat);
+                        } else {
+                          setShowAddModal(true);
+                        }
+                      }} style={{ display: "flex", alignItems: "center", gap: 5, background: `linear-gradient(135deg,${C.terra},${C.gold})`, border: "none", borderRadius: 20, padding: "7px 14px", fontSize: 12, fontWeight: 700, color: C.white, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 3px 10px rgba(232,147,90,0.35)` }}>
+                        ＋ 追加
+                      </button>
                     </div>
                     {/* 小カテゴリ絞り込みタブ */}
                     <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
@@ -3542,6 +3568,55 @@ export default function App() {
       )}
 
       {/* ユーザーメニュー */}
+      {/* エントリー追加モーダル */}
+      {addEntryForCat && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
+          <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
+            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>
+                ＋ 人生{addEntryForCat.name}を追加
+              </div>
+            </div>
+            <div style={{ padding: "16px" }}>
+              <EntryForm
+                categoryName={addEntryForCat.name}
+                onSave={async (entry) => {
+                  const dbEntry = {
+                    user_id: user.id,
+                    category_id: addEntryForCat.id,
+                    name: entry.name,
+                    prefecture: entry.prefecture || "",
+                    rec: entry.rec ?? 2,
+                    star: entry.star ?? 0,
+                    tags: entry.tags || [],
+                    comment: entry.comment || "",
+                    visit_date: entry.visitDate || null,
+                    place_data: entry.placeData || null,
+                    rank_order: 0,
+                  };
+                  const { data: newEnt, error } = await supabase.from("entries").insert(dbEntry).select().single();
+                  if (error) { alert("保存エラー: " + error.message); return; }
+                  const savedId = newEnt?.id || entry.id;
+                  if (entry.photo) { try { localStorage.setItem(`photo_${savedId}`, entry.photo); } catch {} }
+                  const finalEntry = { ...entry, id: savedId };
+                  setCategories(prev => prev.map(c =>
+                    c.id === addEntryForCat.id
+                      ? { ...c, entries: sortEntriesByStar([...c.entries, finalEntry]) }
+                      : c
+                  ));
+                  setAddEntryForCat(null);
+                  // 追加した大カテゴリを表示
+                  const bigCatId = addEntryForCat.bigCat || addEntryForCat.big_cat || "eat";
+                  setActiveBigCat(bigCatId);
+                }}
+                onCancel={() => setAddEntryForCat(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ホームから直接編集モーダル */}
       {editingHomeEntry && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
