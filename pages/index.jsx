@@ -1289,7 +1289,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
-    loadGoogleMaps(() => {
+    function initMap() {
       if (!mapRef.current || mapInstanceRef.current) return;
       mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
         zoom: 5, center: { lat: 36.5, lng: 137.0 },
@@ -1297,7 +1297,12 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
         styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
       });
       setMapReady(true);
-    });
+    }
+    if (window.google?.maps?.Map) {
+      initMap();
+    } else {
+      loadGoogleMaps(initMap);
+    }
   }, []);
 
   useEffect(() => {
