@@ -1563,7 +1563,11 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
       <div style={{ background: C.ink, color: C.white, padding: "28px 16px 8px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} onLogoClick={onBack}/>
-          <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user?.name?.split(" ")[0]}</div>
+          <button onClick={() => setShowUserMenu(true)} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontSize: 16 }}>👤</span>
+            <span>{user?.name?.split(" ")[0] || "メニュー"}</span>
+            <span>▾</span>
+          </button>
         </div>
         {/* 自分 / フレンド タブ */}
         <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 2, marginBottom: 6, gap: 2 }}>
@@ -2482,7 +2486,7 @@ function AddFollowModal({ user, onClose, onAdded }) {
 }
 
 // ===== フォロービュー =====
-function FriendsView({ user }) {
+function FriendsView({ user, onOpenMenu }) {
   const [following, setFollowing] = useState([]); // 自分がフォローしている
   const [followers, setFollowers] = useState([]); // 自分をフォローしている
   const [friends, setFriends] = useState([]); // 相互フォロー
@@ -2609,7 +2613,11 @@ function FriendsView({ user }) {
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} />
-          <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user.name?.split(" ")[0]}</div>
+          <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontSize: 16 }}>👤</span>
+            <span>{user.name?.split(" ")[0] || "メニュー"}</span>
+            <span>▾</span>
+          </button>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
           <div style={{ fontSize: 20, fontWeight: "bold" }}>👥 フォロー</div>
@@ -2751,13 +2759,17 @@ function FriendsView({ user }) {
   );
 }
 
-function FriendMapView({ user }) {
+function FriendMapView({ user, onOpenMenu }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} />
-          <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user.name?.split(" ")[0]}</div>
+          <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontSize: 16 }}>👤</span>
+            <span>{user.name?.split(" ")[0] || "メニュー"}</span>
+            <span>▾</span>
+          </button>
         </div>
         <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>🌐 フレンド地図</div>
       </div>
@@ -3212,13 +3224,13 @@ export default function App() {
   );
   if (activeTab === "friends") return (
     <>
-      <FriendsView user={user} />
+      <FriendsView user={user} onOpenMenu={() => setShowUserMenu(true)} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
   if (activeTab === "friendsmap") return (
     <>
-      <FriendMapView user={user} />
+      <FriendMapView user={user} onOpenMenu={() => setShowUserMenu(true)} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
