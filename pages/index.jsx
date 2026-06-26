@@ -1560,19 +1560,19 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
   return (
     <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       {/* ヘッダー（固定）*/}
-      <div style={{ background: C.ink, color: C.white, padding: "44px 16px 10px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 16px 8px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} onLogoClick={onBack}/>
           <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user?.name?.split(" ")[0]}</div>
         </div>
         {/* 自分 / フレンド タブ */}
-        <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginBottom: 8, gap: 3 }}>
+        <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 2, marginBottom: 6, gap: 2 }}>
           <button onClick={() => { setMapMode("self"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
-            style={{ flex: 1, padding: "6px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
+            style={{ flex: 1, padding: "5px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
             自分
           </button>
           <button onClick={() => { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
-            style={{ flex: 1, padding: "6px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+            style={{ flex: 1, padding: "5px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
             フレンド({followingUsers.length})
           </button>
         </div>
@@ -3306,13 +3306,13 @@ export default function App() {
           </div>
 
           {/* 自分 / フレンド タブ */}
-          <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginTop: 14, gap: 3 }}>
+          <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 2, marginTop: 10, gap: 2 }}>
             <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); setActiveBigCat("all"); }}
-              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: !isFriendMode ? "bold" : "normal", background: !isFriendMode ? C.white : "transparent", color: !isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
+              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: !isFriendMode ? "bold" : "normal", background: !isFriendMode ? C.white : "transparent", color: !isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
               自分
             </button>
             <button onClick={() => { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); }}
-              style={{ flex: 1, padding: "8px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", fontWeight: isFriendMode ? "bold" : "normal", background: isFriendMode ? C.white : "transparent", color: isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: isFriendMode ? "bold" : "normal", background: isFriendMode ? C.white : "transparent", color: isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
               フレンド {followingUsers.length > 0 ? `(${followingUsers.length})` : ""}
             </button>
           </div>
