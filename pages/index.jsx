@@ -816,14 +816,13 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
             {/* 訪問日 */}
             <div style={{ marginBottom:14 }}>
               <label style={labelStyle}>訪問日（任意）</label>
-              <div style={{ position:"relative" }}>
-                <input type="date" value={visitDate} onChange={e=>setVisitDate(e.target.value)}
-                  style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0, zIndex:2, cursor:"pointer", boxSizing:"border-box" }}/>
-                <div style={{ padding:"12px 14px", border:`1.5px solid ${visitDate?C.terra:C.border}`, borderRadius:10, fontSize:16, background:visitDate?"#FFF8F5":C.white, color:visitDate?C.ink:C.muted, display:"flex", alignItems:"center", gap:8, minHeight:48, pointerEvents:"none" }}>
-                  <span>📅</span>
-                  <span>{visitDate?new Date(visitDate+"T00:00:00").toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric"}):"日付を選択"}</span>
+              <input type="date" value={visitDate} onChange={e=>setVisitDate(e.target.value)}
+                style={{ ...inputStyle, colorScheme:"light" }}/>
+              {visitDate && (
+                <div style={{ fontSize:12, color:C.terra, marginTop:4 }}>
+                  📅 {new Date(visitDate+"T00:00:00").toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric"})}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* タグ */}
@@ -1349,18 +1348,24 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
   const [friendEntries, setFriendEntries] = useState([]);
   const [selectedCatName, setSelectedCatName] = useState(null);
   const [loadingFriend, setLoadingFriend] = useState(false);
-  const [mapOpen, setMapOpen] = useState(false); // 地図の開閉
+  const [mapOpen, setMapOpen] = useState(true); // 地図の開閉（デフォルト開）
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
 
-  // 自分のエントリー（座標付き・大カテゴリフィルター）
+  // 自分のエントリー（座標付き・大カテゴリ・小カテゴリフィルター）
   const myEntries = categories.flatMap(cat => {
     const catBig = cat.bigCat || cat.big_cat || "eat";
     if (activeBigFilter !== "all" && catBig !== activeBigFilter) return [];
+    if (activeSmallFilter && cat.name !== activeSmallFilter) return [];
     return (cat.entries || [])
       .filter(e => e.placeData?.lat && e.placeData?.lng)
       .map((e, idx) => ({ ...e, categoryName: cat.name, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }));
   });
+
+  // 現在の大カテゴリに属する小カテゴリ一覧
+  const smallCatsInBig = activeBigFilter === "all" ? [] :
+    categories.filter(c => (c.bigCat || c.big_cat || "eat") === activeBigFilter);
 
   // フレンド個別エントリー
   const filteredFriendEntries = friendEntries.filter(e => e.placeData?.lat && e.placeData?.lng);
@@ -1439,13 +1444,30 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
 
         {/* 自分：大カテゴリフィルター */}
         {mapMode === "self" && (
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
-            {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
-              <button key={bc.id} onClick={() => { setActiveBigFilter(bc.id); setSelectedPlace(null); }}
-                style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: activeBigFilter === bc.id ? C.terra : "rgba(255,255,255,0.1)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 11, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                <span>{bc.icon}</span><span>{bc.label}</span>
-              </button>
-            ))}
+          <div>
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+              {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
+                <button key={bc.id} onClick={() => { setActiveBigFilter(bc.id); setActiveSmallFilter(null); setSelectedPlace(null); }}
+                  style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: activeBigFilter === bc.id ? C.terra : "rgba(255,255,255,0.1)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 11, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                  <span>{bc.icon}</span><span>{bc.label}</span>
+                </button>
+              ))}
+            </div>
+            {/* 小カテゴリフィルター */}
+            {smallCatsInBig?.length > 0 && (
+              <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2, marginTop: 6 }}>
+                <button onClick={() => setActiveSmallFilter(null)}
+                  style={{ flexShrink: 0, padding: "4px 10px", borderRadius: 20, border: "none", background: !activeSmallFilter ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: !activeSmallFilter ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: !activeSmallFilter ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>
+                  すべて
+                </button>
+                {smallCatsInBig.map(cat => (
+                  <button key={cat.id} onClick={() => { setActiveSmallFilter(cat.name); setSelectedPlace(null); }}
+                    style={{ flexShrink: 0, padding: "4px 10px", borderRadius: 20, border: "none", background: activeSmallFilter === cat.name ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: activeSmallFilter === cat.name ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: activeSmallFilter === cat.name ? 700 : 400, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1582,12 +1604,14 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
                           {getTagEmoji(entry.categoryName)}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>
-                            {entry.ownerName ? `${entry.ownerName} さん · ` : ""}人生{entry.categoryName}
-                            {entry.prefecture ? ` · ${entry.prefecture}` : ""}
+                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>
+                            {entry.ownerName ? `👤 ${entry.ownerName} · ` : ""}{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}
                           </div>
-                          <div style={{ marginTop: 4 }}><RecBadge value={entry.rec}/></div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center", flexWrap: "wrap" }}>
+                            <RecBadge value={entry.rec}/>
+                            {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -2762,6 +2786,7 @@ export default function App() {
   const [activeBigCat, setActiveBigCat] = useState("all"); // 大カテゴリフィルター
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
   const [crossCatFilterUser, setCrossCatFilterUser] = useState(null);
   const [crossCatFilterRec, setCrossCatFilterRec] = useState(null);
   const [friendViewSortCat, setFriendViewSortCat] = useState(null);
