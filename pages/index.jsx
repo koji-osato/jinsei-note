@@ -1290,6 +1290,25 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   const markersRef = useRef([]);
   const [mapReady, setMapReady] = useState(false);
 
+  // カスタムピンSVGを生成（吹き出し型）
+  function createPinIcon(color, isSelected = false) {
+    const size = isSelected ? 44 : 36;
+    const svg = `<svg width="${size}" height="${size + 8}" viewBox="0 0 44 52" xmlns="http://www.w3.org/2000/svg">
+      <filter id="shadow">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/>
+      </filter>
+      <circle cx="22" cy="20" r="${isSelected ? 18 : 15}" fill="${color}" filter="url(#shadow)"/>
+      <circle cx="22" cy="20" r="${isSelected ? 14 : 11}" fill="white" opacity="0.25"/>
+      <polygon points="16,30 28,30 22,42" fill="${color}" filter="url(#shadow)"/>
+      ${isSelected ? `<circle cx="22" cy="20" r="6" fill="white"/>` : `<circle cx="22" cy="20" r="5" fill="white"/>`}
+    </svg>`;
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+      scaledSize: new window.google.maps.Size(size, size + 8),
+      anchor: new window.google.maps.Point(size / 2, size + 8),
+    };
+  }
+
   useEffect(() => {
     function initMap() {
       if (!mapRef.current || mapInstanceRef.current) return;
@@ -1312,14 +1331,22 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
     entries.forEach(entry => {
+      const color = entry.accentColor || C.terra;
+      const isSelected = selectedPlace?.id === entry.id;
       const marker = new window.google.maps.Marker({
         position: { lat: entry.placeData.lat, lng: entry.placeData.lng },
-        map: mapInstanceRef.current, title: entry.name,
-        icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: entry.accentColor || C.terra, fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+        map: mapInstanceRef.current,
+        title: entry.name,
+        icon: createPinIcon(color, isSelected),
+        zIndex: isSelected ? 100 : 1,
       });
       marker.addListener("click", () => {
         onSelectPlace(entry);
+        // ズーム + パン
         mapInstanceRef.current.panTo({ lat: entry.placeData.lat, lng: entry.placeData.lng });
+        if (mapInstanceRef.current.getZoom() < 15) {
+          mapInstanceRef.current.setZoom(15);
+        }
       });
       markersRef.current.push(marker);
     });
@@ -1329,14 +1356,17 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
       mapInstanceRef.current.fitBounds(bounds, { padding: 60 });
     } else if (entries.length === 1) {
       mapInstanceRef.current.setCenter({ lat: entries[0].placeData.lat, lng: entries[0].placeData.lng });
-      mapInstanceRef.current.setZoom(14);
+      mapInstanceRef.current.setZoom(15);
     }
-  }, [mapReady, entries.length]);
+  }, [mapReady, entries.length, selectedPlace?.id]);
 
-  // 選択時にパン
+  // 選択時にズーム＋パン
   useEffect(() => {
     if (selectedPlace && mapInstanceRef.current) {
       mapInstanceRef.current.panTo({ lat: selectedPlace.placeData.lat, lng: selectedPlace.placeData.lng });
+      if (mapInstanceRef.current.getZoom() < 15) {
+        mapInstanceRef.current.setZoom(15);
+      }
     }
   }, [selectedPlace]);
 
@@ -3288,6 +3318,12 @@ export default function App() {
                             {entry.comment && <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "9px 11px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>「{entry.comment}」</div>}
                             {entry.tags?.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>{entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}</div>}
                             {entry.photo && <div style={{ marginBottom: 8, borderRadius: 10, overflow: "hidden" }}><img src={entry.photo} alt="" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }}/></div>}
+                            {entry.placeData?.address && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📍 {entry.placeData.address}</div>}
+                            <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
+                              target="_blank" rel="noopener noreferrer"
+                              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", marginBottom: 10 }}>
+                              🗺 Google Mapsで見る
+                            </a>
                             <div style={{ display: "flex", gap: 8 }}>
                               <button onClick={() => setEditingHomeEntry({ ...entry, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>✏️ 編集</button>
                               <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>🗑 削除</button>
@@ -3440,7 +3476,12 @@ export default function App() {
                                     <img src={entry.photo} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}/>
                                   </div>
                                 )}
-                                {/* 編集・削除ボタン */}
+                                {entry.placeData?.address && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📍 {entry.placeData.address}</div>}
+                                <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
+                                  target="_blank" rel="noopener noreferrer"
+                                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", marginBottom: 10 }}>
+                                  🗺 Google Mapsで見る
+                                </a>
                                 <div style={{ display: "flex", gap: 8 }}>
                                   <button onClick={() => setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                                     ✏️ 編集
@@ -3584,6 +3625,13 @@ export default function App() {
                       {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
                     </div>
                     {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
+                    {entry.placeData?.address && (
+                      <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", marginTop: 6 }}>
+                        📍 {entry.placeData.address}
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>
