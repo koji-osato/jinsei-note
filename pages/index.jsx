@@ -1224,9 +1224,12 @@ function BrowseView({ onSelect, onBack }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: C.ink, color: C.white, padding: "16px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
-        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
-        <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <LogoBanner darkBg={true} />
+          <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 13, cursor: "pointer", padding: "7px 14px", display: "inline-flex", alignItems: "center", gap: 5, borderRadius: 20, touchAction: "manipulation" }}>✕ 閉じる</button>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
         <div style={{ position: "relative" }}>
           <input value={query} onChange={e => setQuery(e.target.value)}
             placeholder="カテゴリを検索..."
@@ -3467,16 +3470,24 @@ export default function App() {
               <div>
                 {/* フレンドで探す */}
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>👤 フレンドで探す</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>👤 フレンドで探す</div>
+                    <button onClick={() => { setFriendSearchQuery(""); }}
+                      style={{ fontSize: 12, color: C.terra, background: `linear-gradient(135deg,${C.terra}15,${C.gold}15)`, border: `1px solid ${C.terra}40`, borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, touchAction: "manipulation" }}>
+                      フレンド一覧を見る →
+                    </button>
+                  </div>
+                  {/* 検索窓 */}
                   <div style={{ position: "relative", marginBottom: 10 }}>
                     <input value={friendSearchQuery} onChange={e=>setFriendSearchQuery(e.target.value)}
-                      placeholder="名前・ユーザーIDで検索"
+                      placeholder="名前・ユーザーIDで絞り込む"
                       style={{ ...inputStyle, paddingLeft: 36 }}/>
                     <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
                   </div>
+                  {/* 一覧（検索中 or 一覧ボタン後は全件表示） */}
                   {followingUsers.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>フォロー中のユーザーがいません</div>
-                  ) : (
+                  ) : filteredFriendUsers.length > 0 ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {filteredFriendUsers.sort((a,b) => getFriendCount(b.id)-getFriendCount(a.id)).map(fu => (
                         <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); setFriendViewSortCat(null); setFriendViewSortRec(null); }}
@@ -3492,21 +3503,31 @@ export default function App() {
                         </button>
                       ))}
                     </div>
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "16px 0", color: C.muted, fontSize: 13 }}>一致するフレンドがいません</div>
                   )}
                 </div>
 
                 {/* カテゴリで探す */}
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>📂 カテゴリで探す</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>📂 カテゴリで探す</div>
+                    <button onClick={() => { setCatSearchQuery(""); }}
+                      style={{ fontSize: 12, color: C.terra, background: `linear-gradient(135deg,${C.terra}15,${C.gold}15)`, border: `1px solid ${C.terra}40`, borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, touchAction: "manipulation" }}>
+                      カテゴリ一覧を見る →
+                    </button>
+                  </div>
+                  {/* 検索窓 */}
                   <div style={{ position: "relative", marginBottom: 10 }}>
                     <input value={catSearchQuery} onChange={e=>setCatSearchQuery(e.target.value)}
-                      placeholder="カテゴリ名で検索"
+                      placeholder="カテゴリ名で絞り込む"
                       style={{ ...inputStyle, paddingLeft: 36 }}/>
                     <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
                   </div>
+                  {/* 一覧 */}
                   {friendCatList.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>
-                      {allFriendData.length === 0 ? "フレンドのデータを読み込み中..." : "カテゴリが見つかりません"}
+                      {allFriendData.length === 0 ? "読み込み中..." : catSearchQuery ? "カテゴリが見つかりません" : "フレンドの記録がありません"}
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
