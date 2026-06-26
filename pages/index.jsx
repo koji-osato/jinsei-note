@@ -1645,7 +1645,16 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
                             <RecBadge value={entry.rec}/>
                             {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
                           </div>
+                          {entry.placeData?.address && (
+                            <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>📍 {entry.placeData.address}</div>
+                          )}
                         </div>
+                        <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontSize: 10, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 10, padding: "8px 10px", textDecoration: "none", flexShrink: 0, minWidth: 52 }}>
+                          <span style={{ fontSize: 18 }}>🗺</span>
+                          <span>地図</span>
+                        </a>
                       </div>
                     ))}
                   </div>
@@ -3626,11 +3635,14 @@ export default function App() {
                     </div>
                     {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
                     {entry.placeData?.address && (
-                      <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
-                        target="_blank" rel="noopener noreferrer"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", marginTop: 6 }}>
-                        📍 {entry.placeData.address}
-                      </a>
+                      <div style={{ marginTop: 6 }}>
+                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>📍 {entry.placeData.address}</div>
+                        <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none" }}>
+                          🗺 Google Mapsで見る
+                        </a>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -3679,6 +3691,16 @@ export default function App() {
                       {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
                     </div>
                     {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
+                    {entry.placeData?.address && (
+                      <div style={{ marginTop: 6 }}>
+                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>📍 {entry.placeData.address}</div>
+                        <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none" }}>
+                          🗺 Google Mapsで見る
+                        </a>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
