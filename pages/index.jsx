@@ -1323,8 +1323,10 @@ function BrowseView({ onSelect, onBack }) {
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", padding: "4px 0", fontFamily: "inherit", touchAction: "manipulation" }}>‹ 戻る</button>
+          </div>
           <LogoBanner darkBg={true} />
-          <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", padding: "4px 0", fontFamily: "inherit", touchAction: "manipulation" }}>‹ 戻る</button>
         </div>
         <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
         <div style={{ position: "relative" }}>
@@ -1473,7 +1475,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4" }} />;
 }
 
-function MapView({ categories, onBack, followingUsers, allFriendData }) {
+function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
   const [mapMode, setMapMode] = useState("self");
   const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -1561,6 +1563,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
       <div style={{ background: C.ink, color: C.white, padding: "44px 16px 10px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <LogoBanner darkBg={true} onLogoClick={onBack}/>
+          <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user?.name?.split(" ")[0]}</div>
         </div>
         {/* 自分 / フレンド タブ */}
         <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginBottom: 8, gap: 3 }}>
@@ -2604,7 +2607,10 @@ function FriendsView({ user }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 16px" }}>
-        <LogoBanner darkBg={true} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <LogoBanner darkBg={true} />
+          <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user.name?.split(" ")[0]}</div>
+        </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
           <div style={{ fontSize: 20, fontWeight: "bold" }}>👥 フォロー</div>
           <button onClick={() => setShowAdd(true)} style={{ background: C.terra, border: "none", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "bold", color: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
@@ -2749,7 +2755,10 @@ function FriendMapView({ user }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
-        <LogoBanner darkBg={true} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <LogoBanner darkBg={true} />
+          <div style={{ fontSize: 12, color: "#9A8A7A" }}>{user.name?.split(" ")[0]}</div>
+        </div>
         <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>🌐 フレンド地図</div>
       </div>
       <div style={{ padding: "60px 24px", textAlign: "center", color: C.muted }}>
@@ -3197,7 +3206,7 @@ export default function App() {
   // タブ切替で地図・フレンド表示
   if (activeTab === "map") return (
     <>
-      <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} />
+      <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} user={user} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
