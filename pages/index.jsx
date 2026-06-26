@@ -278,6 +278,103 @@ const labelStyle = {
   color: "#888", marginBottom: 6, letterSpacing: 0.5,
 };
 
+// ===== 共通エントリーカード（デフォルト表示）=====
+// isSelf=true: 自分のリスト（★表示・展開あり）
+// isSelf=false: フレンドのリスト（★非表示・展開なし）
+function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onDelete }) {
+  const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
+  const rankBgs = [
+    "linear-gradient(135deg,#D4A843,#E8C060)",
+    "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
+    "linear-gradient(135deg,#A06030,#C08050)",
+  ];
+  return (
+    <div style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)" }}>
+      {/* メイン表示 */}
+      <div style={{ padding: "12px 14px" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          {/* ランクバッジ（rankがある場合） */}
+          {rank && (
+            <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: rank <= 3 ? rankBgs[rank-1] : C.border, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: rank <= 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none" }}>
+              <span style={{ fontSize: 8, fontWeight: 900, color: rank <= 3 ? "#FFF" : C.muted }}>
+                {["1ST","2ND","3RD"][rank-1] || rank}
+              </span>
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* カテゴリ名 */}
+            {entry.categoryName && (
+              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+            )}
+            {/* 店名 */}
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
+            {/* ★・おすすめ度・都道府県 */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
+              {isSelf && entry.star > 0 && <StarDisplay value={entry.star}/>}
+              <RecBadge value={entry.rec}/>
+              {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
+            </div>
+            {/* 住所 */}
+            {entry.placeData?.address && (
+              <div style={{ fontSize: 11, color: C.sub, marginBottom: 4 }}>📍 {entry.placeData.address}</div>
+            )}
+          </div>
+          {/* 右側：地図ボタン + 展開ボタン */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, alignItems: "center" }}>
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontSize: 9, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "6px 8px", textDecoration: "none", minWidth: 44 }}>
+              <span style={{ fontSize: 16 }}>🗺</span>
+              <span>地図</span>
+            </a>
+            {isSelf && (
+              <button onClick={onToggle} style={{ fontSize: 9, color: C.sub, background: C.border, border: "none", borderRadius: 8, padding: "5px 8px", cursor: "pointer", minWidth: 44 }}>
+                {expanded ? "閉じる" : "詳細"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* 展開パネル（自分のみ）*/}
+      {isSelf && expanded && (
+        <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 14px 12px", background: "#FAFAF8" }}>
+          {entry.visitDate && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📅 {entry.visitDate}</div>}
+          {entry.tags?.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>
+              {entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}
+            </div>
+          )}
+          {entry.comment && (
+            <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "9px 11px", background: "#FFF", borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>
+              「{entry.comment}」
+            </div>
+          )}
+          {entry.photo && (
+            <div style={{ marginBottom: 8, borderRadius: 10, overflow: "hidden" }}>
+              <img src={entry.photo} alt="" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }}/>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={onEdit} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "#FFF", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>✏️ 編集</button>
+            <button onClick={onDelete} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>🗑 削除</button>
+          </div>
+        </div>
+      )}
+      {/* フレンドのみ：コメント・住所リンク */}
+      {!isSelf && (entry.comment || entry.placeData?.address) && (
+        <div style={{ borderTop: `1px solid ${C.border}`, padding: "8px 14px 10px", background: "#FAFAF8" }}>
+          {entry.comment && <div style={{ fontSize: 12, color: "#5A4E44", fontStyle: "italic", marginBottom: 6 }}>「{entry.comment}」</div>}
+          {entry.placeData?.address && (
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "4px 10px", textDecoration: "none" }}>
+              🗺 Google Mapsで見る
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ===== おすすめ度バッジ =====
 function RecBadge({ value, large }) {
   const rec = REC_LEVELS.find(r => r.value === value);
@@ -1342,11 +1439,8 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
       });
       marker.addListener("click", () => {
         onSelectPlace(entry);
-        // ズーム + パン
-        mapInstanceRef.current.panTo({ lat: entry.placeData.lat, lng: entry.placeData.lng });
-        if (mapInstanceRef.current.getZoom() < 15) {
-          mapInstanceRef.current.setZoom(15);
-        }
+        mapInstanceRef.current.setZoom(15);
+        mapInstanceRef.current.setCenter({ lat: entry.placeData.lat, lng: entry.placeData.lng });
       });
       markersRef.current.push(marker);
     });
@@ -1360,14 +1454,20 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
     }
   }, [mapReady, entries.length, selectedPlace?.id]);
 
-  // 選択時にズーム＋パン
+  // 選択時にズーム＋センター（iOS対応）
   useEffect(() => {
-    if (selectedPlace && mapInstanceRef.current) {
-      mapInstanceRef.current.panTo({ lat: selectedPlace.placeData.lat, lng: selectedPlace.placeData.lng });
-      if (mapInstanceRef.current.getZoom() < 15) {
-        mapInstanceRef.current.setZoom(15);
-      }
-    }
+    if (!selectedPlace || !mapInstanceRef.current) return;
+    const lat = selectedPlace.placeData.lat;
+    const lng = selectedPlace.placeData.lng;
+    // iOSはsetZoom→setCenterの順で確実に動く
+    mapInstanceRef.current.setZoom(15);
+    mapInstanceRef.current.setCenter({ lat, lng });
+    // 念のため少し遅らせて再セット
+    setTimeout(() => {
+      if (!mapInstanceRef.current) return;
+      mapInstanceRef.current.setZoom(15);
+      mapInstanceRef.current.setCenter({ lat, lng });
+    }, 150);
   }, [selectedPlace]);
 
   return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4" }} />;
@@ -1458,21 +1558,22 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
   return (
     <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       {/* ヘッダー */}
-      <div style={{ background: C.ink, color: C.white, padding: "28px 16px 12px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <LogoBanner darkBg={true} onLogoClick={onBack}/>
-        </div>
-
-        {/* 自分 / フレンド タブ */}
-        <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginBottom: 10, gap: 3 }}>
-          <button onClick={() => { setMapMode("self"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
-            style={{ flex: 1, padding: "7px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
-            自分
-          </button>
-          <button onClick={() => { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
-            style={{ flex: 1, padding: "7px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
-            フレンド({followingUsers.length})
-          </button>
+      <div style={{ background: C.ink, color: C.white, padding: "44px 12px 8px", flexShrink: 0 }}>
+        {/* ロゴ + タブ 横並び */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <div onClick={onBack} style={{ cursor: "pointer", flexShrink: 0 }}>
+            <LJIcon size={32} darkBg={true}/>
+          </div>
+          <div style={{ flex: 1, display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 2, gap: 2 }}>
+            <button onClick={() => { setMapMode("self"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
+              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
+              自分
+            </button>
+            <button onClick={() => { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
+              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+              フレンド({followingUsers.length})
+            </button>
+          </div>
         </div>
 
         {/* 自分：大カテゴリフィルター */}
@@ -3305,41 +3406,16 @@ export default function App() {
                   const years = Object.keys(byYear).sort((a,b) => b-a);
 
                   function EntryCard({ entry }) {
-                    const isOpen = expandedEntryId === entry.id;
                     const catObj = categories.find(c => c.name === entry.categoryName);
                     return (
-                      <div style={{ background: C.white, borderRadius: 14, marginBottom: 6, border: `1px solid ${isOpen ? C.terra : C.border}`, overflow: "hidden" }}>
-                        <div onClick={() => setExpandedEntryId(isOpen ? null : entry.id)} style={{ padding: "12px 14px", display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                            <div style={{ display: "flex", gap: 6, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
-                              {entry.star > 0 && <StarDisplay value={entry.star}/>}
-                              <RecBadge value={entry.rec}/>
-                              {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                            </div>
-                          </div>
-                          <span style={{ color: C.muted, fontSize: 12, flexShrink: 0 }}>{isOpen ? "▲" : "▼"}</span>
-                        </div>
-                        {isOpen && (
-                          <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 14px 14px", background: "#FAFAF8" }}>
-                            {entry.visitDate && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📅 {entry.visitDate}</div>}
-                            {entry.comment && <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "9px 11px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>「{entry.comment}」</div>}
-                            {entry.tags?.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>{entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}</div>}
-                            {entry.photo && <div style={{ marginBottom: 8, borderRadius: 10, overflow: "hidden" }}><img src={entry.photo} alt="" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }}/></div>}
-                            {entry.placeData?.address && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📍 {entry.placeData.address}</div>}
-                            <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
-                              target="_blank" rel="noopener noreferrer"
-                              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", marginBottom: 10 }}>
-                              🗺 Google Mapsで見る
-                            </a>
-                            <div style={{ display: "flex", gap: 8 }}>
-                              <button onClick={() => setEditingHomeEntry({ ...entry, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>✏️ 編集</button>
-                              <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>🗑 削除</button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <EntryCardDisplay
+                        entry={entry}
+                        isSelf={true}
+                        expanded={expandedEntryId === entry.id}
+                        onToggle={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}
+                        onEdit={() => setEditingHomeEntry({ ...entry, categoryId: catObj?.id })}
+                        onDelete={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}}
+                      />
                     );
                   }
 
@@ -3449,59 +3525,16 @@ export default function App() {
                         const isOpen = expandedEntryId === entry.id;
                         const catObj = categories.find(c => c.name === entry.categoryName);
                         return (
-                          <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 16, marginBottom: 8, border: `1px solid ${isOpen ? C.terra : C.border}`, overflow: "hidden", boxShadow: isOpen ? `0 4px 16px rgba(232,147,90,0.12)` : "0 2px 8px rgba(24,22,15,0.05)" }}>
-                            {/* メイン行（タップで展開）*/}
-                            <div onClick={() => setExpandedEntryId(isOpen ? null : entry.id)} style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
-                              <div style={{ width: 28, height: 28, borderRadius: 8, background: i===0&&!activeCatFilter?"linear-gradient(135deg,#D4A843,#E8C060)":i===1&&!activeCatFilter?"linear-gradient(135deg,#9AA8B8,#B8C4D0)":i===2&&!activeCatFilter?"linear-gradient(135deg,#A06030,#C08050)":C.border, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                <span style={{ fontSize: 8, fontWeight: 900, color: (i<3&&!activeCatFilter)?"#FFF":C.muted }}>{["1ST","2ND","3RD"][i]||`${i+1}`}</span>
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                                <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-                                  {entry.star > 0 && <StarDisplay value={entry.star}/>}
-                                  <RecBadge value={entry.rec}/>
-                                  {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                                </div>
-                              </div>
-                              <span style={{ color: C.muted, fontSize: 14, flexShrink: 0 }}>{isOpen ? "▲" : "▼"}</span>
-                            </div>
-                            {/* 展開パネル */}
-                            {isOpen && (
-                              <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 16px 14px", background: "#FAFAF8" }}>
-                                {entry.visitDate && <div style={{ fontSize: 12, color: C.sub, marginBottom: 8 }}>📅 {entry.visitDate}</div>}
-                                {entry.comment && (
-                                  <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.7, padding: "10px 12px", background: C.white, borderRadius: 10, borderLeft: `3px solid ${C.terra}`, fontStyle: "italic", marginBottom: 8 }}>
-                                    「{entry.comment}」
-                                  </div>
-                                )}
-                                {entry.tags?.length > 0 && (
-                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                                    {entry.tags.map(t => <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "#F0EDE8", color: C.sub }}>{t}</span>)}
-                                  </div>
-                                )}
-                                {entry.photo && (
-                                  <div style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden" }}>
-                                    <img src={entry.photo} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}/>
-                                  </div>
-                                )}
-                                {entry.placeData?.address && <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>📍 {entry.placeData.address}</div>}
-                                <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
-                                  target="_blank" rel="noopener noreferrer"
-                                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none", marginBottom: 10 }}>
-                                  🗺 Google Mapsで見る
-                                </a>
-                                <div style={{ display: "flex", gap: 8 }}>
-                                  <button onClick={() => setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: catObj?.id })} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                    ✏️ 編集
-                                  </button>
-                                  <button onClick={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}} style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                                    🗑 削除
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          <EntryCardDisplay
+                            key={`${entry.id}-${i}`}
+                            entry={entry}
+                            rank={!activeCatFilter ? i+1 : null}
+                            isSelf={true}
+                            expanded={expandedEntryId === entry.id}
+                            onToggle={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}
+                            onEdit={() => setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: catObj?.id })}
+                            onDelete={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}}
+                          />
                         );
                       });
                     })()}
@@ -3625,26 +3658,7 @@ export default function App() {
                 {friendViewFiltered.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>記録がありません</div>
                 ) : friendViewFiltered.map((entry, i) => (
-                  <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}` }}>
-                    <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                      <RecBadge value={entry.rec}/>
-                      {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                      {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
-                    </div>
-                    {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
-                    {entry.placeData?.address && (
-                      <div style={{ marginTop: 6 }}>
-                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>📍 {entry.placeData.address}</div>
-                        <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none" }}>
-                          🗺 Google Mapsで見る
-                        </a>
-                      </div>
-                    )}
-                  </div>
+                  <EntryCardDisplay key={`${entry.id}-${i}`} entry={entry} isSelf={false}/>
                 ))}
               </div>
             )}
@@ -3682,26 +3696,7 @@ export default function App() {
                     <div>記録がありません</div>
                   </div>
                 ) : crossCatFiltered.map((entry, i) => (
-                  <div key={`${entry.id}-${i}`} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 8, border: `1px solid ${C.border}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.terra, marginBottom: 3 }}>👤 {entry.ownerName}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                      <RecBadge value={entry.rec}/>
-                      {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                      {entry.visitDate && <span style={{ fontSize: 10, color: C.muted }}>📅 {entry.visitDate}</span>}
-                    </div>
-                    {entry.comment && <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontStyle: "italic" }}>「{entry.comment}」</div>}
-                    {entry.placeData?.address && (
-                      <div style={{ marginTop: 6 }}>
-                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>📍 {entry.placeData.address}</div>
-                        <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "5px 12px", textDecoration: "none" }}>
-                          🗺 Google Mapsで見る
-                        </a>
-                      </div>
-                    )}
-                  </div>
+                  <EntryCardDisplay key={`${entry.id}-${i}`} entry={{ ...entry, categoryName: entry.categoryName }} isSelf={false}/>
                 ))}
               </div>
             )}
