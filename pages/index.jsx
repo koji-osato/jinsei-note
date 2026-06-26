@@ -1342,26 +1342,30 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
 }
 
 function MapView({ categories, onBack, followingUsers, allFriendData }) {
-  const [mapMode, setMapMode] = useState("self"); // "self" | "select" | "friend" | "category"
-  const [activeFilter, setActiveFilter] = useState("すべて");
+  const [mapMode, setMapMode] = useState("self");
+  const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
   const [friendEntries, setFriendEntries] = useState([]);
   const [selectedCatName, setSelectedCatName] = useState(null);
   const [loadingFriend, setLoadingFriend] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false); // 地図の開閉
+  const [friendSearchQuery, setFriendSearchQuery] = useState("");
+  const [catSearchQuery, setCatSearchQuery] = useState("");
 
-  // 自分のエントリー（座標付きのみ）
-  const myEntries = categories.flatMap(cat =>
-    (cat.entries || [])
+  // 自分のエントリー（座標付き・大カテゴリフィルター）
+  const myEntries = categories.flatMap(cat => {
+    const catBig = cat.bigCat || cat.big_cat || "eat";
+    if (activeBigFilter !== "all" && catBig !== activeBigFilter) return [];
+    return (cat.entries || [])
       .filter(e => e.placeData?.lat && e.placeData?.lng)
-      .map((e, idx) => ({ ...e, categoryName: cat.name, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }))
-  );
-  const filteredMyEntries = activeFilter === "すべて" ? myEntries : myEntries.filter(e => e.categoryName === activeFilter);
+      .map((e, idx) => ({ ...e, categoryName: cat.name, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }));
+  });
 
-  // フレンド個別エントリー（座標付きのみ）
+  // フレンド個別エントリー
   const filteredFriendEntries = friendEntries.filter(e => e.placeData?.lat && e.placeData?.lng);
 
-  // カテゴリ横断：全フレンドの指定カテゴリエントリー（座標付きのみ）
+  // カテゴリ横断
   const crossCatEntries = selectedCatName
     ? allFriendData.flatMap((fd, fi) =>
         (fd.categories.find(c => c.name === selectedCatName)?.entries || [])
@@ -1370,14 +1374,22 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
       )
     : [];
 
-  // 全フレンドのカテゴリ一覧（座標付きエントリーを持つもの）
-  const friendCatNames = [...new Set(
-    allFriendData.flatMap(fd =>
-      fd.categories.filter(cat =>
-        cat.entries.some(e => e.placeData?.lat && e.placeData?.lng)
-      ).map(cat => cat.name)
-    )
-  )];
+  // フレンドカテゴリ集計
+  const friendCatStats = {};
+  allFriendData.forEach(fd => {
+    fd.categories.forEach(cat => {
+      if (!cat.entries.some(e => e.placeData?.lat && e.placeData?.lng)) return;
+      if (!friendCatStats[cat.name]) friendCatStats[cat.name] = 0;
+      friendCatStats[cat.name]++;
+    });
+  });
+  const friendCatList = Object.entries(friendCatStats)
+    .sort((a,b) => b[1]-a[1])
+    .filter(([name]) => !catSearchQuery.trim() || name.includes(catSearchQuery.trim()));
+
+  const filteredFriendUsers = friendSearchQuery.trim()
+    ? followingUsers.filter(u => u.name?.includes(friendSearchQuery.trim()) || u.user_code?.includes(friendSearchQuery.trim()))
+    : followingUsers;
 
   async function loadFriendEntries(friend) {
     setLoadingFriend(true);
@@ -1385,36 +1397,33 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
     const { data: cats } = await supabase.from("categories").select("*").eq("user_id", friend.id);
     if (!cats || cats.length === 0) { setFriendEntries([]); setLoadingFriend(false); return; }
     const catIds = cats.map(c => c.id);
-    // 座標付きのみ取得
-    const { data: ents } = await supabase.from("entries").select("*")
-      .in("category_id", catIds)
-      .not("place_data", "is", null);
+    const { data: ents } = await supabase.from("entries").select("*").in("category_id", catIds).not("place_data", "is", null);
     const result = (ents || [])
       .filter(e => e.place_data?.lat && e.place_data?.lng)
       .map((e, idx) => ({
         id: e.id, name: e.name, prefecture: e.prefecture || "",
         rec: e.rec ?? 2, comment: e.comment || "",
         categoryName: cats.find(c => c.id === e.category_id)?.name || "",
-        placeData: e.place_data,
-        rank: idx + 1,
-        accentColor: getAccentColor(idx),
-        ownerName: friend.name,
+        placeData: e.place_data, rank: idx + 1,
+        accentColor: getAccentColor(idx), ownerName: friend.name,
       }));
     setFriendEntries(result);
     setLoadingFriend(false);
   }
 
-  // 表示するエントリーと説明文
-  const displayEntries = mapMode === "self" ? filteredMyEntries
+  const displayEntries = mapMode === "self" ? myEntries
     : mapMode === "friend" ? filteredFriendEntries
-    : mapMode === "category" ? crossCatEntries
-    : [];
+    : mapMode === "category" ? crossCatEntries : [];
+
+  const isFriendSelect = mapMode === "select";
 
   return (
     <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       {/* ヘッダー */}
-      <div style={{ background: C.ink, color: C.white, padding: "16px 16px 12px", flexShrink: 0 }}>
-        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 10, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 16px 12px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <LogoBanner darkBg={true} onLogoClick={onBack}/>
+        </div>
 
         {/* 自分 / フレンド タブ */}
         <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginBottom: 10, gap: 3 }}>
@@ -1422,76 +1431,104 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
             style={{ flex: 1, padding: "7px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
             自分
           </button>
-          <button onClick={() => { if (followingUsers.length > 0) { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); } }}
+          <button onClick={() => { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
             style={{ flex: 1, padding: "7px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
             フレンド({followingUsers.length})
           </button>
         </div>
 
-        {/* 自分モード：カテゴリフィルター */}
+        {/* 自分：大カテゴリフィルター */}
         {mapMode === "self" && (
           <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
-            {["すべて", ...categories.map(c => c.name)].map(name => (
-              <button key={name} onClick={() => { setActiveFilter(name); setSelectedPlace(null); }}
-                style={{ background: activeFilter === name ? C.terra : "rgba(255,255,255,0.1)", border: `0.5px solid ${activeFilter === name ? C.terra : "rgba(255,255,255,0.2)"}`, borderRadius: 20, padding: "4px 12px", fontSize: 11, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                {name === "すべて" ? "すべて" : `${getTagEmoji(name)} ${name}`}
+            {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
+              <button key={bc.id} onClick={() => { setActiveBigFilter(bc.id); setSelectedPlace(null); }}
+                style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: activeBigFilter === bc.id ? C.terra : "rgba(255,255,255,0.1)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 11, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                <span>{bc.icon}</span><span>{bc.label}</span>
               </button>
             ))}
           </div>
         )}
 
-        {/* フレンドモード：状態表示 */}
+        {/* フレンド状態表示 */}
         {mapMode === "friend" && viewingFriend && (
-          <div style={{ fontSize: 11, color: "#9A8A7A" }}>👤 {viewingFriend.name} さんの地図</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: "#9A8A7A" }}>👤 {viewingFriend.name} さんの地図</span>
+            <button onClick={() => { setMapMode("select"); setViewingFriend(null); setFriendEntries([]); }}
+              style={{ fontSize: 11, color: C.terra, background: "none", border: "none", cursor: "pointer" }}>← 変更</button>
+          </div>
         )}
         {mapMode === "category" && selectedCatName && (
-          <div style={{ fontSize: 11, color: "#9A8A7A" }}>📂 全フレンドの人生{selectedCatName}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: "#9A8A7A" }}>📂 人生{selectedCatName}</span>
+            <button onClick={() => { setMapMode("select"); setSelectedCatName(null); }}
+              style={{ fontSize: 11, color: C.terra, background: "none", border: "none", cursor: "pointer" }}>← 変更</button>
+          </div>
         )}
       </div>
 
-      {/* フレンド選択画面（地図の代わりに表示）*/}
-      {mapMode === "select" && (
+      {/* フレンド選択画面 */}
+      {isFriendSelect && (
         <div style={{ flex: 1, overflowY: "auto", padding: "16px", paddingBottom: 90 }}>
-          {/* フレンドを選ぶ */}
-          <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>👤 フレンドを選んで地図を見る</div>
-            {followingUsers.map(fu => (
-              <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.border}`, background: "#FAFAF9", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", marginBottom: 8, textAlign: "left" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0 }}>
-                  {fu.name?.charAt(0)}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{fu.name}</div>
-                </div>
-                <span style={{ color: C.muted }}>›</span>
-              </button>
-            ))}
+          {/* フレンドで探す */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>👤 フレンドで探す</div>
+            <div style={{ position: "relative", marginBottom: 10 }}>
+              <input value={friendSearchQuery} onChange={e=>setFriendSearchQuery(e.target.value)}
+                placeholder="名前・ユーザーIDで検索"
+                style={{ ...inputStyle, paddingLeft: 36 }}/>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filteredFriendUsers.map(fu => (
+                <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); setMapOpen(true); }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
+                    {fu.name?.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{fu.name}</div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{fu.user_code}</div>
+                  </div>
+                  <span style={{ color: C.muted }}>›</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* カテゴリで全フレンドを見る */}
-          <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px" }}>
-            <div style={{ fontSize: 13, fontWeight: "bold", color: C.ink, marginBottom: 12 }}>📂 カテゴリで全フレンドの地図を見る</div>
-            {friendCatNames.length === 0 ? (
-              <div style={{ textAlign: "center", color: C.muted, padding: "20px 0", fontSize: 13 }}>座標付きの記録がありません</div>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {friendCatNames.map(name => (
-                  <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setSelectedPlace(null); }}
-                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                    <span>{getTagEmoji(name)}</span>
-                    <span style={{ fontSize: 13, color: C.ink }}>人生{name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* カテゴリで探す */}
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>📂 カテゴリで探す</div>
+            <div style={{ position: "relative", marginBottom: 10 }}>
+              <input value={catSearchQuery} onChange={e=>setCatSearchQuery(e.target.value)}
+                placeholder="カテゴリ名で検索"
+                style={{ ...inputStyle, paddingLeft: 36 }}/>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {friendCatList.map(([name, count]) => (
+                <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setMapOpen(true); setSelectedPlace(null); }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                    {getTagEmoji(name)}
+                  </div>
+                  <div style={{ flex: 1, textAlign: "left" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>人生{name}</div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{count}人が記録</div>
+                  </div>
+                  <span style={{ color: C.muted }}>›</span>
+                </button>
+              ))}
+              {friendCatList.length === 0 && (
+                <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>座標付きの記録がありません</div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* 地図表示（自分・フレンド個別・カテゴリ横断）*/}
-      {mapMode !== "select" && (
-        <>
+      {/* 地図 + リスト */}
+      {!isFriendSelect && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {loadingFriend ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted }}>
               <div style={{ textAlign: "center" }}>
@@ -1501,28 +1538,57 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
             </div>
           ) : (
             <>
-              <MapCore entries={displayEntries} onSelectPlace={setSelectedPlace} selectedPlace={selectedPlace} />
-              <div style={{ background: C.white, borderRadius: "20px 20px 0 0", marginTop: -20, flex: 1, padding: "14px 14px 90px", overflowY: "auto" }}>
-                <div style={{ width: 36, height: 4, background: "#E0E0E0", borderRadius: 2, margin: "0 auto 16px" }} />
+              {/* 地図開閉ボタン */}
+              <button onClick={() => setMapOpen(!mapOpen)} style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "8px 16px", background: C.white, border: "none",
+                borderBottom: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
+                fontSize: 13, fontWeight: 600, color: C.terra, width: "100%",
+                flexShrink: 0,
+              }}>
+                <span>🗺</span>
+                <span>{mapOpen ? "地図を閉じる ▲" : "地図を表示 ▼"}</span>
+                {displayEntries.length > 0 && <span style={{ fontSize: 11, color: C.sub }}>({displayEntries.length}件)</span>}
+              </button>
+
+              {/* 地図（折りたたみ）*/}
+              {mapOpen && (
+                <div style={{ flexShrink: 0 }}>
+                  <MapCore entries={displayEntries} onSelectPlace={e => { setSelectedPlace(e); }} selectedPlace={selectedPlace}/>
+                </div>
+              )}
+
+              {/* エントリーリスト */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px 90px" }}>
                 {displayEntries.length === 0 ? (
                   <div style={{ textAlign: "center", color: C.muted, padding: "40px 0" }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>📍</div>
                     <div>座標付きの記録がありません</div>
+                    <div style={{ fontSize: 12, marginTop: 8 }}>場所検索で登録すると地図に表示されます</div>
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {(selectedPlace ? [selectedPlace, ...displayEntries.filter(e => e.id !== selectedPlace.id)] : displayEntries).map((entry, i) => (
                       <div key={`${entry.id}-${i}`}
-                        onClick={() => setSelectedPlace(entry)}
-                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, background: selectedPlace?.id === entry.id ? "#FFF8F5" : "#FAFAF9", border: `0.5px solid ${selectedPlace?.id === entry.id ? C.terra : C.border}`, cursor: "pointer" }}>
-                        <div style={{ fontSize: 22, flexShrink: 0 }}>{getTagEmoji(entry.categoryName)}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: "bold", color: C.ink }}>{entry.name}</div>
-                          <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>
-                            {entry.ownerName ? `${entry.ownerName} さん・` : ""}人生{entry.categoryName}
-                          </div>
+                        onClick={() => { setSelectedPlace(entry); if (!mapOpen) setMapOpen(true); }}
+                        style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: selectedPlace?.id === entry.id ? "#FFF8F5" : C.white, border: `1px solid ${selectedPlace?.id === entry.id ? C.terra : C.border}`, cursor: "pointer", boxShadow: selectedPlace?.id === entry.id ? `0 3px 12px rgba(232,147,90,0.15)` : "0 1px 4px rgba(24,22,15,0.04)" }}>
+                        {/* ピン改善：カテゴリカラーの円形バッジ */}
+                        <div style={{
+                          width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                          background: entry.accentColor || C.terra,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 18, boxShadow: `0 2px 8px ${entry.accentColor || C.terra}50`,
+                        }}>
+                          {getTagEmoji(entry.categoryName)}
                         </div>
-                        <RankBadge rank={entry.rank} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
+                          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>
+                            {entry.ownerName ? `${entry.ownerName} さん · ` : ""}人生{entry.categoryName}
+                            {entry.prefecture ? ` · ${entry.prefecture}` : ""}
+                          </div>
+                          <div style={{ marginTop: 4 }}><RecBadge value={entry.rec}/></div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1530,7 +1596,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
               </div>
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -1589,12 +1655,11 @@ function LJIcon({ size = 48, darkBg = true }) {
 }
 
 // ===== 横長ロゴ（ヘッダー用）=====
-function LogoBanner({ darkBg = true }) {
+function LogoBanner({ darkBg = true, onLogoClick }) {
   const textColor = darkBg ? "#E8DDD0" : "#6B5344";
-  const subColor = darkBg ? "#9A8A7A" : "#9A8A7A";
   const goldColor = "#C8941A";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div onClick={onLogoClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: onLogoClick ? "pointer" : "default" }}>
       <LJIcon size={44} darkBg={darkBg} />
       <div>
         <div style={{ fontSize: 20, fontWeight: "bold", color: textColor, letterSpacing: 2, lineHeight: 1.1, fontFamily: "Georgia, 'Hiragino Mincho ProN', serif" }}>
@@ -3057,7 +3122,7 @@ export default function App() {
       <div style={{ background: C.ink, padding: "28px 20px 16px", color: C.white }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <LogoBanner darkBg={true} />
+            <LogoBanner darkBg={true} onLogoClick={() => { setActiveBigCat("all"); setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); setExpandedEntryId(null); }} />
             <button onClick={() => setShowUserMenu(true)} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ fontSize: 16 }}>👤</span>
               <span>{user.name?.split(" ")[0] || "メニュー"}</span>
