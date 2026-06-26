@@ -295,7 +295,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
           {/* ランクバッジ（rankがある場合） */}
           {rank && (
-            <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: rank <= 3 ? rankBgs[rank-1] : C.border, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: rank <= 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: rank <= 3 ? rankBgs[rank-1] : C.border, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: rank <= 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none", alignSelf: "flex-start", marginTop: 2 }}>
               <span style={{ fontSize: 8, fontWeight: 900, color: rank <= 3 ? "#FFF" : C.muted }}>
                 {["1ST","2ND","3RD"][rank-1] || rank}
               </span>
@@ -1478,6 +1478,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
   const [mapOpen, setMapOpen] = useState(true); // 地図の開閉（デフォルト開）
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [expandedMapEntryId, setExpandedMapEntryId] = useState(null);
   const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
 
   // 自分のエントリー（座標付き・大カテゴリ・小カテゴリフィルター）
@@ -1722,37 +1723,15 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {(selectedPlace ? [selectedPlace, ...displayEntries.filter(e => e.id !== selectedPlace.id)] : displayEntries).map((entry, i) => (
-                      <div key={`${entry.id}-${i}`}
-                        onClick={() => { setSelectedPlace(entry); if (!mapOpen) setMapOpen(true); }}
-                        style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: selectedPlace?.id === entry.id ? "#FFF8F5" : C.white, border: `1px solid ${selectedPlace?.id === entry.id ? C.terra : C.border}`, cursor: "pointer", boxShadow: selectedPlace?.id === entry.id ? `0 3px 12px rgba(232,147,90,0.15)` : "0 1px 4px rgba(24,22,15,0.04)" }}>
-                        {/* ピン改善：カテゴリカラーの円形バッジ */}
-                        <div style={{
-                          width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                          background: entry.accentColor || C.terra,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 18, boxShadow: `0 2px 8px ${entry.accentColor || C.terra}50`,
-                        }}>
-                          {getTagEmoji(entry.categoryName)}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 2 }}>
-                            {entry.ownerName ? `👤 ${entry.ownerName} · ` : ""}{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}
-                          </div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{entry.name}</div>
-                          <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center", flexWrap: "wrap" }}>
-                            <RecBadge value={entry.rec}/>
-                            {entry.prefecture && <span style={{ fontSize: 10, color: C.sub }}>{entry.prefecture}</span>}
-                          </div>
-                          {entry.placeData?.address && (
-                            <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>📍 {entry.placeData.address}</div>
-                          )}
-                        </div>
-                        <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontSize: 10, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 10, padding: "8px 10px", textDecoration: "none", flexShrink: 0, minWidth: 52 }}>
-                          <span style={{ fontSize: 18 }}>🗺</span>
-                          <span>地図</span>
-                        </a>
+                      <div key={`${entry.id}-${i}`} onClick={() => { setSelectedPlace(entry); if (!mapOpen) setMapOpen(true); }}>
+                        <EntryCardDisplay
+                          entry={entry}
+                          isSelf={mapMode === "self"}
+                          expanded={expandedMapEntryId === entry.id}
+                          onToggle={() => setExpandedMapEntryId(expandedMapEntryId === entry.id ? null : entry.id)}
+                          onEdit={null}
+                          onDelete={null}
+                        />
                       </div>
                     ))}
                   </div>
