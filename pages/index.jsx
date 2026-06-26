@@ -289,7 +289,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
     "linear-gradient(135deg,#A06030,#C08050)",
   ];
   return (
-    <div style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)" }}>
+    <div onClick={isSelf ? onToggle : undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)", cursor: isSelf ? "pointer" : "default" }}>
       {/* メイン表示 */}
       <div style={{ padding: "12px 14px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -319,19 +319,13 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
               <div style={{ fontSize: 11, color: C.sub, marginBottom: 4 }}>📍 {entry.placeData.address}</div>
             )}
           </div>
-          {/* 右側：地図ボタン + 展開ボタン */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, alignItems: "center" }}>
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontSize: 9, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "6px 8px", textDecoration: "none", minWidth: 44 }}>
-              <span style={{ fontSize: 16 }}>🗺</span>
-              <span>地図</span>
-            </a>
-            {isSelf && (
-              <button onClick={onToggle} style={{ fontSize: 9, color: C.sub, background: C.border, border: "none", borderRadius: 8, padding: "5px 8px", cursor: "pointer", minWidth: 44 }}>
-                {expanded ? "閉じる" : "詳細"}
-              </button>
-            )}
-          </div>
+          {/* 右側：地図ボタン */}
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontSize: 9, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "6px 8px", textDecoration: "none", minWidth: 44, flexShrink: 0 }}>
+            <span style={{ fontSize: 16 }}>🗺</span>
+            <span>地図</span>
+          </a>
         </div>
       </div>
       {/* 展開パネル（自分のみ）*/}
@@ -1322,12 +1316,10 @@ function BrowseView({ onSelect, onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", padding: "4px 0", fontFamily: "inherit", touchAction: "manipulation" }}>‹ 戻る</button>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <LogoBanner darkBg={true} />
         </div>
+        <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer", padding: "0 0 8px", fontFamily: "inherit", touchAction: "manipulation" }}>‹ 戻る</button>
         <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
         <div style={{ position: "relative" }}>
           <input value={query} onChange={e => setQuery(e.target.value)}
