@@ -1324,7 +1324,7 @@ function BrowseView({ onSelect, onBack }) {
       <div style={{ background: C.ink, color: C.white, padding: "28px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <LogoBanner darkBg={true} />
-          <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 13, cursor: "pointer", padding: "7px 14px", display: "inline-flex", alignItems: "center", gap: 5, borderRadius: 20, touchAction: "manipulation" }}>✕ 閉じる</button>
+          <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", padding: "4px 0", fontFamily: "inherit", touchAction: "manipulation" }}>‹ 戻る</button>
         </div>
         <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
         <div style={{ position: "relative" }}>
@@ -1557,23 +1557,21 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
 
   return (
     <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
-      {/* ヘッダー */}
-      <div style={{ background: C.ink, color: C.white, padding: "44px 12px 8px", flexShrink: 0 }}>
-        {/* ロゴ + タブ 横並び */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <div onClick={onBack} style={{ cursor: "pointer", flexShrink: 0 }}>
-            <LJIcon size={32} darkBg={true}/>
-          </div>
-          <div style={{ flex: 1, display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 2, gap: 2 }}>
-            <button onClick={() => { setMapMode("self"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
-              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
-              自分
-            </button>
-            <button onClick={() => { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
-              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
-              フレンド({followingUsers.length})
-            </button>
-          </div>
+      {/* ヘッダー（固定）*/}
+      <div style={{ background: C.ink, color: C.white, padding: "44px 16px 10px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <LogoBanner darkBg={true} onLogoClick={onBack}/>
+        </div>
+        {/* 自分 / フレンド タブ */}
+        <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, marginBottom: 8, gap: 3 }}>
+          <button onClick={() => { setMapMode("self"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
+            style={{ flex: 1, padding: "6px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode === "self" ? C.white : "transparent", color: mapMode === "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode === "self" ? "bold" : "normal", touchAction: "manipulation" }}>
+            自分
+          </button>
+          <button onClick={() => { setMapMode("select"); setViewingFriend(null); setSelectedCatName(null); setSelectedPlace(null); }}
+            style={{ flex: 1, padding: "6px", borderRadius: 9, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: mapMode !== "self" ? C.white : "transparent", color: mapMode !== "self" ? C.ink : "rgba(255,255,255,0.7)", fontWeight: mapMode !== "self" ? "bold" : "normal", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
+            フレンド({followingUsers.length})
+          </button>
         </div>
 
         {/* 自分：大カテゴリフィルター */}
@@ -1610,14 +1608,14 @@ function MapView({ categories, onBack, followingUsers, allFriendData }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 11, color: "#9A8A7A" }}>👤 {viewingFriend.name} さんの地図</span>
             <button onClick={() => { setMapMode("select"); setViewingFriend(null); setFriendEntries([]); }}
-              style={{ fontSize: 11, color: C.terra, background: "none", border: "none", cursor: "pointer" }}>← 変更</button>
+              style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
           </div>
         )}
         {mapMode === "category" && selectedCatName && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 11, color: "#9A8A7A" }}>📂 人生{selectedCatName}</span>
             <button onClick={() => { setMapMode("select"); setSelectedCatName(null); }}
-              style={{ fontSize: 11, color: C.terra, background: "none", border: "none", cursor: "pointer" }}>← 変更</button>
+              style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
           </div>
         )}
       </div>
@@ -3359,7 +3357,6 @@ export default function App() {
                       {BIG_CATS.map((bc, idx) => {
                         const count = categories.filter(c => (c.bigCat || c.big_cat || "eat") === bc.id)
                           .reduce((s, c) => s + (c.entries?.length || 0), 0);
-                        if (count === 0) return null;
                         const grad = ["#D4845A,#C8A040","#6890C8,#8870C0","#50A888,#3890B0","#C86878,#B05090","#78A850,#50A870","#8878C8,#C878A8"][idx] || "#999,#666";
                         const [gs, ge] = grad.split(",");
                         return (
@@ -3421,7 +3418,7 @@ export default function App() {
 
                   return (
                     <div>
-                      <button onClick={() => { setActiveBigCat("all"); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                      <button onClick={() => { setActiveBigCat("all"); setExpandedEntryId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
                       <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
 
                       {/* 年グループ */}
@@ -3489,7 +3486,7 @@ export default function App() {
                 {/* 大カテゴリ別★順 */}
                 {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (
                   <div>
-                    <button onClick={() => { setActiveBigCat("all"); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                    <button onClick={() => { setActiveBigCat("all"); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
                         {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
@@ -3637,7 +3634,7 @@ export default function App() {
             {friendTabMode === "friend" && viewingUser && (
               <div>
                 <button onClick={() => { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); }}
-                  style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 4 }}>👤 {viewingUser.name} さんの記録</div>
                 <div style={{ fontSize: 11, color: C.sub, marginBottom: 14 }}>訪問日の新しい順</div>
 
@@ -3667,7 +3664,7 @@ export default function App() {
             {friendTabMode === "category" && selectedCategory && (
               <div>
                 <button onClick={() => { setSelectedCategory(null); setFriendTabMode("select"); }}
-                  style={{ background: "none", border: "none", color: C.terra, fontSize: 14, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>← 戻る</button>
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 4 }}>
                   {getTagEmoji(selectedCategory)} 全フレンドの人生{selectedCategory}
                 </div>
