@@ -440,6 +440,21 @@ function getSuggestions(input) {
   return results;
 }
 
+// ===== シャドウ定数 =====
+const S = {
+  card:    "0 1px 0 rgba(255,255,255,0.85) inset, 0 2px 8px rgba(24,22,15,0.08), 0 8px 24px rgba(24,22,15,0.05)",
+  cardExp: "0 1px 0 rgba(255,255,255,0.85) inset, 0 4px 20px rgba(232,147,90,0.18), 0 12px 36px rgba(232,147,90,0.1)",
+  btnPri:  "0 3px 0 rgba(140,60,10,0.45), 0 6px 20px rgba(232,147,90,0.45), inset 0 1px 0 rgba(255,255,255,0.3)",
+  btnSec:  "0 2px 0 rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
+  btnDel:  "0 2px 0 rgba(200,60,60,0.12), inset 0 1px 0 rgba(255,255,255,1)",
+  fab:     "0 5px 0 rgba(140,60,10,0.5), 0 8px 24px rgba(232,147,90,0.6), inset 0 2px 0 rgba(255,255,255,0.4)",
+  nav:     "0 -2px 16px rgba(24,22,15,0.1), inset 0 1px 0 rgba(255,255,255,0.7)",
+  modal:   "0 -4px 40px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.9)",
+  header:  "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)",
+  badge:   "0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.45)",
+  rank:    "0 3px 0 rgba(0,0,0,0.2), 0 6px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4)",
+};
+
 // ① iOSズーム防止: font-size:16px + touch-action:manipulation
 const inputStyle = {
   display: "block",
@@ -460,6 +475,7 @@ const inputStyle = {
   touchAction: "manipulation",
   minWidth: 0,
   color: C.ink,
+  boxShadow: "inset 0 1px 3px rgba(24,22,15,0.06), 0 1px 0 rgba(255,255,255,0.9)",
 };
 const labelStyle = {
   display: "block", fontSize: 11, fontWeight: "bold",
@@ -477,7 +493,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
     "linear-gradient(135deg,#A06030,#C08050)",
   ];
   return (
-    <div onClick={onToggle || undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)", cursor: onToggle ? "pointer" : "default" }}>
+    <div onClick={onToggle || undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? S.cardExp : S.card, cursor: onToggle ? "pointer" : "default" }}>
       {/* メイン表示 */}
       <div style={{ padding: "12px 14px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -536,8 +552,8 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
             </div>
           )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={onEdit} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "#FFF", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>✏️ 編集</button>
-            <button onClick={onDelete} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>🗑 削除</button>
+            <button onClick={onEdit} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: S.btnSec }}>✏️ 編集</button>
+            <button onClick={onDelete} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: S.btnDel }}>🗑 削除</button>
           </div>
         </div>
       )}
@@ -561,6 +577,7 @@ function RecBadge({ value, large }) {
       padding: large ? "4px 12px" : "3px 9px", borderRadius: 20,
       color: rec.color, background: rec.bg,
       whiteSpace: "nowrap", display: "inline-block", letterSpacing: 0.2,
+      boxShadow: S.badge,
     }}>{rec.short}</span>
   );
 }
@@ -624,7 +641,7 @@ function RankBadge({ rank }) {
       width:38, height:38, borderRadius:12, flexShrink:0,
       background: rankBgs[rank-1],
       display:"flex", alignItems:"center", justifyContent:"center",
-      boxShadow:"0 3px 10px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.3)",
+      boxShadow:S.rank,
     }}>
       <span style={{ fontSize:8, fontWeight:900, color:"#FFF", letterSpacing:0.5 }}>{labels[rank-1]}</span>
     </div>
@@ -954,7 +971,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
     const done = step > n; const active = step === n;
     return (
       <div style={{ display:"flex", alignItems:"center" }}>
-        <div style={{ width:24, height:24, borderRadius:"50%", background: done?C.ink:active?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:active?"0 3px 10px rgba(232,147,90,0.4)":"none" }}>
+        <div style={{ width:24, height:24, borderRadius:"50%", background: done?C.ink:active?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:active?"0 3px 0 rgba(140,60,10,0.3), 0 6px 16px rgba(232,147,90,0.45), inset 0 1px 0 rgba(255,255,255,0.4)":"none" }}>
           {done ? <span style={{ fontSize:12, color:"#FFF" }}>✓</span>
                 : <span style={{ fontSize:10, fontWeight:800, color:active?"#FFF":C.muted }}>{n}</span>}
         </div>
@@ -964,7 +981,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
   }
 
   return (
-    <div style={{ background:C.white, borderRadius:18, border:`1px solid ${C.border}`, width:"100%", boxSizing:"border-box", overflow:"hidden", boxShadow:"0 4px 20px rgba(24,22,15,0.08)" }}>
+    <div style={{ background:C.white, borderRadius:18, border:`1px solid ${C.border}`, width:"100%", boxSizing:"border-box", overflow:"hidden", boxShadow:"0 1px 0 rgba(255,255,255,0.9) inset, 0 4px 20px rgba(24,22,15,0.1), 0 12px 40px rgba(24,22,15,0.06)" }}>
       {/* ステップヘッダー */}
       <div style={{ padding:"16px 16px 12px", borderBottom:`1px solid ${C.border}`, background:"#FAFAF8" }}>
         <div style={{ fontSize:12, fontWeight:700, color:C.sub, marginBottom:10 }}>
@@ -1060,7 +1077,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
                     border:`1.5px solid ${rec===r.value?r.color:C.border}`,
                     background:rec===r.value?r.bg:C.white,
                     color:rec===r.value?r.color:C.sub,
-                    boxShadow:rec===r.value?`0 3px 12px ${r.color}20`:"none",
+                    boxShadow:rec===r.value?`0 2px 0 ${r.color}35, 0 4px 16px ${r.color}28, inset 0 1px 0 rgba(255,255,255,0.5)`:"inset 0 1px 3px rgba(24,22,15,0.04), 0 1px 0 rgba(255,255,255,0.8)",
                   }}>
                     <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${rec===r.value?r.color:C.border}`, background:rec===r.value?r.color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       {rec===r.value && <span style={{ fontSize:10, color:"#FFF" }}>✓</span>}
@@ -1168,9 +1185,9 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
           <button onClick={()=>setStep(s=>s-1)} style={{ flex:1, padding:"13px", borderRadius:14, border:`1.5px solid ${C.border}`, background:C.white, fontSize:14, fontWeight:700, color:C.ink, cursor:"pointer" }}>戻る</button>
         )}
         {step < 3 ? (
-          <button onClick={()=>(step===1?canNext1:canNext2)&&setStep(s=>s+1)} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:(step===1?canNext1:canNext2)?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, fontSize:14, fontWeight:700, color:(step===1?canNext1:canNext2)?"#FFF":C.muted, cursor:(step===1?canNext1:canNext2)?"pointer":"not-allowed", boxShadow:(step===1?canNext1:canNext2)?`0 4px 16px rgba(232,147,90,0.35)`:"none" }}>次へ →</button>
+          <button onClick={()=>(step===1?canNext1:canNext2)&&setStep(s=>s+1)} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:(step===1?canNext1:canNext2)?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, fontSize:14, fontWeight:700, color:(step===1?canNext1:canNext2)?"#FFF":C.muted, cursor:(step===1?canNext1:canNext2)?"pointer":"not-allowed", boxShadow:(step===1?canNext1:canNext2)?S.btnPri:"none" }}>次へ →</button>
         ) : (
-          <button onClick={handleSave} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:`linear-gradient(135deg,${C.terra},${C.gold})`, fontSize:14, fontWeight:700, color:"#FFF", cursor:"pointer", boxShadow:`0 4px 16px rgba(232,147,90,0.35)` }}>✓ 記録する</button>
+          <button onClick={handleSave} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:`linear-gradient(135deg,${C.terra},${C.gold})`, fontSize:14, fontWeight:700, color:"#FFF", cursor:"pointer", boxShadow:S.btnPri }}>✓ 記録する</button>
         )}
         {step === 1 && (
           <button onClick={onCancel} style={{ flex:1, padding:"13px", borderRadius:14, border:`1.5px solid ${C.border}`, background:C.white, fontSize:14, color:C.sub, cursor:"pointer" }}>キャンセル</button>
@@ -1408,7 +1425,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
                   opacity: (dragging === idx || isTouchDragging) ? 0.5 : 1,
                   transform: isTouchDragging ? "scale(1.02)" : "scale(1)",
                   transition: "transform 0.15s, opacity 0.15s",
-                  boxShadow: isTouchDragging ? "0 8px 24px rgba(0,0,0,0.15)" : "none",
+                  boxShadow: isTouchDragging ? "0 12px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8)" : S.card,
                 }}
               >
                 <div style={{ padding: "16px", display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -1463,11 +1480,11 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
                 {isExpanded && (
                   <div style={{ borderTop: `1px solid #F0E8E0`, padding: "12px 16px 16px", display: "flex", gap: 10 }}>
                     <button onClick={() => { setEditingEntry(entry); setExpandedId(null); }}
-                      style={{ flex: 1, fontSize: 14, color: "#555", background: "#F5F5F5", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation" }}>
+                      style={{ flex: 1, fontSize: 14, color: "#555", background: "linear-gradient(180deg,#FAFAFA,#F2F0EC)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation", boxShadow: S.btnSec }}>
                       ✏️ 編集
                     </button>
                     <button onClick={() => deleteEntry(entry.id)}
-                      style={{ flex: 1, fontSize: 14, color: "#E57373", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation" }}>
+                      style={{ flex: 1, fontSize: 14, color: "#E57373", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation", boxShadow: S.btnDel }}>
                       🗑 削除
                     </button>
                   </div>
@@ -1885,7 +1902,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {filteredFriendUsers.map(fu => (
                 <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); setMapOpen(true); }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: S.card }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
                     {fu.name?.charAt(0)}
                   </div>
@@ -1911,7 +1928,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {friendCatList.map(([name, count]) => (
                 <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setMapOpen(true); setSelectedPlace(null); }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: S.card }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                     {getTagEmoji(name)}
                   </div>
@@ -1945,8 +1962,8 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
               {/* 地図開閉ボタン */}
               <button onClick={() => setMapOpen(!mapOpen)} style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "8px 16px", background: C.white, border: "none",
-                borderBottom: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
+                padding: "8px 16px", background: "linear-gradient(180deg,#FFFFFF,#FAF8F5)", border: "none",
+                borderBottom: `1px solid ${C.border}`, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9)", cursor: "pointer", fontFamily: "inherit",
                 fontSize: 13, fontWeight: 600, color: C.terra, width: "100%",
                 flexShrink: 0,
               }}>
@@ -2074,7 +2091,7 @@ function LogoBanner({ darkBg = true, onLogoClick }) {
 // ===== ロゴヘッダー（認証画面用・縦型）=====
 function LogoHeader({ subtitle = "人生で最高だったものを記録しよう" }) {
   return (
-    <div style={{ background: C.ink, padding: "48px 24px 32px", textAlign: "center" }}>
+    <div style={{ background: "linear-gradient(160deg,#201E16 0%,#18160F 60%,#1E1A0F 100%)", padding: "48px 24px 32px", textAlign: "center", boxShadow: "0 4px 24px rgba(24,22,15,0.3), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginBottom: 10 }}>
         <LJIcon size={72} darkBg={true} />
         <div style={{ textAlign: "center" }}>
@@ -2301,9 +2318,10 @@ function ProfileSetupScreen({ initialName = "", initialEmail = "", onComplete })
         )}
 
         <button onClick={handleSubmit} style={{
-          width: "100%", background: C.ink, color: C.white, border: "none",
+          width: "100%", background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none",
           borderRadius: 12, padding: "16px", fontSize: 16, fontWeight: "bold",
           cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation",
+          boxShadow: "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}>
           人生ノートをはじめる 🎉
         </button>
@@ -2624,7 +2642,8 @@ function BottomNav({ activeTab, onTabChange }) {
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: C.white, borderTop: `1px solid ${C.border}`,
+      background: "linear-gradient(180deg,#FDFCFB,#FFFFFF)", borderTop: `1px solid ${C.border}`,
+      boxShadow: "0 -2px 16px rgba(24,22,15,0.1), inset 0 1px 0 rgba(255,255,255,0.7)",
       display: "flex", alignItems: "center",
       paddingBottom: "env(safe-area-inset-bottom, 8px)",
     }}>
@@ -2643,10 +2662,10 @@ function BottomNav({ activeTab, onTabChange }) {
           {item.primary ? (
             <div style={{
               width: 50, height: 50, borderRadius: "50%",
-              background: "linear-gradient(145deg, #F5A878, #E8935A 45%, #C87038)",
+              background: "linear-gradient(160deg, #F5B090 0%, #E8935A 45%, #C87038 100%)",
               display: "flex", alignItems: "center", justifyContent: "center",
               marginTop: -22,
-              boxShadow: "0 6px 20px rgba(232,147,90,0.55), 0 2px 6px rgba(200,112,56,0.4), inset 0 2px 0 rgba(255,255,255,0.3)",
+              boxShadow: S.fab,
             }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <line x1="11" y1="4" x2="11" y2="18" stroke="white" strokeWidth="2.6" strokeLinecap="round"/>
@@ -2718,7 +2737,7 @@ function AddFollowModal({ user, onClose, onAdded }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
-      <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, maxHeight: "80vh", overflowY: "auto" }}>
+      <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, maxHeight: "80vh", overflowY: "auto", boxShadow: S.modal }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: "bold", color: C.ink }}>ユーザーをフォロー</div>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, color: C.muted, cursor: "pointer" }}>✕</button>
@@ -3031,7 +3050,7 @@ function FriendsView({ user, onOpenMenu }) {
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button onClick={() => acceptFollow(f.id)} style={{ flex: 1, background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                        <button onClick={() => acceptFollow(f.id)} style={{ flex: 1, background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
                           ✓ 承認する
                         </button>
                         <button onClick={() => rejectFollow(f.id)} style={{ flex: 1, background: "#FFF5F5", color: "#E57373", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
@@ -3202,7 +3221,7 @@ function UserMenu({ user, onEdit, onLogout, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
-      <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
+      <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, boxShadow: S.modal }}>
         {/* プロフィールサマリー */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
           <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: C.white, flexShrink: 0 }}>
@@ -3695,7 +3714,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       {/* ヘッダー */}
-      <div style={{ background: C.ink, padding: "28px 20px 16px", color: C.white }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", padding: "28px 20px 16px", color: C.white, boxShadow: S.header }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <LogoBanner darkBg={true} onLogoClick={() => { setActiveBigCat("all"); setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); setExpandedEntryId(null); }} />
@@ -3746,7 +3765,7 @@ export default function App() {
                       width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
                       padding: "16px", background: C.white, borderRadius: 16, border: `1px solid ${C.border}`,
                       marginBottom: 12, cursor: "pointer", fontFamily: "inherit",
-                      boxShadow: "0 2px 12px rgba(24,22,15,0.06)",
+                      boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 3px 12px rgba(24,22,15,0.1), 0 8px 28px rgba(24,22,15,0.06)",
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📝</div>
@@ -3774,7 +3793,7 @@ export default function App() {
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             padding: "14px 16px", background: C.white, borderRadius: 16,
                             border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
-                            boxShadow: "0 2px 10px rgba(24,22,15,0.05)",
+                            boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 3px 10px rgba(24,22,15,0.09), 0 8px 24px rgba(24,22,15,0.05)",
                           }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                               <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${gs},${ge})`, display: "flex", alignItems: "center", justifyContent: "center" }}><BigCatIcon id={bc.id} size={28}/></div>
@@ -3993,7 +4012,7 @@ export default function App() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {(friendSearchQuery.trim() || showAllFriends ? filteredFriendUsers : filteredFriendUsers.slice(0, 5)).sort((a,b) => getFriendCount(b.id)-getFriendCount(a.id)).map(fu => (
                         <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); setFriendViewSortCat(null); setFriendViewSortRec(null); }}
-                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: S.card }}>
                           <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
                             {fu.name?.charAt(0)}
                           </div>
@@ -4041,7 +4060,7 @@ export default function App() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {(catSearchQuery.trim() || showAllCats ? friendCatList : friendCatList.slice(0, 5)).map(([name, stat]) => (
                         <button key={name} onClick={() => { setSelectedCategory(name); setFriendTabMode("category"); setCrossCatFilterUser(null); setCrossCatFilterRec(null); }}
-                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: S.card }}>
                           <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                             {getTagEmoji(name)}
                           </div>
@@ -4139,7 +4158,7 @@ export default function App() {
       {showAddModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowAddModal(false)} />
-          <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
+          <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, boxShadow: S.modal }}>
             <div style={{ fontWeight: "bold", fontSize: 16, color: C.ink, marginBottom: 16 }}>新しいカテゴリを追加</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
               <button onClick={() => { setShowAddModal(false); setShowBrowse(true); }}
@@ -4158,7 +4177,7 @@ export default function App() {
       {showAddModal === "input" && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowAddModal(false)} />
-          <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
+          <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, boxShadow: S.modal }}>
             <div style={{ fontWeight: "bold", fontSize: 16, color: C.ink, marginBottom: 16 }}>カテゴリ名を入力</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <span style={{ fontSize: 14, color: "#888", whiteSpace: "nowrap" }}>人生</span>
