@@ -61,6 +61,7 @@ function sortEntriesByDate(entries) {
 
 // ===== タグ辞書 =====
 const TAG_DICTIONARY = [
+  // 🍜 麺
   { tag: "うどん", aliases: ["うどん屋","讃岐うどん","手打ちうどん","釜揚げうどん"], group: "🍜 麺" },
   { tag: "ラーメン", aliases: ["らーめん","ラーメン屋","拉麺","豚骨ラーメン","醤油ラーメン"], group: "🍜 麺" },
   { tag: "そば", aliases: ["蕎麦","そば屋","手打ちそば","日本そば"], group: "🍜 麺" },
@@ -70,6 +71,7 @@ const TAG_DICTIONARY = [
   { tag: "フォー", aliases: ["pho","ベトナム麺"], group: "🍜 麺" },
   { tag: "素麺", aliases: ["そうめん","流しそうめん"], group: "🍜 麺" },
   { tag: "焼きそば", aliases: ["やきそば"], group: "🍜 麺" },
+  // 🍱 和食
   { tag: "寿司", aliases: ["すし","鮨","回転寿司","握り寿司"], group: "🍱 和食" },
   { tag: "天ぷら", aliases: ["てんぷら","天丼"], group: "🍱 和食" },
   { tag: "とんかつ", aliases: ["トンカツ","豚カツ","カツレツ"], group: "🍱 和食" },
@@ -82,6 +84,7 @@ const TAG_DICTIONARY = [
   { tag: "刺身", aliases: ["お刺身","刺し身"], group: "🍱 和食" },
   { tag: "海鮮丼", aliases: ["海鮮","ちらし寿司"], group: "🍱 和食" },
   { tag: "丼もの", aliases: ["丼","親子丼","牛丼","カツ丼","天丼"], group: "🍱 和食" },
+  // 🌍 各国料理
   { tag: "餃子", aliases: ["ぎょうざ","ギョーザ","餃子専門店"], group: "🌍 各国料理" },
   { tag: "中華", aliases: ["中華料理","中国料理","中華料理店"], group: "🌍 各国料理" },
   { tag: "焼肉", aliases: ["焼き肉","バーベキュー","BBQ","炭火焼肉"], group: "🌍 各国料理" },
@@ -94,6 +97,7 @@ const TAG_DICTIONARY = [
   { tag: "メキシコ料理", aliases: ["メキシカン","タコス","ブリトー"], group: "🌍 各国料理" },
   { tag: "ベトナム料理", aliases: ["ベトナム","バインミー"], group: "🌍 各国料理" },
   { tag: "トルコ料理", aliases: ["トルコ","ケバブ"], group: "🌍 各国料理" },
+  // 🍔 カジュアル
   { tag: "カレー", aliases: ["curry","カレーライス","スープカレー"], group: "🍔 カジュアル" },
   { tag: "ハンバーガー", aliases: ["バーガー","burger"], group: "🍔 カジュアル" },
   { tag: "ピザ", aliases: ["pizza","ピッツァ"], group: "🍔 カジュアル" },
@@ -102,6 +106,7 @@ const TAG_DICTIONARY = [
   { tag: "お好み焼き", aliases: ["おこのみやき","広島焼き"], group: "🍔 カジュアル" },
   { tag: "もんじゃ", aliases: ["もんじゃ焼き"], group: "🍔 カジュアル" },
   { tag: "串カツ", aliases: ["串かつ","串揚げ"], group: "🍔 カジュアル" },
+  // 🍰 スイーツ
   { tag: "ケーキ", aliases: ["ショートケーキ","チーズケーキ","洋菓子"], group: "🍰 スイーツ" },
   { tag: "パフェ", aliases: ["parfait"], group: "🍰 スイーツ" },
   { tag: "アイスクリーム", aliases: ["ジェラート","アイス","gelato"], group: "🍰 スイーツ" },
@@ -110,6 +115,7 @@ const TAG_DICTIONARY = [
   { tag: "クレープ", aliases: ["crepe"], group: "🍰 スイーツ" },
   { tag: "ソフトクリーム", aliases: ["ソフトアイス","soft cream"], group: "🍰 スイーツ" },
   { tag: "プリン", aliases: ["pudding","焼きプリン"], group: "🍰 スイーツ" },
+  // ☕ 飲む
   { tag: "カフェ・喫茶店", aliases: ["カフェ","喫茶店","コーヒー","cafe","珈琲"], group: "☕ 飲む" },
   { tag: "居酒屋", aliases: ["いざかや","大衆酒場","酒場"], group: "☕ 飲む" },
   { tag: "バー", aliases: ["bar","BAR","ワインバー","立ち飲み"], group: "☕ 飲む" },
@@ -118,6 +124,7 @@ const TAG_DICTIONARY = [
   { tag: "クラフトビール", aliases: ["ブルワリー","brewery","地ビール"], group: "☕ 飲む" },
   { tag: "ウイスキー蒸留所", aliases: ["蒸溜所","distillery"], group: "☕ 飲む" },
   { tag: "茶室", aliases: ["お茶室","茶道","抹茶"], group: "☕ 飲む" },
+  // 🌅 景色
   { tag: "夕日", aliases: ["夕焼け","サンセット","sunset"], group: "🌅 景色" },
   { tag: "朝日", aliases: ["日の出","sunrise","御来光"], group: "🌅 景色" },
   { tag: "夜景", aliases: ["夜の景色","イルミネーション","ナイトビュー"], group: "🌅 景色" },
@@ -126,9 +133,9 @@ const TAG_DICTIONARY = [
   { tag: "桜", aliases: ["さくら","花見","お花見","cherry blossom"], group: "🌅 景色" },
   { tag: "雪景色", aliases: ["雪","冬景色","雪原"], group: "🌅 景色" },
   { tag: "雲海", aliases: ["雲の海","雲上"], group: "🌅 景色" },
-  { tag: "富士山", aliases: ["ふじさん","Mt.Fuji","富士"], group: "🌅 景色" },
   { tag: "オーロラ", aliases: ["aurora","北極光","南極光"], group: "🌅 景色" },
   { tag: "花火", aliases: ["花火大会","fireworks"], group: "🌅 景色" },
+  // 🌿 自然
   { tag: "海", aliases: ["ビーチ","海岸","砂浜","ocean","sea"], group: "🌿 自然" },
   { tag: "山・登山", aliases: ["山","登山","ハイキング","山頂"], group: "🌿 自然" },
   { tag: "滝", aliases: ["たき","waterfall","名瀑"], group: "🌿 自然" },
@@ -141,6 +148,7 @@ const TAG_DICTIONARY = [
   { tag: "森林", aliases: ["森","林","forest","樹海"], group: "🌿 自然" },
   { tag: "鍾乳洞", aliases: ["洞窟","cave","洞穴"], group: "🌿 自然" },
   { tag: "珊瑚礁", aliases: ["サンゴ","coral reef"], group: "🌿 自然" },
+  // 🎿 アクティビティ
   { tag: "スキー場", aliases: ["スキー","スノーボード","ゲレンデ","ski"], group: "🎿 アクティビティ" },
   { tag: "サーフィン", aliases: ["surf","波乗り"], group: "🎿 アクティビティ" },
   { tag: "ダイビング", aliases: ["diving","スキューバ","スキューバダイビング"], group: "🎿 アクティビティ" },
@@ -153,13 +161,13 @@ const TAG_DICTIONARY = [
   { tag: "釣り", aliases: ["フィッシング","fishing","渓流釣り","海釣り"], group: "🎿 アクティビティ" },
   { tag: "ゴルフ場", aliases: ["ゴルフ","golf","コース"], group: "🎿 アクティビティ" },
   { tag: "サイクリング", aliases: ["自転車","cycling","ポタリング"], group: "🎿 アクティビティ" },
+  // 🎡 施設
   { tag: "テーマパーク・遊園地", aliases: ["テーマパーク","遊園地","ディズニー","USJ","アミューズメント"], group: "🎡 施設" },
   { tag: "水族館", aliases: ["aquarium"], group: "🎡 施設" },
   { tag: "動物園", aliases: ["zoo"], group: "🎡 施設" },
   { tag: "植物園", aliases: ["botanical garden"], group: "🎡 施設" },
   { tag: "博物館", aliases: ["museum","歴史博物館"], group: "🎡 施設" },
-  { tag: "科学館", aliases: ["科学博物館","planetarium"], group: "🎡 施設" },
-  { tag: "プラネタリウム", aliases: ["星空観察","天文台"], group: "🎡 施設" },
+  // 🎭 文化・歴史
   { tag: "神社", aliases: ["shrine","大社","神宮","お宮"], group: "🎭 文化・歴史" },
   { tag: "寺", aliases: ["temple","お寺","仏閣","大仏"], group: "🎭 文化・歴史" },
   { tag: "城", aliases: ["お城","castle","城跡"], group: "🎭 文化・歴史" },
@@ -167,15 +175,15 @@ const TAG_DICTIONARY = [
   { tag: "美術館", aliases: ["art museum","ギャラリー","gallery","アート"], group: "🎭 文化・歴史" },
   { tag: "街並み", aliases: ["古民家","町並み","レトロ","古い街","商店街"], group: "🎭 文化・歴史" },
   { tag: "市場", aliases: ["マーケット","市場","朝市","錦市場"], group: "🎭 文化・歴史" },
+  // 🎪 体験
   { tag: "陶芸", aliases: ["pottery","焼き物","陶芸体験"], group: "🎪 体験" },
-  { tag: "ガラス工芸", aliases: ["吹きガラス","琉球ガラス"], group: "🎪 体験" },
   { tag: "酒造見学", aliases: ["蔵見学","醸造見学"], group: "🎪 体験" },
   { tag: "農業体験", aliases: ["農園","収穫体験","果物狩り","いちご狩り"], group: "🎪 体験" },
-  { tag: "漁業体験", aliases: ["漁師体験","釣り体験"], group: "🎪 体験" },
   { tag: "料理教室", aliases: ["cooking class","クッキング"], group: "🎪 体験" },
   { tag: "茶道", aliases: ["tea ceremony","お茶","茶道体験"], group: "🎪 体験" },
   { tag: "座禅", aliases: ["禅","zen","瞑想"], group: "🎪 体験" },
   { tag: "パン作り", aliases: ["bread making","ベーキング"], group: "🎪 体験" },
+  // 🏟️ スポーツ観戦
   { tag: "野球場", aliases: ["野球","baseball","球場","プロ野球"], group: "🏟️ スポーツ観戦" },
   { tag: "サッカースタジアム", aliases: ["サッカー","football","スタジアム"], group: "🏟️ スポーツ観戦" },
   { tag: "バスケ観戦", aliases: ["バスケットボール","basketball","NBA","Bリーグ"], group: "🏟️ スポーツ観戦" },
@@ -183,33 +191,37 @@ const TAG_DICTIONARY = [
   { tag: "テニス観戦", aliases: ["テニス","tennis"], group: "🏟️ スポーツ観戦" },
   { tag: "競馬場", aliases: ["競馬","horse racing"], group: "🏟️ スポーツ観戦" },
   { tag: "相撲", aliases: ["大相撲","国技館","sumo"], group: "🏟️ スポーツ観戦" },
+  // ♨️ 癒し
   { tag: "温泉", aliases: ["onsen","湯","お風呂","露天風呂","湯治"], group: "♨️ 癒し" },
   { tag: "サウナ", aliases: ["sauna","ととのう","フィンランドサウナ"], group: "♨️ 癒し" },
   { tag: "銭湯", aliases: ["公衆浴場","お風呂","銭湯"], group: "♨️ 癒し" },
   { tag: "スパ", aliases: ["spa","エステ","リラクゼーション"], group: "♨️ 癒し" },
   { tag: "リトリート", aliases: ["retreat","瞑想リトリート","ヨガ"], group: "♨️ 癒し" },
+  // 🏨 泊まる
   { tag: "ホテル", aliases: ["hotel","リゾートホテル","シティホテル"], group: "🏨 泊まる" },
   { tag: "旅館", aliases: ["ryokan","和風旅館","老舗旅館"], group: "🏨 泊まる" },
   { tag: "民宿", aliases: ["民泊","B&B","ペンション"], group: "🏨 泊まる" },
   { tag: "ゲストハウス", aliases: ["hostel","ホステル","ドミトリー"], group: "🏨 泊まる" },
   { tag: "グランピング", aliases: ["glamping","豪華キャンプ"], group: "🏨 泊まる" },
   { tag: "ツリーハウス", aliases: ["treehouse","木の上の宿"], group: "🏨 泊まる" },
+  { tag: "ヴィラ", aliases: ["villa","コテージ","貸別荘"], group: "🏨 泊まる" },
+  // 🛍️ 買う
   { tag: "マルシェ", aliases: ["marche","朝市","ファーマーズマーケット"], group: "🛍️ 買う" },
-  { tag: "骨董市", aliases: ["アンティーク","蚤の市","フリマ"], group: "🛍️ 買う" },
   { tag: "道の駅・産直", aliases: ["道の駅","産直","直売所","JAショップ"], group: "🛍️ 買う" },
   { tag: "アウトレット", aliases: ["outlet","アウトレットモール"], group: "🛍️ 買う" },
+  // 🎵 エンタメ
   { tag: "ライブ・コンサート", aliases: ["ライブ","コンサート","live","concert","フェス","音楽フェス"], group: "🎵 エンタメ" },
   { tag: "映画館", aliases: ["シネマ","cinema","movie","映画"], group: "🎵 エンタメ" },
   { tag: "演劇・落語", aliases: ["演劇","落語","歌舞伎","宝塚","ミュージカル"], group: "🎵 エンタメ" },
   { tag: "祭り", aliases: ["お祭り","festival","縁日","夏祭り"], group: "🎵 エンタメ" },
+  // 🐾 動物・生き物
   { tag: "猫カフェ", aliases: ["ねこカフェ","猫","cat cafe"], group: "🐾 動物・生き物" },
   { tag: "牧場", aliases: ["ファーム","farm","動物ふれあい"], group: "🐾 動物・生き物" },
   { tag: "イルカウォッチング", aliases: ["イルカ","dolphin","クジラ","whale"], group: "🐾 動物・生き物" },
-  { tag: "ホタル", aliases: ["蛍","firefly"], group: "🐾 動物・生き物" },
+  // 🚂 乗り物体験
   { tag: "ローカル線", aliases: ["ローカル電車","路面電車","トロッコ列車","観光列車"], group: "🚂 乗り物体験" },
   { tag: "ロープウェイ", aliases: ["ゴンドラ","リフト","cable car"], group: "🚂 乗り物体験" },
   { tag: "クルーズ船", aliases: ["クルーズ","cruise","遊覧船","屋形船"], group: "🚂 乗り物体験" },
-  { tag: "人力車", aliases: ["rickshaw","じんりきしゃ"], group: "🚂 乗り物体験" },
 ];
 
 const GROUP_EMOJIS = {
@@ -238,17 +250,37 @@ function normalizeTag(input) {
   }
   return trimmed;
 }
+// DBから取得したサジェスト（30人以上）をグローバルで保持
+let _dynamicSuggestions = [];
+function setDynamicSuggestions(data) { _dynamicSuggestions = data || []; }
+
 function getSuggestions(input) {
   if (!input || input.length < 1) return [];
   const lower = input.toLowerCase();
   const results = [];
+  const seen = new Set();
+
+  // まずTAG_DICTIONARYから検索
   for (const entry of TAG_DICTIONARY) {
     const allTerms = [entry.tag, ...entry.aliases];
     if (allTerms.some(t => t.toLowerCase().includes(lower))) {
       results.push(entry);
+      seen.add(entry.tag);
       if (results.length >= 8) break;
     }
   }
+
+  // DBの動的サジェスト（30人以上・TAG_DICTIONARYにないもの）を追加
+  for (const s of _dynamicSuggestions) {
+    if (seen.has(s.name)) continue;
+    if (s.name.toLowerCase().includes(lower)) {
+      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"やる・体験", relax:"整う・癒し", enjoy:"楽しむ", stay:"泊まる" }[s.big_cat] || "その他";
+      results.push({ tag: s.name, aliases: [], group: `👥 みんなの人気（${s.count}人）`, _dynamic: true });
+      seen.add(s.name);
+      if (results.length >= 10) break;
+    }
+  }
+
   return results;
 }
 
@@ -1304,7 +1336,12 @@ function BrowseView({ onSelect, onBack }) {
   const [query, setQuery] = useState("");
   const groups = [...new Set(TAG_DICTIONARY.map(t => t.group))];
   const filtered = query.trim()
-    ? TAG_DICTIONARY.filter(t => [t.tag, ...t.aliases].some(a => a.toLowerCase().includes(query.toLowerCase())))
+    ? [
+        ...TAG_DICTIONARY.filter(t => [t.tag, ...t.aliases].some(a => a.toLowerCase().includes(query.toLowerCase()))),
+        ..._dynamicSuggestions
+          .filter(s => s.name.toLowerCase().includes(query.toLowerCase()) && !TAG_DICTIONARY.find(t => t.tag === s.name))
+          .map(s => ({ tag: s.name, aliases: [], group: `👥 みんなの人気（${s.count}人）`, _dynamic: true }))
+      ]
     : null;
 
   return (
@@ -1340,8 +1377,9 @@ function BrowseView({ onSelect, onBack }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {filtered.map(t => (
                   <button key={t.tag} onClick={() => onSelect(t.tag)}
-                    style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 20, padding: "9px 16px", fontSize: 14, cursor: "pointer", color: "#333", fontFamily: "inherit", touchAction: "manipulation" }}>
-                    {GROUP_EMOJIS[t.group]} {t.tag}
+                    style={{ background: C.white, border: `1.5px solid ${t._dynamic ? C.terra + "40" : C.border}`, borderRadius: 20, padding: "9px 16px", fontSize: 14, cursor: "pointer", color: "#333", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 4 }}>
+                    {t._dynamic ? "👥" : GROUP_EMOJIS[t.group]} {t.tag}
+                    {t._dynamic && <span style={{ fontSize: 11, color: C.terra }}>{t.group.match(/\d+/)?.[0]}人</span>}
                   </button>
                 ))}
               </div>
@@ -1361,6 +1399,24 @@ function BrowseView({ onSelect, onBack }) {
               </div>
             </div>
           ))
+        )}
+
+        {/* 👥 みんなの人気カテゴリ（30人以上） */}
+        {!query.trim() && _dynamicSuggestions.length > 0 && (
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 10, letterSpacing: 0.5 }}>👥 みんなの人気カテゴリ</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {_dynamicSuggestions
+                .filter(s => !TAG_DICTIONARY.find(t => t.tag === s.name))
+                .map(s => (
+                  <button key={s.name} onClick={() => onSelect(s.name)}
+                    style={{ background: C.white, border: `1.5px solid ${C.terra}40`, borderRadius: 20, padding: "9px 16px", fontSize: 14, cursor: "pointer", color: "#333", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>👥</span> {s.name}
+                    <span style={{ fontSize: 11, color: C.terra }}>{s.count}人</span>
+                  </button>
+                ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1473,7 +1529,9 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
   const [expandedMapEntryId, setExpandedMapEntryId] = useState(null);
-  const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
+  const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター（自分）
+  const [friendBigFilter, setFriendBigFilter] = useState("all"); // フレンド大カテゴリフィルター
+  const [friendSmallFilter, setFriendSmallFilter] = useState(null); // フレンド小カテゴリフィルター
 
   // 自分のエントリー（座標付き・大カテゴリ・小カテゴリフィルター）
   const myEntries = categories.flatMap(cat => {
@@ -1489,8 +1547,28 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
   const smallCatsInBig = activeBigFilter === "all" ? [] :
     categories.filter(c => (c.bigCat || c.big_cat || "eat") === activeBigFilter);
 
-  // フレンド個別エントリー
-  const filteredFriendEntries = friendEntries.filter(e => e.placeData?.lat && e.placeData?.lng);
+  // フレンド個別エントリー（大カテゴリ・小カテゴリフィルター）
+  const filteredFriendEntries = friendEntries.filter(e => {
+    if (!e.placeData?.lat || !e.placeData?.lng) return false;
+    if (friendBigFilter !== "all") {
+      // カテゴリ名からbig_catを推定
+      const catBigCat = allFriendData.flatMap(fd => fd.categories)
+        .find(c => c.name === e.categoryName)?.big_cat || "eat";
+      if (catBigCat !== friendBigFilter) return false;
+    }
+    if (friendSmallFilter && e.categoryName !== friendSmallFilter) return false;
+    return true;
+  });
+
+  // フレンドの小カテゴリ一覧（大カテゴリフィルター後）
+  const friendSmallCatsInBig = friendBigFilter === "all" ? [] :
+    [...new Set(friendEntries
+      .filter(e => {
+        const catBigCat = allFriendData.flatMap(fd => fd.categories)
+          .find(c => c.name === e.categoryName)?.big_cat || "eat";
+        return catBigCat === friendBigFilter;
+      })
+      .map(e => e.categoryName))];
 
   // カテゴリ横断
   const crossCatEntries = selectedCatName
@@ -1597,12 +1675,32 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
           </div>
         )}
 
-        {/* フレンド状態表示 */}
+        {/* フレンド状態表示 + フィルター */}
         {mapMode === "friend" && viewingFriend && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "#9A8A7A" }}>👤 {viewingFriend.name} さんの地図</span>
-            <button onClick={() => { setMapMode("select"); setViewingFriend(null); setFriendEntries([]); }}
-              style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 11, color: "#9A8A7A" }}>👤 {viewingFriend.name} さんの地図</span>
+              <button onClick={() => { setMapMode("select"); setViewingFriend(null); setFriendEntries([]); setFriendBigFilter("all"); setFriendSmallFilter(null); }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
+            </div>
+            <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2 }}>
+              {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
+                <button key={bc.id} onClick={() => { setFriendBigFilter(bc.id); setFriendSmallFilter(null); setSelectedPlace(null); }}
+                  style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 3, background: friendBigFilter === bc.id ? C.terra : "rgba(255,255,255,0.1)", border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit" }}>
+                  <span>{bc.icon}</span><span>{bc.label}</span>
+                </button>
+              ))}
+            </div>
+            {friendSmallCatsInBig.length > 0 && (
+              <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2, marginTop: 4 }}>
+                <button onClick={() => setFriendSmallFilter(null)}
+                  style={{ flexShrink: 0, padding: "3px 9px", borderRadius: 20, border: "none", background: !friendSmallFilter ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: !friendSmallFilter ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
+                {friendSmallCatsInBig.map(name => (
+                  <button key={name} onClick={() => { setFriendSmallFilter(name); setSelectedPlace(null); }}
+                    style={{ flexShrink: 0, padding: "3px 9px", borderRadius: 20, border: "none", background: friendSmallFilter === name ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: friendSmallFilter === name ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>{name}</button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {mapMode === "category" && selectedCatName && (
@@ -2928,6 +3026,7 @@ export default function App() {
   const [expandedMonths, setExpandedMonths] = useState({}); // 月アコーディオン
   const [addEntryForCat, setAddEntryForCat] = useState(null); // エントリー追加対象カテゴリ
   const [newCatBigCat, setNewCatBigCat] = useState("eat"); // 新規カテゴリの大カテゴリ
+  const [suggestedCats, setSuggestedCats] = useState([]); // 30人以上のサジェスト
 
   // Supabase Auth: セッション監視
   const [pendingAuthUser, setPendingAuthUser] = useState(null); // プロフィール未設定のユーザー
@@ -2974,7 +3073,18 @@ export default function App() {
     if (!user) return;
     loadData();
     loadFollowingUsers();
+    loadSuggestedCats();
   }, [user]);
+
+  async function loadSuggestedCats() {
+    const { data } = await supabase
+      .from("suggested_categories")
+      .select("name, count, big_cat")
+      .gte("count", 30)
+      .order("count", { ascending: false });
+    setSuggestedCats(data || []);
+    setDynamicSuggestions(data || []);
+  }
 
   // フォロー中ユーザーが取得できたら全データも取得
   useEffect(() => {
