@@ -3118,10 +3118,22 @@ export default function App() {
     setCategories(prev => prev.map(c => c.id === updated.id ? updated : c));
   }
 
-  async function deleteCategory(id) {
-    if (!confirm("このカテゴリを削除しますか？")) return;
-    await supabase.from("categories").delete().eq("id", id);
-    setCategories(prev => prev.filter(c => c.id !== id));
+  async function deleteCategory(catId, catName, entryCount) {
+    const msg = entryCount > 0
+      ? `「人生${catName}」を削除しますか？\n\n⚠️ このカテゴリの記録${entryCount}件もすべて削除されます。\nこの操作は元に戻せません。`
+      : `「人生${catName}」を削除しますか？\nこの操作は元に戻せません。`;
+    if (!confirm(msg)) return;
+    // エントリーも削除
+    const cat = categories.find(c => c.id === catId);
+    if (cat?.entries?.length > 0) {
+      const entryIds = cat.entries.map(e => e.id);
+      await supabase.from("entries").delete().in("id", entryIds);
+    }
+    await supabase.from("categories").delete().eq("id", catId);
+    setCategories(prev => prev.filter(c => c.id !== catId));
+    // 大カテゴリビューを表示中なら戻る
+    setActiveBigCat("all");
+    setExpandedEntryId(null);
   }
 
   if (!authChecked) return (
@@ -3484,7 +3496,6 @@ export default function App() {
                         {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
                       </div>
                       <button onClick={() => {
-                        // 絞り込み中のカテゴリがあればそれを使う、なければ選択モーダル
                         if (activeCatFilter) {
                           const cat = categories.find(c => c.name === activeCatFilter);
                           if (cat) setAddEntryForCat(cat);
@@ -3495,6 +3506,19 @@ export default function App() {
                         ＋ 追加
                       </button>
                     </div>
+                    {/* 小カテゴリ選択中はカテゴリ削除ボタンを表示 */}
+                    {activeCatFilter && (() => {
+                      const cat = categories.find(c => c.name === activeCatFilter);
+                      if (!cat) return null;
+                      return (
+                        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                          <button onClick={() => deleteCategory(cat.id, cat.name, cat.entries?.length || 0)}
+                            style={{ fontSize: 12, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 20, padding: "5px 14px", cursor: "pointer", fontFamily: "inherit" }}>
+                            🗑 「{cat.name}」カテゴリを削除
+                          </button>
+                        </div>
+                      );
+                    })()}
                     {/* 小カテゴリ絞り込みタブ */}
                     <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
                       <button onClick={() => setActiveCatFilter(null)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${!activeCatFilter ? C.ink : C.border}`, background: !activeCatFilter ? C.ink : C.white, color: !activeCatFilter ? C.white : C.sub, fontSize: 12, fontWeight: !activeCatFilter ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
