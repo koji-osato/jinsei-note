@@ -321,7 +321,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
     "linear-gradient(135deg,#A06030,#C08050)",
   ];
   return (
-    <div onClick={isSelf ? onToggle : undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)", cursor: isSelf ? "pointer" : "default" }}>
+    <div onClick={onToggle || undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)", cursor: onToggle ? "pointer" : "default" }}>
       {/* メイン表示 */}
       <div style={{ padding: "12px 14px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -385,8 +385,8 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
           </div>
         </div>
       )}
-      {/* フレンドのみ：コメント表示 */}
-      {!isSelf && entry.comment && (
+      {/* フレンドのみ：展開時にコメント表示 */}
+      {!isSelf && expanded && entry.comment && (
         <div style={{ borderTop: `1px solid ${C.border}`, padding: "8px 14px 10px", background: "#FAFAF8" }}>
           <div style={{ fontSize: 12, color: "#5A4E44", fontStyle: "italic" }}>「{entry.comment}」</div>
         </div>
@@ -1517,7 +1517,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4" }} />;
 }
 
-function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
+function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu }) {
   const [mapMode, setMapMode] = useState("self");
   const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -1528,6 +1528,8 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
   const [mapOpen, setMapOpen] = useState(true); // 地図の開閉（デフォルト開）
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [showAllFriends, setShowAllFriends] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
   const [expandedMapEntryId, setExpandedMapEntryId] = useState(null);
   const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター（自分）
   const [friendBigFilter, setFriendBigFilter] = useState("all"); // フレンド大カテゴリフィルター
@@ -1628,7 +1630,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
       <div style={{ background: C.ink, color: C.white, padding: "28px 16px 8px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} onLogoClick={onBack}/>
-          <button onClick={() => setShowUserMenu(true)} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
+          <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ fontSize: 16 }}>👤</span>
             <span>{user?.name?.split(" ")[0] || "メニュー"}</span>
             <span>▾</span>
@@ -3014,6 +3016,8 @@ export default function App() {
   const [activeBigCat, setActiveBigCat] = useState("all"); // 大カテゴリフィルター
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [showAllFriends, setShowAllFriends] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
   const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
   const [crossCatFilterUser, setCrossCatFilterUser] = useState(null);
   const [crossCatFilterRec, setCrossCatFilterRec] = useState(null);
@@ -3308,7 +3312,7 @@ export default function App() {
   // タブ切替で地図・フレンド表示
   if (activeTab === "map") return (
     <>
-      <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} user={user} />
+      <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} user={user} onOpenMenu={() => setShowUserMenu(true)} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
@@ -3675,7 +3679,7 @@ export default function App() {
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>👤 フレンドで探す</div>
-                    <button onClick={() => { setFriendSearchQuery(""); }}
+                    <button onClick={() => { setFriendSearchQuery(""); setShowAllFriends(true); }}
                       style={{ fontSize: 12, color: C.terra, background: `linear-gradient(135deg,${C.terra}15,${C.gold}15)`, border: `1px solid ${C.terra}40`, borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, touchAction: "manipulation" }}>
                       フレンド一覧を見る →
                     </button>
@@ -3692,7 +3696,7 @@ export default function App() {
                     <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>フォロー中のユーザーがいません</div>
                   ) : filteredFriendUsers.length > 0 ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {filteredFriendUsers.sort((a,b) => getFriendCount(b.id)-getFriendCount(a.id)).map(fu => (
+                      {(friendSearchQuery.trim() || showAllFriends ? filteredFriendUsers : filteredFriendUsers.slice(0, 5)).sort((a,b) => getFriendCount(b.id)-getFriendCount(a.id)).map(fu => (
                         <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); setFriendViewSortCat(null); setFriendViewSortRec(null); }}
                           style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                           <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
@@ -3709,13 +3713,19 @@ export default function App() {
                   ) : (
                     <div style={{ textAlign: "center", padding: "16px 0", color: C.muted, fontSize: 13 }}>一致するフレンドがいません</div>
                   )}
+                  {!friendSearchQuery.trim() && !showAllFriends && filteredFriendUsers.length > 5 && (
+                    <button onClick={() => setShowAllFriends(true)}
+                      style={{ width: "100%", padding: "10px", background: "none", border: `1px solid ${C.border}`, borderRadius: 12, fontSize: 13, color: C.sub, cursor: "pointer", fontFamily: "inherit", marginTop: 4 }}>
+                      残り{filteredFriendUsers.length - 5}人を表示
+                    </button>
+                  )}
                 </div>
 
                 {/* カテゴリで探す */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>📂 カテゴリで探す</div>
-                    <button onClick={() => { setCatSearchQuery(""); }}
+                    <button onClick={() => { setCatSearchQuery(""); setShowAllCats(true); }}
                       style={{ fontSize: 12, color: C.terra, background: `linear-gradient(135deg,${C.terra}15,${C.gold}15)`, border: `1px solid ${C.terra}40`, borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, touchAction: "manipulation" }}>
                       カテゴリ一覧を見る →
                     </button>
@@ -3734,7 +3744,7 @@ export default function App() {
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {friendCatList.map(([name, stat]) => (
+                      {(catSearchQuery.trim() || showAllCats ? friendCatList : friendCatList.slice(0, 5)).map(([name, stat]) => (
                         <button key={name} onClick={() => { setSelectedCategory(name); setFriendTabMode("category"); setCrossCatFilterUser(null); setCrossCatFilterRec(null); }}
                           style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                           <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
@@ -3748,6 +3758,12 @@ export default function App() {
                         </button>
                       ))}
                     </div>
+                  )}
+                  {!catSearchQuery.trim() && !showAllCats && friendCatList.length > 5 && (
+                    <button onClick={() => setShowAllCats(true)}
+                      style={{ width: "100%", padding: "10px", background: "none", border: `1px solid ${C.border}`, borderRadius: 12, fontSize: 13, color: C.sub, cursor: "pointer", fontFamily: "inherit", marginTop: 4 }}>
+                      残り{friendCatList.length - 5}件を表示
+                    </button>
                   )}
                 </div>
               </div>
