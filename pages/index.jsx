@@ -24,13 +24,113 @@ const REC_LEVELS = [
 
 // ===== 大カテゴリ =====
 const BIG_CATS = [
-  { id:"eat",   label:"食べる・飲む", icon:"🍽" },
-  { id:"see",   label:"見る・感じる", icon:"👁" },
-  { id:"do",    label:"やる・体験",   icon:"🎯" },
-  { id:"relax", label:"整う・癒し",   icon:"♨️" },
-  { id:"enjoy", label:"楽しむ",       icon:"🎉" },
-  { id:"stay",  label:"泊まる",       icon:"🏨" },
+  { id:"eat",   label:"食べる・飲む" },
+  { id:"see",   label:"見る・感じる" },
+  { id:"do",    label:"やる・体験"   },
+  { id:"relax", label:"整う・癒し"   },
+  { id:"enjoy", label:"楽しむ"       },
+  { id:"stay",  label:"泊まる"       },
 ];
+
+// ===== 大カテゴリSVGアイコン =====
+function BigCatIcon({ id, size = 28 }) {
+  const s = size;
+  const icons = {
+    eat: (
+      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" fill="#FFF3EC"/>
+        <ellipse cx="22" cy="28" rx="12" ry="4" fill="#FFCBA4" stroke="#E8935A" strokeWidth="1.2"/>
+        <path d="M10 28 Q10 36 22 36 Q34 36 34 28" fill="#FFF3EC" stroke="#E8935A" strokeWidth="1.2"/>
+        <path d="M16 26 Q19 23 22 26 Q25 29 28 26" stroke="#D4A843" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+        <path d="M15 28 Q18 25 21 28 Q24 31 27 28 Q30 25 33 28" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        <line x1="10" y1="10" x2="10" y2="22" stroke="#E8935A" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="8" y1="10" x2="8" y2="15" stroke="#E8935A" strokeWidth="1.2" strokeLinecap="round"/>
+        <line x1="10" y1="10" x2="10" y2="15" stroke="#E8935A" strokeWidth="1.2" strokeLinecap="round"/>
+        <line x1="12" y1="10" x2="12" y2="15" stroke="#E8935A" strokeWidth="1.2" strokeLinecap="round"/>
+        <line x1="33" y1="8" x2="28" y2="24" stroke="#E8935A" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="37" y1="10" x2="30" y2="24" stroke="#E8935A" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M18 20 Q19 17 18 14 Q17 11 18 8" stroke="#FFCBA4" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+        <path d="M22 20 Q23 17 22 14 Q21 11 22 8" stroke="#FFCBA4" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+      </svg>
+    ),
+    see: (
+      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" fill="#EEF4FF"/>
+        <path d="M6 22 Q15 10 22 10 Q29 10 38 22 Q29 34 22 34 Q15 34 6 22Z" fill="#B5D4F4" stroke="#378ADD" strokeWidth="1.5" strokeLinejoin="round"/>
+        <circle cx="22" cy="22" r="6" fill="#378ADD" stroke="#185FA5" strokeWidth="1"/>
+        <circle cx="22" cy="22" r="3" fill="#185FA5"/>
+        <circle cx="24" cy="20" r="1.5" fill="white"/>
+        <line x1="34" y1="10" x2="36" y2="8" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="33" y1="7" x2="37" y2="11" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="38" y1="16" x2="40" y2="16" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="38" y1="14" x2="40" y2="18" stroke="#D4A843" strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    ),
+    do: (
+      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" fill="#EAF3DE"/>
+        <path d="M6 34 Q22 28 40 32" stroke="#639922" strokeWidth="3" strokeLinecap="round" fill="none"/>
+        <path d="M4 36 Q10 33 14 36 Q18 39 22 36 Q26 33 30 36 Q34 39 40 36" stroke="#97C459" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        <circle cx="28" cy="18" r="3" fill="#3B6D11"/>
+        <path d="M28 21 L24 28" stroke="#3B6D11" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M24 28 L20 32" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M24 28 L28 31" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M27 23 L20 21" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M27 23 L34 20" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    relax: (
+      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" fill="#E1F5EE"/>
+        <path d="M8 28 Q8 36 22 36 Q36 36 36 28 L36 26 L8 26 Z" fill="#9FE1CB" stroke="#1D9E75" strokeWidth="1.2" strokeLinejoin="round"/>
+        <path d="M12 26 Q16 24 20 26 Q24 28 28 26 Q32 24 36 26" stroke="#1D9E75" strokeWidth="1" fill="none" strokeLinecap="round"/>
+        <circle cx="22" cy="23" r="3.5" fill="#0F6E56"/>
+        <path d="M12 26 Q14 22 18 24" stroke="#0F6E56" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M32 26 Q30 22 26 24" stroke="#0F6E56" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M16 18 Q17 14 16 10" stroke="#9FE1CB" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        <path d="M22 16 Q23 12 22 8" stroke="#9FE1CB" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        <path d="M28 18 Q29 14 28 10" stroke="#9FE1CB" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        <path d="M19 20 Q22 18 25 20" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      </svg>
+    ),
+    enjoy: (
+      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" fill="#FAEEDA"/>
+        <path d="M22 8 L18 20 L26 20 Z" fill="#FAC775" opacity="0.6"/>
+        <path d="M14 6 L12 20 L20 20 Z" fill="#FAC775" opacity="0.4"/>
+        <path d="M30 6 L32 20 L24 20 Z" fill="#FAC775" opacity="0.4"/>
+        <rect x="8" y="20" width="28" height="4" rx="1" fill="#EF9F27" stroke="#BA7517" strokeWidth="1"/>
+        <circle cx="22" cy="29" r="2.5" fill="#854F0B"/>
+        <path d="M22 31.5 L22 36" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M22 32 L19 35" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M22 32 L25 35" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M21 32 L18 29" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M23 32 L26 29" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="13" cy="30" r="2" fill="#BA7517"/>
+        <path d="M13 32 L13 36" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
+        <path d="M13 33 L16 31" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="31" cy="30" r="2" fill="#BA7517"/>
+        <path d="M31 32 L31 36" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
+        <path d="M31 33 L28 31" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    ),
+    stay: (
+      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" fill="#EEEDFE"/>
+        <rect x="10" y="12" width="24" height="26" rx="1" fill="#AFA9EC" stroke="#534AB7" strokeWidth="1.2"/>
+        <rect x="13" y="16" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="20" y="16" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="27" y="16" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="13" y="24" width="5" height="5" rx="0.5" fill="#FAC775" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="20" y="24" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="27" y="24" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="18" y="31" width="8" height="7" rx="1" fill="#534AB7" stroke="#3C3489" strokeWidth="0.8"/>
+        <rect x="8" y="10" width="28" height="3" rx="0.5" fill="#7F77DD" stroke="#534AB7" strokeWidth="1"/>
+      </svg>
+    ),
+  };
+  return icons[id] || <span style={{ fontSize: s * 0.6 }}>✦</span>;
+}
 
 // ===== 体験タグ =====
 const EXPERIENCE_TAGS = {
@@ -1652,10 +1752,10 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
         {mapMode === "self" && (
           <div>
             <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
-              {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
+              {[{ id:"all", label:"すべて" }, ...BIG_CATS].map(bc => (
                 <button key={bc.id} onClick={() => { setActiveBigFilter(bc.id); setActiveSmallFilter(null); setSelectedPlace(null); }}
                   style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: activeBigFilter === bc.id ? C.terra : "rgba(255,255,255,0.1)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 11, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
-                  <span>{bc.icon}</span><span>{bc.label}</span>
+                  {bc.id === "all" ? <span>✦</span> : <BigCatIcon id={bc.id} size={16}/>}<span>{bc.label}</span>
                 </button>
               ))}
             </div>
@@ -1686,10 +1786,10 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                 style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
             </div>
             <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2 }}>
-              {[{ id:"all", label:"すべて", icon:"✦" }, ...BIG_CATS].map(bc => (
+              {[{ id:"all", label:"すべて" }, ...BIG_CATS].map(bc => (
                 <button key={bc.id} onClick={() => { setFriendBigFilter(bc.id); setFriendSmallFilter(null); setSelectedPlace(null); }}
                   style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 3, background: friendBigFilter === bc.id ? C.terra : "rgba(255,255,255,0.1)", border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10, color: C.white, whiteSpace: "nowrap", cursor: "pointer", fontFamily: "inherit" }}>
-                  <span>{bc.icon}</span><span>{bc.label}</span>
+                  {bc.id === "all" ? <span>✦</span> : <BigCatIcon id={bc.id} size={14}/>}<span>{bc.label}</span>
                 </button>
               ))}
             </div>
@@ -3531,7 +3631,7 @@ export default function App() {
                             boxShadow: "0 2px 10px rgba(24,22,15,0.05)",
                           }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${gs},${ge})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{bc.icon}</div>
+                              <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${gs},${ge})`, display: "flex", alignItems: "center", justifyContent: "center" }}><BigCatIcon id={bc.id} size={28}/></div>
                               <div style={{ textAlign: "left" }}>
                                 <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{bc.label}</div>
                                 <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>★順で見る</div>
@@ -3653,7 +3753,7 @@ export default function App() {
                     <button onClick={() => { setActiveBigCat("all"); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
-                        {BIG_CATS.find(b=>b.id===activeBigCat)?.icon} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
+                        {activeBigCat && <BigCatIcon id={activeBigCat} size={22}/>} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
                       </div>
                       <button onClick={() => {
                         if (activeCatFilter) {
@@ -3931,7 +4031,7 @@ export default function App() {
                     cursor: "pointer", fontFamily: "inherit",
                     display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
                   }}>
-                    <span style={{ fontSize: 18 }}>{bc.icon}</span>
+                    <BigCatIcon id={bc.id} size={24}/>
                     <span style={{ fontSize: 9, fontWeight: newCatBigCat===bc.id ? 700 : 400, color: newCatBigCat===bc.id ? C.white : C.sub, textAlign: "center", lineHeight: 1.2 }}>{bc.label}</span>
                   </button>
                 ))}
