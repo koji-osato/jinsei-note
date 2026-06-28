@@ -1340,7 +1340,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: C.ink, color: C.white, padding: "16px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "16px 20px 14px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 10 }}>
         <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
         {ownerName && (
           <div style={{ fontSize: 11, color: C.terra, fontWeight: "bold", marginBottom: 4, letterSpacing: 0.5 }}>
@@ -1369,9 +1369,10 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
 
         {!readOnly && !showForm && !editingEntry && (
           <button onClick={() => setShowForm(true)} style={{
-            width: "100%", background: C.terra, color: C.white, border: "none",
+            width: "100%", background: "linear-gradient(160deg,#F0A070,#E8935A,#D07840)", color: C.white, border: "none",
             borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold",
             cursor: "pointer", marginBottom: 16, touchAction: "manipulation",
+            boxShadow: "0 3px 0 rgba(140,60,10,0.4), 0 6px 20px rgba(232,147,90,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
           }}>
             ＋ 新しい{category.name}を追加
           </button>
@@ -1519,7 +1520,7 @@ function BrowseView({ onSelect, onBack }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 20px 14px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <LogoBanner darkBg={true} />
         </div>
@@ -1540,7 +1541,7 @@ function BrowseView({ onSelect, onBack }) {
               <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
               <div style={{ fontSize: 14 }}>「{query}」に一致するカテゴリがありません</div>
               <button onClick={() => onSelect(query)}
-                style={{ marginTop: 16, background: C.terra, color: C.white, border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                style={{ marginTop: 16, background: "linear-gradient(160deg,#F0A070,#E8935A,#D07840)", color: C.white, border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 3px 0 rgba(140,60,10,0.4), 0 6px 16px rgba(232,147,90,0.4), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
                 ＋「{query}」を新しく追加
               </button>
             </div>
@@ -1800,7 +1801,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
   return (
     <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       {/* ヘッダー（固定）*/}
-      <div style={{ background: C.ink, color: C.white, padding: "28px 16px 8px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 16px 8px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} onLogoClick={onBack}/>
           <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
@@ -2193,7 +2194,7 @@ function ProfileSetupScreen({ initialName = "", initialEmail = "", onComplete })
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
-      <div style={{ background: C.ink, padding: "28px 24px 20px" }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", padding: "28px 24px 20px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
           <span style={{ fontSize: 24 }}>📖</span>
           <div>
@@ -2498,9 +2499,10 @@ function AuthScreen({ onLogin, onPendingAuth }) {
         )}
 
         <button onClick={handleSubmit} disabled={loading} style={{
-          width: "100%", background: loading ? "#888" : C.ink, color: C.white, border: "none",
+          width: "100%", background: loading ? "#888" : "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none",
           borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold",
           cursor: loading ? "not-allowed" : "pointer", marginTop: isLogin ? 0 : 8, touchAction: "manipulation",
+          boxShadow: loading ? "none" : "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}>
           {loading ? "処理中..." : isLogin ? "ログイン" : "アカウントを作成 →"}
         </button>
@@ -2514,11 +2516,12 @@ function AuthScreen({ onLogin, onPendingAuth }) {
 
         {/* Googleログイン */}
         <button onClick={handleGoogle} disabled={loading} style={{
-          width: "100%", background: C.white, color: C.ink, border: `1.5px solid ${C.border}`,
+          width: "100%", background: "linear-gradient(180deg,#FFFFFF,#F5F2EE)", color: C.ink, border: `1.5px solid ${C.border}`,
           borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation",
           opacity: loading ? 0.6 : 1,
+          boxShadow: "0 2px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)",
         }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -2531,10 +2534,11 @@ function AuthScreen({ onLogin, onPendingAuth }) {
 
         {/* Appleログイン（準備済み・近日対応）*/}
         <button onClick={handleApple} style={{
-          width: "100%", background: C.ink, color: C.white, border: "none",
+          width: "100%", background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none",
           borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           fontFamily: "inherit", opacity: 0.6, touchAction: "manipulation",
+          boxShadow: "0 3px 0 rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}>
           <svg width="17" height="20" viewBox="0 0 17 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M13.769 10.625c-.022-2.3 1.878-3.412 1.963-3.468-1.07-1.565-2.733-1.778-3.322-1.8-1.408-.143-2.762.833-3.477.833-.727 0-1.841-.816-3.03-.793-1.549.023-2.984.9-3.782 2.278C.345 10.204 1.472 14.51 3.16 16.85c.84 1.194 1.832 2.53 3.133 2.483 1.263-.05 1.737-.806 3.263-.806 1.511 0 1.948.806 3.264.783 1.355-.022 2.21-1.213 3.04-2.414.963-1.378 1.355-2.724 1.373-2.794-.03-.013-2.627-1.006-2.664-3.977zM11.45 3.535C12.11 2.727 12.56 1.617 12.43.5c-.942.038-2.1.625-2.783 1.415-.604.695-1.142 1.83-1.002 2.904 1.058.081 2.137-.534 2.805-1.284z" fill="white"/>
@@ -2802,7 +2806,7 @@ function AddFollowModal({ user, onClose, onAdded }) {
               {inviteUrl}
             </div>
             <button onClick={() => { navigator.clipboard?.writeText(inviteUrl); alert("コピーしました！"); }}
-              style={{ width: "100%", background: C.ink, color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation" }}>
+              style={{ width: "100%", background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation", boxShadow: "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
               📋 リンクをコピー
             </button>
             {navigator.share && (
@@ -2928,7 +2932,7 @@ function FriendsView({ user, onOpenMenu }) {
   function UserCard({ profile, action }) {
     if (!profile) return null;
     return (
-      <div style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 8px rgba(24,22,15,0.08), 0 6px 20px rgba(24,22,15,0.05)" }}>
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: C.white, flexShrink: 0 }}>
           {profile.name?.charAt(0) || "?"}
         </div>
@@ -2943,7 +2947,7 @@ function FriendsView({ user, onOpenMenu }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 16px" }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 20px 16px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} />
           <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
@@ -2954,7 +2958,7 @@ function FriendsView({ user, onOpenMenu }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
           <div style={{ fontSize: 20, fontWeight: "bold" }}>👥 フォロー</div>
-          <button onClick={() => setShowAdd(true)} style={{ background: C.terra, border: "none", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "bold", color: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+          <button onClick={() => setShowAdd(true)} style={{ background: "linear-gradient(160deg,#F0A070,#E8935A,#D07840)", border: "none", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "bold", color: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 0 rgba(140,60,10,0.4), 0 4px 12px rgba(232,147,90,0.4), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
             ＋ フォロー
           </button>
         </div>
@@ -3039,7 +3043,7 @@ function FriendsView({ user, onOpenMenu }) {
                     <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 8 }}>承認待ち</div>
                   )}
                   {pendingIn.map(f => (
-                    <div key={`pi-${f.id}`} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1.5px solid ${C.terra}` }}>
+                    <div key={`pi-${f.id}`} style={{ background: "linear-gradient(180deg,#FFFFFF,#FFF8F5)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1.5px solid ${C.terra}`, boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 3px 12px rgba(232,147,90,0.12)" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                         <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#7F77DD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
                           {f.profile?.name?.charAt(0) || "?"}
@@ -3073,7 +3077,7 @@ function FriendsView({ user, onOpenMenu }) {
                           <span style={{ fontSize: 12, color: C.muted, background: "#F5F5F5", borderRadius: 10, padding: "4px 10px" }}>申請中</span>
                         ) : (
                           <button onClick={() => followUser(f.follower_id)}
-                            style={{ background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                            style={{ background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
                             フォロー
                           </button>
                         )
@@ -3095,7 +3099,7 @@ function FriendsView({ user, onOpenMenu }) {
 function FriendMapView({ user, onOpenMenu }) {
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 20px 20px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} />
           <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
@@ -3145,7 +3149,7 @@ function ProfileEditScreen({ user, onSave, onClose }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 40 }}>
-      <div style={{ background: C.ink, padding: "20px 20px 20px" }}>
+      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", padding: "20px 20px 20px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <LogoBanner darkBg={true} />
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", borderRadius: 20, touchAction: "manipulation" }}>✕ 閉じる</button>
@@ -3207,7 +3211,7 @@ function ProfileEditScreen({ user, onSave, onClose }) {
           <div style={{ color: "#E57373", fontSize: 13, marginBottom: 14, background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 8, padding: "10px 14px" }}>⚠️ {error}</div>
         )}
 
-        <button onClick={handleSave} disabled={saving} style={{ width: "100%", background: saving ? "#888" : C.ink, color: C.white, border: "none", borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+        <button onClick={handleSave} disabled={saving} style={{ width: "100%", background: saving ? "#888" : "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: saving ? "none" : "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
           {saving ? "保存中..." : "保存する"}
         </button>
       </div>
@@ -3563,7 +3567,7 @@ export default function App() {
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
           <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
-            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
+            <div style={{ padding: "16px 16px 0", background: "linear-gradient(180deg,#282018,#18160F)", borderRadius: "20px 20px 0 0", boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>＋ 人生{addEntryForCat.name}を追加</div>
             </div>
             <div style={{ padding: "16px" }}>
@@ -4204,7 +4208,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <button onClick={() => addCategory(newCatInput)}
-                style={{ flex: 2, background: C.ink, color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
+                style={{ flex: 2, background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
                 作成
               </button>
               <button onClick={() => { setShowAddModal(false); setNewCatInput(""); }}
@@ -4222,7 +4226,7 @@ export default function App() {
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
           <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
-            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
+            <div style={{ padding: "16px 16px 0", background: "linear-gradient(180deg,#282018,#18160F)", borderRadius: "20px 20px 0 0", boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>
                 ＋ 人生{addEntryForCat.name}を追加
               </div>
@@ -4271,7 +4275,7 @@ export default function App() {
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setEditingHomeEntry(null)}/>
           <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto", zIndex: 1 }}>
-            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
+            <div style={{ padding: "16px 16px 0", background: "linear-gradient(180deg,#282018,#18160F)", borderRadius: "20px 20px 0 0", boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>
                 ✏️ {editingHomeEntry.categoryName} を編集
               </div>
