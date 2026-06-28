@@ -32,100 +32,156 @@ const BIG_CATS = [
   { id:"stay",  label:"泊まる"       },
 ];
 
-// ===== 大カテゴリSVGアイコン =====
+// ===== 大カテゴリSVGアイコン（立体版）=====
 function BigCatIcon({ id, size = 28 }) {
   const s = size;
+  const vb = "0 0 52 52";
   const icons = {
     eat: (
-      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="20" fill="#FFF3EC"/>
-        <ellipse cx="22" cy="28" rx="12" ry="4" fill="#FFCBA4" stroke="#E8935A" strokeWidth="1.2"/>
-        <path d="M10 28 Q10 36 22 36 Q34 36 34 28" fill="#FFF3EC" stroke="#E8935A" strokeWidth="1.2"/>
-        <path d="M16 26 Q19 23 22 26 Q25 29 28 26" stroke="#D4A843" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
-        <path d="M15 28 Q18 25 21 28 Q24 31 27 28 Q30 25 33 28" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        <line x1="10" y1="10" x2="10" y2="22" stroke="#E8935A" strokeWidth="1.8" strokeLinecap="round"/>
-        <line x1="8" y1="10" x2="8" y2="15" stroke="#E8935A" strokeWidth="1.2" strokeLinecap="round"/>
-        <line x1="10" y1="10" x2="10" y2="15" stroke="#E8935A" strokeWidth="1.2" strokeLinecap="round"/>
-        <line x1="12" y1="10" x2="12" y2="15" stroke="#E8935A" strokeWidth="1.2" strokeLinecap="round"/>
-        <line x1="33" y1="8" x2="28" y2="24" stroke="#E8935A" strokeWidth="1.8" strokeLinecap="round"/>
-        <line x1="37" y1="10" x2="30" y2="24" stroke="#E8935A" strokeWidth="1.8" strokeLinecap="round"/>
-        <path d="M18 20 Q19 17 18 14 Q17 11 18 8" stroke="#FFCBA4" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
-        <path d="M22 20 Q23 17 22 14 Q21 11 22 8" stroke="#FFCBA4" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+      <svg width={s} height={s} viewBox={vb} fill="none">
+        <defs>
+          <radialGradient id="bc_bowl" cx="40%" cy="25%" r="70%"><stop offset="0%" stopColor="#FFE0C8"/><stop offset="100%" stopColor="#E8935A"/></radialGradient>
+          <radialGradient id="bc_soup" cx="40%" cy="30%" r="70%"><stop offset="0%" stopColor="#FFF0D8"/><stop offset="100%" stopColor="#F0C87A"/></radialGradient>
+          <linearGradient id="bc_fork" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#C0C0C0"/><stop offset="100%" stopColor="#808080"/></linearGradient>
+          <linearGradient id="bc_chop" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#D4A843"/><stop offset="100%" stopColor="#8A6010"/></linearGradient>
+        </defs>
+        <ellipse cx="27" cy="41" rx="14" ry="3" fill="rgba(0,0,0,0.1)"/>
+        <path d="M13 32 Q13 42 27 42 Q41 42 41 32 L39 28 L15 28 Z" fill="url(#bc_bowl)" stroke="#C87040" strokeWidth="1"/>
+        <ellipse cx="27" cy="28" rx="12" ry="4" fill="url(#bc_soup)" stroke="#D4A843" strokeWidth="0.8"/>
+        <path d="M19 26 Q23 22 27 26 Q31 30 35 26" stroke="#C8941A" strokeWidth="2" strokeLinecap="round" fill="none"/>
+        <path d="M18 28.5 Q22 25 26 28.5 Q30 32 34 28.5" stroke="#C8941A" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+        <line x1="36" y1="8" x2="28" y2="26" stroke="url(#bc_chop)" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="40" y1="10" x2="31" y2="26" stroke="url(#bc_chop)" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="13" y1="10" x2="13" y2="24" stroke="url(#bc_fork)" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="11" y1="10" x2="11" y2="15" stroke="url(#bc_fork)" strokeWidth="1.4" strokeLinecap="round"/>
+        <line x1="13" y1="10" x2="13" y2="15" stroke="url(#bc_fork)" strokeWidth="1.4" strokeLinecap="round"/>
+        <line x1="15" y1="10" x2="15" y2="15" stroke="url(#bc_fork)" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M21 22 Q22 18 21 14 Q20 10 21 6" stroke="#FFD0A0" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.8"/>
+        <path d="M27 20 Q28 16 27 12 Q26 8 27 4" stroke="#FFD0A0" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7"/>
+        <ellipse cx="22" cy="30" rx="4" ry="1.5" fill="white" opacity="0.25" transform="rotate(-10 22 30)"/>
       </svg>
     ),
     see: (
-      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="20" fill="#EEF4FF"/>
-        <path d="M6 22 Q15 10 22 10 Q29 10 38 22 Q29 34 22 34 Q15 34 6 22Z" fill="#B5D4F4" stroke="#378ADD" strokeWidth="1.5" strokeLinejoin="round"/>
-        <circle cx="22" cy="22" r="6" fill="#378ADD" stroke="#185FA5" strokeWidth="1"/>
-        <circle cx="22" cy="22" r="3" fill="#185FA5"/>
-        <circle cx="24" cy="20" r="1.5" fill="white"/>
-        <line x1="34" y1="10" x2="36" y2="8" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="33" y1="7" x2="37" y2="11" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="38" y1="16" x2="40" y2="16" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="38" y1="14" x2="40" y2="18" stroke="#D4A843" strokeWidth="1.2" strokeLinecap="round"/>
+      <svg width={s} height={s} viewBox={vb} fill="none">
+        <defs>
+          <radialGradient id="bc_eye" cx="38%" cy="30%" r="65%"><stop offset="0%" stopColor="#7BBCE8"/><stop offset="100%" stopColor="#0C447C"/></radialGradient>
+          <radialGradient id="bc_iris" cx="35%" cy="30%" r="70%"><stop offset="0%" stopColor="#378ADD"/><stop offset="100%" stopColor="#042C53"/></radialGradient>
+        </defs>
+        <path d="M4 26 Q15 10 26 10 Q37 10 48 26 Q37 42 26 42 Q15 42 4 26Z" fill="#E8F4FF" stroke="#185FA5" strokeWidth="1.4" strokeLinejoin="round"/>
+        <circle cx="26" cy="26" r="10" fill="url(#bc_eye)" stroke="#0C447C" strokeWidth="1"/>
+        <circle cx="26" cy="26" r="5.5" fill="url(#bc_iris)"/>
+        <circle cx="26" cy="26" r="3" fill="#042C53"/>
+        <circle cx="28.5" cy="23" r="2.5" fill="white" opacity="0.7"/>
+        <circle cx="23" cy="28" r="1.2" fill="white" opacity="0.3"/>
+        <line x1="14" y1="14" x2="16" y2="18" stroke="#185FA5" strokeWidth="1.4" strokeLinecap="round"/>
+        <line x1="20" y1="11" x2="21" y2="15" stroke="#185FA5" strokeWidth="1.4" strokeLinecap="round"/>
+        <line x1="26" y1="10" x2="26" y2="14" stroke="#185FA5" strokeWidth="1.4" strokeLinecap="round"/>
+        <line x1="32" y1="11" x2="31" y2="15" stroke="#185FA5" strokeWidth="1.4" strokeLinecap="round"/>
+        <line x1="38" y1="14" x2="36" y2="18" stroke="#185FA5" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M42 8 L43.2 11 L46 11 L43.8 12.8 L44.6 16 L42 14.2 L39.4 16 L40.2 12.8 L38 11 L40.8 11 Z" fill="#D4A843"/>
+        <path d="M6 8 L6.8 10.5 L9 10.5 L7.2 12 L7.8 14.5 L6 13 L4.2 14.5 L4.8 12 L3 10.5 L5.2 10.5 Z" fill="#D4A843" opacity="0.6"/>
       </svg>
     ),
     do: (
-      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="20" fill="#EAF3DE"/>
-        <path d="M6 34 Q22 28 40 32" stroke="#639922" strokeWidth="3" strokeLinecap="round" fill="none"/>
-        <path d="M4 36 Q10 33 14 36 Q18 39 22 36 Q26 33 30 36 Q34 39 40 36" stroke="#97C459" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        <circle cx="28" cy="18" r="3" fill="#3B6D11"/>
-        <path d="M28 21 L24 28" stroke="#3B6D11" strokeWidth="1.8" strokeLinecap="round"/>
-        <path d="M24 28 L20 32" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M24 28 L28 31" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M27 23 L20 21" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M27 23 L34 20" stroke="#3B6D11" strokeWidth="1.5" strokeLinecap="round"/>
+      <svg width={s} height={s} viewBox={vb} fill="none">
+        <defs>
+          <linearGradient id="bc_wave" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#5DCAA5"/><stop offset="100%" stopColor="#1D9E75"/></linearGradient>
+          <radialGradient id="bc_pers" cx="35%" cy="25%" r="70%"><stop offset="0%" stopColor="#7BBCE8"/><stop offset="100%" stopColor="#185FA5"/></radialGradient>
+        </defs>
+        <path d="M2 36 Q10 30 18 36 Q26 42 34 36 Q42 30 50 36 L50 48 L2 48 Z" fill="#9FE1CB" opacity="0.5"/>
+        <path d="M2 40 Q10 34 18 38 Q26 42 34 38 Q42 34 50 40 L50 52 L2 52 Z" fill="url(#bc_wave)"/>
+        <path d="M2 40 Q10 34 18 38 Q26 42 34 38 Q42 34 50 40" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6"/>
+        <path d="M8 38 Q26 30 46 36" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.8"/>
+        <path d="M8 38 Q26 30 46 36" stroke="#185FA5" strokeWidth="0.8" strokeLinecap="round" opacity="0.3"/>
+        <circle cx="32" cy="24" r="4.5" fill="url(#bc_pers)" stroke="#0C447C" strokeWidth="0.8"/>
+        <circle cx="30" cy="22" r="1.8" fill="white" opacity="0.3"/>
+        <path d="M32 28.5 L28 36" stroke="#185FA5" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M28 36 L22 40" stroke="#185FA5" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M28 36 L34 38" stroke="#185FA5" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M31 30 L22 26" stroke="#185FA5" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M31 30 L40 27" stroke="#185FA5" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M10 38 L8 34 M12 37 L11 33" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
       </svg>
     ),
     relax: (
-      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="20" fill="#E1F5EE"/>
-        <path d="M8 28 Q8 36 22 36 Q36 36 36 28 L36 26 L8 26 Z" fill="#9FE1CB" stroke="#1D9E75" strokeWidth="1.2" strokeLinejoin="round"/>
-        <path d="M12 26 Q16 24 20 26 Q24 28 28 26 Q32 24 36 26" stroke="#1D9E75" strokeWidth="1" fill="none" strokeLinecap="round"/>
-        <circle cx="22" cy="23" r="3.5" fill="#0F6E56"/>
-        <path d="M12 26 Q14 22 18 24" stroke="#0F6E56" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M32 26 Q30 22 26 24" stroke="#0F6E56" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M16 18 Q17 14 16 10" stroke="#9FE1CB" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        <path d="M22 16 Q23 12 22 8" stroke="#9FE1CB" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        <path d="M28 18 Q29 14 28 10" stroke="#9FE1CB" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        <path d="M19 20 Q22 18 25 20" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <svg width={s} height={s} viewBox={vb} fill="none">
+        <defs>
+          <linearGradient id="bc_tub" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#9FE1CB"/><stop offset="100%" stopColor="#0F6E56"/></linearGradient>
+          <radialGradient id="bc_water" cx="30%" cy="20%" r="80%"><stop offset="0%" stopColor="#B8EEE0"/><stop offset="100%" stopColor="#1D9E75"/></radialGradient>
+          <radialGradient id="bc_head" cx="35%" cy="25%" r="70%"><stop offset="0%" stopColor="#F0D0B0"/><stop offset="100%" stopColor="#C09060"/></radialGradient>
+        </defs>
+        <ellipse cx="27" cy="44" rx="16" ry="3" fill="rgba(0,0,0,0.08)"/>
+        <path d="M8 32 Q8 46 27 46 Q46 46 46 32 L44 28 L10 28 Z" fill="url(#bc_tub)" stroke="#0F6E56" strokeWidth="1.2"/>
+        <ellipse cx="27" cy="28" rx="17" ry="5.5" fill="url(#bc_water)" stroke="#1D9E75" strokeWidth="1"/>
+        <path d="M14 28 Q19 25 24 28 Q29 31 34 28 Q39 25 44 28" stroke="white" strokeWidth="1" fill="none" opacity="0.5"/>
+        <circle cx="27" cy="24" r="5.5" fill="url(#bc_head)" stroke="#A07040" strokeWidth="0.8"/>
+        <circle cx="25" cy="22" r="2" fill="white" opacity="0.2"/>
+        <path d="M22 21 Q27 18.5 32 21" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M22 21 Q27 18.5 32 21" stroke="#E8935A" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+        <path d="M10 30 Q14 26 19 28" stroke="url(#bc_head)" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M44 30 Q40 26 35 28" stroke="url(#bc_head)" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M18 22 Q19.5 17 18 12 Q16.5 7 18 2" stroke="#9FE1CB" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.8"/>
+        <path d="M27 20 Q28.5 15 27 10 Q25.5 5 27 0" stroke="#9FE1CB" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.7"/>
+        <path d="M36 22 Q37.5 17 36 12 Q34.5 7 36 2" stroke="#9FE1CB" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.6"/>
+        <ellipse cx="18" cy="34" rx="5" ry="2" fill="white" opacity="0.15" transform="rotate(-10 18 34)"/>
       </svg>
     ),
     enjoy: (
-      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="20" fill="#FAEEDA"/>
-        <path d="M22 8 L18 20 L26 20 Z" fill="#FAC775" opacity="0.6"/>
-        <path d="M14 6 L12 20 L20 20 Z" fill="#FAC775" opacity="0.4"/>
-        <path d="M30 6 L32 20 L24 20 Z" fill="#FAC775" opacity="0.4"/>
-        <rect x="8" y="20" width="28" height="4" rx="1" fill="#EF9F27" stroke="#BA7517" strokeWidth="1"/>
-        <circle cx="22" cy="29" r="2.5" fill="#854F0B"/>
-        <path d="M22 31.5 L22 36" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M22 32 L19 35" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M22 32 L25 35" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M21 32 L18 29" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M23 32 L26 29" stroke="#854F0B" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="13" cy="30" r="2" fill="#BA7517"/>
-        <path d="M13 32 L13 36" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
-        <path d="M13 33 L16 31" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
-        <circle cx="31" cy="30" r="2" fill="#BA7517"/>
-        <path d="M31 32 L31 36" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
-        <path d="M31 33 L28 31" stroke="#BA7517" strokeWidth="1.3" strokeLinecap="round"/>
+      <svg width={s} height={s} viewBox={vb} fill="none">
+        <defs>
+          <linearGradient id="bc_stage" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F5D060"/><stop offset="100%" stopColor="#C8941A"/></linearGradient>
+        </defs>
+        <path d="M14 4 L8 22 L20 22 Z" fill="#FFF8C0" opacity="0.7"/>
+        <path d="M26 4 L20 22 L32 22 Z" fill="#C0E0FF" opacity="0.6"/>
+        <path d="M38 4 L32 22 L44 22 Z" fill="#FFF8C0" opacity="0.5"/>
+        <circle cx="14" cy="5" r="3" fill="#E8935A" stroke="#C07030" strokeWidth="0.8"/>
+        <circle cx="26" cy="4" r="3" fill="#378ADD" stroke="#185FA5" strokeWidth="0.8"/>
+        <circle cx="38" cy="5" r="3" fill="#E8935A" stroke="#C07030" strokeWidth="0.8"/>
+        <rect x="4" y="22" width="44" height="6" rx="1.5" fill="url(#bc_stage)" stroke="#A07010" strokeWidth="1"/>
+        <rect x="4" y="22" width="44" height="2" rx="1" fill="white" opacity="0.2"/>
+        <circle cx="26" cy="32" r="3.5" fill="#854F0B"/>
+        <path d="M26 35.5 L26 42" stroke="#854F0B" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M26 38 L21 44" stroke="#854F0B" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M26 38 L31 44" stroke="#854F0B" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M25 36 L19 32" stroke="#854F0B" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M27 36 L33 32" stroke="#854F0B" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="13" cy="33" r="3" fill="#BA7517"/>
+        <path d="M13 36 L13 42" stroke="#BA7517" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M12 37 L8 33" stroke="#BA7517" strokeWidth="1.6" strokeLinecap="round"/>
+        <path d="M14 37 L18 34" stroke="#BA7517" strokeWidth="1.6" strokeLinecap="round"/>
+        <circle cx="39" cy="33" r="3" fill="#BA7517"/>
+        <path d="M39 36 L39 42" stroke="#BA7517" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M38 37 L34 34" stroke="#BA7517" strokeWidth="1.6" strokeLinecap="round"/>
+        <path d="M40 37 L44 33" stroke="#BA7517" strokeWidth="1.6" strokeLinecap="round"/>
       </svg>
     ),
     stay: (
-      <svg width={s} height={s} viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="20" fill="#EEEDFE"/>
-        <rect x="10" y="12" width="24" height="26" rx="1" fill="#AFA9EC" stroke="#534AB7" strokeWidth="1.2"/>
-        <rect x="13" y="16" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
-        <rect x="20" y="16" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
-        <rect x="27" y="16" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
-        <rect x="13" y="24" width="5" height="5" rx="0.5" fill="#FAC775" stroke="#7F77DD" strokeWidth="0.8"/>
-        <rect x="20" y="24" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
-        <rect x="27" y="24" width="5" height="5" rx="0.5" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
-        <rect x="18" y="31" width="8" height="7" rx="1" fill="#534AB7" stroke="#3C3489" strokeWidth="0.8"/>
-        <rect x="8" y="10" width="28" height="3" rx="0.5" fill="#7F77DD" stroke="#534AB7" strokeWidth="1"/>
+      <svg width={s} height={s} viewBox={vb} fill="none">
+        <defs>
+          <linearGradient id="bc_hotel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#C8C0F0"/><stop offset="100%" stopColor="#534AB7"/></linearGradient>
+          <linearGradient id="bc_roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#9A92E0"/><stop offset="100%" stopColor="#3C3489"/></linearGradient>
+          <linearGradient id="bc_win" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#FFF8C0"/><stop offset="100%" stopColor="#F5D060"/></linearGradient>
+        </defs>
+        <rect x="13" y="16" width="28" height="34" rx="1" fill="#3C3489" opacity="0.25" transform="translate(2 2)"/>
+        <rect x="11" y="14" width="30" height="34" rx="1.5" fill="url(#bc_hotel)" stroke="#3C3489" strokeWidth="1.2"/>
+        <rect x="9" y="11" width="34" height="5" rx="1" fill="url(#bc_roof)" stroke="#26215C" strokeWidth="1"/>
+        <rect x="9" y="11" width="34" height="2" rx="1" fill="white" opacity="0.2"/>
+        <rect x="14" y="18" width="6" height="6" rx="1" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="23" y="18" width="6" height="6" rx="1" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="32" y="18" width="6" height="6" rx="1" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="14" y="27" width="6" height="6" rx="1" fill="url(#bc_win)" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="23" y="27" width="6" height="6" rx="1" fill="#EEEDFE" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="32" y="27" width="6" height="6" rx="1" fill="url(#bc_win)" stroke="#7F77DD" strokeWidth="0.8"/>
+        <rect x="14.5" y="18.5" width="2" height="2" rx="0.3" fill="white" opacity="0.5"/>
+        <rect x="14.5" y="27.5" width="2" height="2" rx="0.3" fill="white" opacity="0.5"/>
+        <rect x="32.5" y="27.5" width="2" height="2" rx="0.3" fill="white" opacity="0.5"/>
+        <rect x="20" y="37" width="12" height="11" rx="1.5" fill="#3C3489" stroke="#26215C" strokeWidth="0.8"/>
+        <rect x="22" y="37" width="4" height="11" rx="0.5" fill="#534AB7" opacity="0.5"/>
+        <circle cx="30" cy="43" r="1" fill="#D4A843"/>
+        <path d="M21 10 L21.8 12.5 L24.5 12.5 L22.3 14 L23.1 16.5 L21 15 L18.9 16.5 L19.7 14 L17.5 12.5 L20.2 12.5 Z" fill="#D4A843"/>
+        <path d="M26 9.5 L26.6 11.5 L28.7 11.5 L27.1 12.8 L27.7 14.8 L26 13.5 L24.3 14.8 L24.9 12.8 L23.3 11.5 L25.4 11.5 Z" fill="#D4A843"/>
+        <path d="M31 10 L31.8 12.5 L34.5 12.5 L32.3 14 L33.1 16.5 L31 15 L28.9 16.5 L29.7 14 L27.5 12.5 L30.2 12.5 Z" fill="#D4A843"/>
+        <rect x="11" y="14" width="6" height="34" rx="1.5" fill="white" opacity="0.08"/>
       </svg>
     ),
   };
@@ -2478,13 +2534,91 @@ function AuthScreen({ onLogin, onPendingAuth }) {
 }
 
 // ===== ⑤ 下部ナビゲーションバー =====
-const NAV_ITEMS = [
-  { id: "list",        label: "リスト",     icon: "📋" },
-  { id: "map",         label: "地図",       icon: "🗺" },
-  { id: "add",         label: "追加",       icon: "＋",  primary: true },
-  { id: "friends",     label: "フレンド",   icon: "👥" },
-  { id: "friendsmap",  label: "フレンド地図", icon: "🌐" },
-];
+// ===== ボトムナビSVGアイコン =====
+function NavIcon({ id, active }) {
+  const col = active ? C.terra : "#A0978F";
+  const icons = {
+    list: (
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="nav_bind" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={active ? "#F0A878" : "#C8B8B0"}/><stop offset="100%" stopColor={active ? "#C8703A" : "#907870"}/></linearGradient>
+          <linearGradient id="nav_page" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="100%" stopColor="#F5F0EC"/></linearGradient>
+        </defs>
+        <rect x="4" y="4" width="20" height="22" rx="2.5" fill={active ? "#C8703A" : "#907870"} opacity="0.25"/>
+        <rect x="3" y="3" width="20" height="22" rx="2.5" fill="url(#nav_bind)"/>
+        <rect x="6" y="4.5" width="15" height="19" rx="1.5" fill="url(#nav_page)" stroke={col} strokeWidth="0.8"/>
+        <circle cx="6.5" cy="9" r="2" fill="url(#nav_bind)" stroke={active ? "#A85A28" : "#806860"} strokeWidth="0.8"/>
+        <circle cx="6.5" cy="14" r="2" fill="url(#nav_bind)" stroke={active ? "#A85A28" : "#806860"} strokeWidth="0.8"/>
+        <circle cx="6.5" cy="19" r="2" fill="url(#nav_bind)" stroke={active ? "#A85A28" : "#806860"} strokeWidth="0.8"/>
+        <circle cx="6.5" cy="9" r="0.8" fill="white" opacity="0.6"/>
+        <circle cx="6.5" cy="14" r="0.8" fill="white" opacity="0.6"/>
+        <circle cx="6.5" cy="19" r="0.8" fill="white" opacity="0.6"/>
+        <line x1="10" y1="8.5" x2="19" y2="8.5" stroke={col} strokeWidth="1.2" strokeLinecap="round"/>
+        <line x1="10" y1="12" x2="19" y2="12" stroke={col} strokeWidth="1.2" strokeLinecap="round"/>
+        <line x1="10" y1="15.5" x2="16" y2="15.5" stroke={col} strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M11 19 L11.5 20.5 L13 20.5 L11.9 21.4 L12.3 23 L11 22.1 L9.7 23 L10.1 21.4 L9 20.5 L10.5 20.5 Z" fill={active ? "#D4A843" : "#B0A090"}/>
+        <rect x="3" y="3" width="4" height="22" rx="2.5" fill="white" opacity="0.15"/>
+      </svg>
+    ),
+    map: (
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <radialGradient id="nav_globe" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stopColor={active ? "#B5D4F4" : "#C8C0B8"}/>
+            <stop offset="100%" stopColor={active ? "#185FA5" : "#706860"}/>
+          </radialGradient>
+        </defs>
+        <circle cx="14" cy="14" r="11" fill="url(#nav_globe)" stroke={active ? "#0C447C" : "#605850"} strokeWidth="1.2"/>
+        <ellipse cx="14" cy="14" rx="11" ry="5" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8"/>
+        <line x1="3" y1="14" x2="25" y2="14" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8"/>
+        <ellipse cx="14" cy="14" rx="5" ry="11" stroke="rgba(255,255,255,0.25)" strokeWidth="0.7"/>
+        <path d="M15 7 Q18 7.5 19.5 9.5 Q20.5 11.5 19 13 Q17 14 15.5 12.5 Q14 11 15 9 Z" fill={active ? "#4A9E30" : "#909888"} opacity="0.85"/>
+        <path d="M8 9.5 Q11 8.5 12.5 10.5 Q13 12 11.5 13 Q9.5 13 8.5 11.5 Z" fill={active ? "#4A9E30" : "#909888"} opacity="0.7"/>
+        <path d="M7.5 14.5 Q9.5 13.5 10.5 15.5 Q10.5 17.5 8.5 17.5 Q6.5 16.5 7.5 14.5 Z" fill={active ? "#4A9E30" : "#909888"} opacity="0.6"/>
+        <circle cx="18" cy="10" r="2.8" fill={active ? "#E8935A" : "#B09888"} stroke={active ? "#C87040" : "#907860"} strokeWidth="0.8"/>
+        <path d="M18 12.8 L18 16" stroke={active ? "#C87040" : "#907860"} strokeWidth="1.6" strokeLinecap="round"/>
+        <circle cx="18" cy="10" r="1.2" fill="white" opacity="0.7"/>
+        <circle cx="10" cy="9" r="3.5" fill="white" opacity="0.12"/>
+      </svg>
+    ),
+    friends: (
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <radialGradient id="nav_p1" cx="40%" cy="30%" r="70%"><stop offset="0%" stopColor={active ? "#7BBCE8" : "#C0B8B0"}/><stop offset="100%" stopColor={active ? "#185FA5" : "#706860"}/></radialGradient>
+          <radialGradient id="nav_p2" cx="40%" cy="30%" r="70%"><stop offset="0%" stopColor={active ? "#EFC060" : "#D0C8C0"}/><stop offset="100%" stopColor={active ? "#BA7517" : "#908070"}/></radialGradient>
+        </defs>
+        <circle cx="18.5" cy="9.5" r="4" fill="url(#nav_p2)" stroke={active ? "#BA7517" : "#807060"} strokeWidth="0.8"/>
+        <path d="M13 25 C13 20 15.5 18 18.5 18 C21.5 18 24 20 24 25" fill="url(#nav_p2)" stroke={active ? "#BA7517" : "#807060"} strokeWidth="0.8" strokeLinecap="round"/>
+        <circle cx="10.5" cy="10" r="4.8" fill="url(#nav_p1)" stroke={active ? "#185FA5" : "#606058"} strokeWidth="1"/>
+        <path d="M3.5 26 C3.5 20.5 6.5 18 10.5 18 C14.5 18 17.5 20.5 17.5 26" fill="url(#nav_p1)" stroke={active ? "#185FA5" : "#606058"} strokeWidth="1" strokeLinecap="round"/>
+        <circle cx="8.5" cy="8" r="2.5" fill="white" opacity="0.2"/>
+        <circle cx="16.5" cy="8" r="1.8" fill="white" opacity="0.2"/>
+      </svg>
+    ),
+    friendsmap: (
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="nav_g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={active ? "#F5D060" : "#D0C8B8"}/><stop offset="100%" stopColor={active ? "#C8941A" : "#908070"}/></linearGradient>
+          <linearGradient id="nav_s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={active ? "#E0E0E0" : "#D0C8C0"}/><stop offset="100%" stopColor={active ? "#A0A0A0" : "#908888"}/></linearGradient>
+          <linearGradient id="nav_b1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={active ? "#E0A070" : "#C8B8A8"}/><stop offset="100%" stopColor={active ? "#A06030" : "#907060"}/></linearGradient>
+        </defs>
+        <rect x="2" y="16" width="7" height="10" rx="1" fill="url(#nav_s1)" stroke={active ? "#A0A0A0" : "#908888"} strokeWidth="0.8"/>
+        <text x="5.5" y="23" fontSize="6" fill="white" textAnchor="middle" fontWeight="bold">2</text>
+        <rect x="10.5" y="10" width="7" height="16" rx="1" fill="url(#nav_g1)" stroke={active ? "#C8941A" : "#908070"} strokeWidth="0.8"/>
+        <text x="14" y="21" fontSize="6" fill="white" textAnchor="middle" fontWeight="bold">1</text>
+        <rect x="19" y="19" width="7" height="7" rx="1" fill="url(#nav_b1)" stroke={active ? "#A06030" : "#907060"} strokeWidth="0.8"/>
+        <text x="22.5" y="24" fontSize="6" fill="white" textAnchor="middle" fontWeight="bold">3</text>
+        <path d="M11 10 L12.5 7 L14 9.5 L15.5 6.5 L17 10" stroke={active ? "#D4A843" : "#B09878"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+        <line x1="11" y1="10" x2="17" y2="10" stroke={active ? "#D4A843" : "#B09878"} strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="5.5" cy="13.5" r="2" fill={active ? "#A0A0A0" : "#B0A8A0"}/>
+        <circle cx="14" cy="7.5" r="2.2" fill={active ? "#C8941A" : "#A09078"}/>
+        <circle cx="22.5" cy="16.5" r="2" fill={active ? "#A06030" : "#A09080"}/>
+        <rect x="10.5" y="10" width="3" height="16" rx="1" fill="white" opacity="0.12"/>
+      </svg>
+    ),
+  };
+  return icons[id] || null;
+}
 
 function BottomNav({ activeTab, onTabChange }) {
   return (
@@ -2492,9 +2626,15 @@ function BottomNav({ activeTab, onTabChange }) {
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
       background: C.white, borderTop: `1px solid ${C.border}`,
       display: "flex", alignItems: "center",
-      paddingBottom: "env(safe-area-inset-bottom, 8px)", // ノッチ対応
+      paddingBottom: "env(safe-area-inset-bottom, 8px)",
     }}>
-      {NAV_ITEMS.map(item => (
+      {[
+        { id: "list", label: "リスト" },
+        { id: "map", label: "地図" },
+        { id: "add", label: "追加", primary: true },
+        { id: "friends", label: "フレンド" },
+        { id: "friendsmap", label: "ランキング" },
+      ].map(item => (
         <button key={item.id} onClick={() => onTabChange(item.id)} style={{
           flex: 1, padding: "8px 0 6px", border: "none", background: "none", cursor: "pointer",
           display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
@@ -2502,13 +2642,19 @@ function BottomNav({ activeTab, onTabChange }) {
         }}>
           {item.primary ? (
             <div style={{
-              width: 48, height: 48, borderRadius: "50%",
-              background: C.terra, display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 24, color: C.white, marginTop: -20,
-              boxShadow: "0 4px 12px rgba(192,120,74,0.4)",
-            }}>＋</div>
+              width: 50, height: 50, borderRadius: "50%",
+              background: "linear-gradient(145deg, #F5A878, #E8935A 45%, #C87038)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginTop: -22,
+              boxShadow: "0 6px 20px rgba(232,147,90,0.55), 0 2px 6px rgba(200,112,56,0.4), inset 0 2px 0 rgba(255,255,255,0.3)",
+            }}>
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <line x1="11" y1="4" x2="11" y2="18" stroke="white" strokeWidth="2.6" strokeLinecap="round"/>
+                <line x1="4" y1="11" x2="18" y2="11" stroke="white" strokeWidth="2.6" strokeLinecap="round"/>
+              </svg>
+            </div>
           ) : (
-            <span style={{ fontSize: 22 }}>{item.icon}</span>
+            <NavIcon id={item.id} active={activeTab === item.id}/>
           )}
           <span style={{
             fontSize: 10, fontWeight: activeTab === item.id ? "bold" : "normal",
@@ -2939,7 +3085,7 @@ function FriendMapView({ user, onOpenMenu }) {
             <span>▾</span>
           </button>
         </div>
-        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>🌐 フレンド地図</div>
+        <div style={{ fontSize: 20, fontWeight: "bold", marginTop: 12 }}>🏆 ランキング</div>
       </div>
       <div style={{ padding: "60px 24px", textAlign: "center", color: C.muted }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🌐</div>
