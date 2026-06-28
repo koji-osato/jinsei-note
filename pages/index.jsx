@@ -3291,7 +3291,37 @@ export default function App() {
   // 表示中のカテゴリ（自分orフレンド）- activeCategoryより前に定義必須
   const displayCategories = viewingUser ? friendCategories : categories;
 
-  if (showBrowse) return <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />;
+  if (showBrowse) return (
+    <>
+      <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />
+      {addEntryForCat && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
+          <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
+            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>＋ 人生{addEntryForCat.name}を追加</div>
+            </div>
+            <div style={{ padding: "16px" }}>
+              <EntryForm
+                categoryName={addEntryForCat.name}
+                onSave={async (entry) => {
+                  const dbEntry = { user_id: user.id, category_id: addEntryForCat.id, name: entry.name, prefecture: entry.prefecture || "", rec: entry.rec ?? 2, star: entry.star ?? 0, tags: entry.tags || [], comment: entry.comment || "", visit_date: entry.visitDate || null, place_data: entry.placeData || null, rank_order: 0 };
+                  const { data: newEnt, error } = await supabase.from("entries").insert(dbEntry).select().single();
+                  if (error) { alert("保存エラー: " + error.message); return; }
+                  const savedId = newEnt?.id || entry.id;
+                  if (entry.photo) { try { localStorage.setItem(`photo_${savedId}`, entry.photo); } catch {} }
+                  setCategories(prev => prev.map(c => c.id === addEntryForCat.id ? { ...c, entries: sortEntriesByStar([...c.entries, { ...entry, id: savedId }]) } : c));
+                  setAddEntryForCat(null);
+                  setShowBrowse(false);
+                }}
+                onCancel={() => setAddEntryForCat(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
   if (activeCategory) {
     const isFriendView = !!viewingUser;
     const accentColor = getAccentColor(displayCategories.findIndex(c => c.id === activeCategory.id));
