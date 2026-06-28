@@ -3309,23 +3309,42 @@ export default function App() {
     );
   }
 
+  // ユーザーメニュー（全ページ共通）
+  const userMenuElement = showUserMenu && (
+    <UserMenu
+      user={user}
+      onEdit={() => { setShowUserMenu(false); setShowProfileEdit(true); }}
+      onLogout={async () => {
+        setShowUserMenu(false);
+        if (confirm("ログアウトしますか？")) {
+          await supabase.auth.signOut();
+          setUser(null); setCategories([]);
+        }
+      }}
+      onClose={() => setShowUserMenu(false)}
+    />
+  );
+
   // タブ切替で地図・フレンド表示
   if (activeTab === "map") return (
     <>
       <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} user={user} onOpenMenu={() => setShowUserMenu(true)} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {userMenuElement}
     </>
   );
   if (activeTab === "friends") return (
     <>
       <FriendsView user={user} onOpenMenu={() => setShowUserMenu(true)} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {userMenuElement}
     </>
   );
   if (activeTab === "friendsmap") return (
     <>
       <FriendMapView user={user} onOpenMenu={() => setShowUserMenu(true)} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {userMenuElement}
     </>
   );
 
