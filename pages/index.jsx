@@ -5,14 +5,16 @@ const STORAGE_KEY = "jinsei-note-v3";
 
 // ===== カラー定数 =====
 const C = {
-  ink:    "#18160F",
-  terra:  "#E8935A",
-  gold:   "#D4A843",
-  cream:  "#FAFAF8",
+  ink:    "#1A1208",
+  terra:  "#C87040",
+  gold:   "#C8A050",
+  cream:  "#F2EDE4",
   white:  "#FFFFFF",
-  border: "#EEEBE6",
-  muted:  "#B8B0A8",
-  sub:    "#8A8078",
+  border: "#E0D5C0",
+  muted:  "#B09878",
+  sub:    "#A08060",
+  leather:"#2C1F0E",
+  goldLight:"#E8C870",
 };
 
 // ===== おすすめ度定義 =====
@@ -440,21 +442,6 @@ function getSuggestions(input) {
   return results;
 }
 
-// ===== シャドウ定数 =====
-const S = {
-  card:    "0 1px 0 rgba(255,255,255,0.85) inset, 0 2px 8px rgba(24,22,15,0.08), 0 8px 24px rgba(24,22,15,0.05)",
-  cardExp: "0 1px 0 rgba(255,255,255,0.85) inset, 0 4px 20px rgba(232,147,90,0.18), 0 12px 36px rgba(232,147,90,0.1)",
-  btnPri:  "0 3px 0 rgba(140,60,10,0.45), 0 6px 20px rgba(232,147,90,0.45), inset 0 1px 0 rgba(255,255,255,0.3)",
-  btnSec:  "0 2px 0 rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
-  btnDel:  "0 2px 0 rgba(200,60,60,0.12), inset 0 1px 0 rgba(255,255,255,1)",
-  fab:     "0 5px 0 rgba(140,60,10,0.5), 0 8px 24px rgba(232,147,90,0.6), inset 0 2px 0 rgba(255,255,255,0.4)",
-  nav:     "0 -2px 16px rgba(24,22,15,0.1), inset 0 1px 0 rgba(255,255,255,0.7)",
-  modal:   "0 -4px 40px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.9)",
-  header:  "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)",
-  badge:   "0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.45)",
-  rank:    "0 3px 0 rgba(0,0,0,0.2), 0 6px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4)",
-};
-
 // ① iOSズーム防止: font-size:16px + touch-action:manipulation
 const inputStyle = {
   display: "block",
@@ -475,7 +462,6 @@ const inputStyle = {
   touchAction: "manipulation",
   minWidth: 0,
   color: C.ink,
-  boxShadow: "inset 0 1px 3px rgba(24,22,15,0.06), 0 1px 0 rgba(255,255,255,0.9)",
 };
 const labelStyle = {
   display: "block", fontSize: 11, fontWeight: "bold",
@@ -493,7 +479,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
     "linear-gradient(135deg,#A06030,#C08050)",
   ];
   return (
-    <div onClick={onToggle || undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? S.cardExp : S.card, cursor: onToggle ? "pointer" : "default" }}>
+    <div onClick={onToggle || undefined} style={{ background: "#FFFFFF", borderRadius: 16, marginBottom: 8, border: `1px solid ${expanded ? C.terra : C.border}`, overflow: "hidden", boxShadow: expanded ? "0 4px 16px rgba(232,147,90,0.12)" : "0 2px 8px rgba(24,22,15,0.05)", cursor: onToggle ? "pointer" : "default" }}>
       {/* メイン表示 */}
       <div style={{ padding: "12px 14px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -552,8 +538,8 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
             </div>
           )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={onEdit} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: S.btnSec }}>✏️ 編集</button>
-            <button onClick={onDelete} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: S.btnDel }}>🗑 削除</button>
+            <button onClick={onEdit} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "#FFF", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>✏️ 編集</button>
+            <button onClick={onDelete} style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit" }}>🗑 削除</button>
           </div>
         </div>
       )}
@@ -577,7 +563,6 @@ function RecBadge({ value, large }) {
       padding: large ? "4px 12px" : "3px 9px", borderRadius: 20,
       color: rec.color, background: rec.bg,
       whiteSpace: "nowrap", display: "inline-block", letterSpacing: 0.2,
-      boxShadow: S.badge,
     }}>{rec.short}</span>
   );
 }
@@ -641,7 +626,7 @@ function RankBadge({ rank }) {
       width:38, height:38, borderRadius:12, flexShrink:0,
       background: rankBgs[rank-1],
       display:"flex", alignItems:"center", justifyContent:"center",
-      boxShadow:S.rank,
+      boxShadow:"0 3px 10px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.3)",
     }}>
       <span style={{ fontSize:8, fontWeight:900, color:"#FFF", letterSpacing:0.5 }}>{labels[rank-1]}</span>
     </div>
@@ -971,7 +956,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
     const done = step > n; const active = step === n;
     return (
       <div style={{ display:"flex", alignItems:"center" }}>
-        <div style={{ width:24, height:24, borderRadius:"50%", background: done?C.ink:active?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:active?"0 3px 0 rgba(140,60,10,0.3), 0 6px 16px rgba(232,147,90,0.45), inset 0 1px 0 rgba(255,255,255,0.4)":"none" }}>
+        <div style={{ width:24, height:24, borderRadius:"50%", background: done?C.ink:active?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:active?"0 3px 10px rgba(232,147,90,0.4)":"none" }}>
           {done ? <span style={{ fontSize:12, color:"#FFF" }}>✓</span>
                 : <span style={{ fontSize:10, fontWeight:800, color:active?"#FFF":C.muted }}>{n}</span>}
         </div>
@@ -981,7 +966,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
   }
 
   return (
-    <div style={{ background:C.white, borderRadius:18, border:`1px solid ${C.border}`, width:"100%", boxSizing:"border-box", overflow:"hidden", boxShadow:"0 1px 0 rgba(255,255,255,0.9) inset, 0 4px 20px rgba(24,22,15,0.1), 0 12px 40px rgba(24,22,15,0.06)" }}>
+    <div style={{ background:C.white, borderRadius:18, border:`1px solid ${C.border}`, width:"100%", boxSizing:"border-box", overflow:"hidden", boxShadow:"0 4px 20px rgba(24,22,15,0.08)" }}>
       {/* ステップヘッダー */}
       <div style={{ padding:"16px 16px 12px", borderBottom:`1px solid ${C.border}`, background:"#FAFAF8" }}>
         <div style={{ fontSize:12, fontWeight:700, color:C.sub, marginBottom:10 }}>
@@ -1077,7 +1062,7 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
                     border:`1.5px solid ${rec===r.value?r.color:C.border}`,
                     background:rec===r.value?r.bg:C.white,
                     color:rec===r.value?r.color:C.sub,
-                    boxShadow:rec===r.value?`0 2px 0 ${r.color}35, 0 4px 16px ${r.color}28, inset 0 1px 0 rgba(255,255,255,0.5)`:"inset 0 1px 3px rgba(24,22,15,0.04), 0 1px 0 rgba(255,255,255,0.8)",
+                    boxShadow:rec===r.value?`0 3px 12px ${r.color}20`:"none",
                   }}>
                     <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${rec===r.value?r.color:C.border}`, background:rec===r.value?r.color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       {rec===r.value && <span style={{ fontSize:10, color:"#FFF" }}>✓</span>}
@@ -1185,9 +1170,9 @@ function EntryForm({ onSave, onCancel, initial, categoryName }) {
           <button onClick={()=>setStep(s=>s-1)} style={{ flex:1, padding:"13px", borderRadius:14, border:`1.5px solid ${C.border}`, background:C.white, fontSize:14, fontWeight:700, color:C.ink, cursor:"pointer" }}>戻る</button>
         )}
         {step < 3 ? (
-          <button onClick={()=>(step===1?canNext1:canNext2)&&setStep(s=>s+1)} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:(step===1?canNext1:canNext2)?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, fontSize:14, fontWeight:700, color:(step===1?canNext1:canNext2)?"#FFF":C.muted, cursor:(step===1?canNext1:canNext2)?"pointer":"not-allowed", boxShadow:(step===1?canNext1:canNext2)?S.btnPri:"none" }}>次へ →</button>
+          <button onClick={()=>(step===1?canNext1:canNext2)&&setStep(s=>s+1)} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:(step===1?canNext1:canNext2)?`linear-gradient(135deg,${C.terra},${C.gold})`:C.border, fontSize:14, fontWeight:700, color:(step===1?canNext1:canNext2)?"#FFF":C.muted, cursor:(step===1?canNext1:canNext2)?"pointer":"not-allowed", boxShadow:(step===1?canNext1:canNext2)?`0 4px 16px rgba(232,147,90,0.35)`:"none" }}>次へ →</button>
         ) : (
-          <button onClick={handleSave} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:`linear-gradient(135deg,${C.terra},${C.gold})`, fontSize:14, fontWeight:700, color:"#FFF", cursor:"pointer", boxShadow:S.btnPri }}>✓ 記録する</button>
+          <button onClick={handleSave} style={{ flex:2, padding:"13px", borderRadius:14, border:"none", background:`linear-gradient(135deg,${C.terra},${C.gold})`, fontSize:14, fontWeight:700, color:"#FFF", cursor:"pointer", boxShadow:`0 4px 16px rgba(232,147,90,0.35)` }}>✓ 記録する</button>
         )}
         {step === 1 && (
           <button onClick={onCancel} style={{ flex:1, padding:"13px", borderRadius:14, border:`1.5px solid ${C.border}`, background:C.white, fontSize:14, color:C.sub, cursor:"pointer" }}>キャンセル</button>
@@ -1339,8 +1324,8 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
   const emoji = getTagEmoji(category.name);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "16px 20px 14px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 10 }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "16px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <button onClick={onBack} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20, touchAction: "manipulation" }}><span>←</span> 戻る</button>
         {ownerName && (
           <div style={{ fontSize: 11, color: C.terra, fontWeight: "bold", marginBottom: 4, letterSpacing: 0.5 }}>
@@ -1369,10 +1354,9 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
 
         {!readOnly && !showForm && !editingEntry && (
           <button onClick={() => setShowForm(true)} style={{
-            width: "100%", background: "linear-gradient(160deg,#F0A070,#E8935A,#D07840)", color: C.white, border: "none",
+            width: "100%", background: C.terra, color: C.white, border: "none",
             borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold",
             cursor: "pointer", marginBottom: 16, touchAction: "manipulation",
-            boxShadow: "0 3px 0 rgba(140,60,10,0.4), 0 6px 20px rgba(232,147,90,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
           }}>
             ＋ 新しい{category.name}を追加
           </button>
@@ -1426,7 +1410,7 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
                   opacity: (dragging === idx || isTouchDragging) ? 0.5 : 1,
                   transform: isTouchDragging ? "scale(1.02)" : "scale(1)",
                   transition: "transform 0.15s, opacity 0.15s",
-                  boxShadow: isTouchDragging ? "0 12px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8)" : S.card,
+                  boxShadow: isTouchDragging ? "0 8px 24px rgba(0,0,0,0.15)" : "none",
                 }}
               >
                 <div style={{ padding: "16px", display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -1481,11 +1465,11 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
                 {isExpanded && (
                   <div style={{ borderTop: `1px solid #F0E8E0`, padding: "12px 16px 16px", display: "flex", gap: 10 }}>
                     <button onClick={() => { setEditingEntry(entry); setExpandedId(null); }}
-                      style={{ flex: 1, fontSize: 14, color: "#555", background: "linear-gradient(180deg,#FAFAFA,#F2F0EC)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation", boxShadow: S.btnSec }}>
+                      style={{ flex: 1, fontSize: 14, color: "#555", background: "#F5F5F5", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation" }}>
                       ✏️ 編集
                     </button>
                     <button onClick={() => deleteEntry(entry.id)}
-                      style={{ flex: 1, fontSize: 14, color: "#E57373", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation", boxShadow: S.btnDel }}>
+                      style={{ flex: 1, fontSize: 14, color: "#E57373", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", fontWeight: "bold", touchAction: "manipulation" }}>
                       🗑 削除
                     </button>
                   </div>
@@ -1519,8 +1503,8 @@ function BrowseView({ onSelect, onBack }) {
     : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 20px 14px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 10 }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 14px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <LogoBanner darkBg={true} />
         </div>
@@ -1541,7 +1525,7 @@ function BrowseView({ onSelect, onBack }) {
               <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
               <div style={{ fontSize: 14 }}>「{query}」に一致するカテゴリがありません</div>
               <button onClick={() => onSelect(query)}
-                style={{ marginTop: 16, background: "linear-gradient(160deg,#F0A070,#E8935A,#D07840)", color: C.white, border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 3px 0 rgba(140,60,10,0.4), 0 6px 16px rgba(232,147,90,0.4), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
+                style={{ marginTop: 16, background: C.terra, color: C.white, border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
                 ＋「{query}」を新しく追加
               </button>
             </div>
@@ -1799,9 +1783,9 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
   const isFriendSelect = mapMode === "select";
 
   return (
-    <div style={{ height: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       {/* ヘッダー（固定）*/}
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 16px 8px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 16px 8px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} onLogoClick={onBack}/>
           <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
@@ -1903,7 +1887,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {filteredFriendUsers.map(fu => (
                 <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); setMapOpen(true); }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: S.card }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
                     {fu.name?.charAt(0)}
                   </div>
@@ -1929,7 +1913,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {friendCatList.map(([name, count]) => (
                 <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setMapOpen(true); setSelectedPlace(null); }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: S.card }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                     {getTagEmoji(name)}
                   </div>
@@ -1963,8 +1947,8 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
               {/* 地図開閉ボタン */}
               <button onClick={() => setMapOpen(!mapOpen)} style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "8px 16px", background: "linear-gradient(180deg,#FFFFFF,#FAF8F5)", border: "none",
-                borderBottom: `1px solid ${C.border}`, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9)", cursor: "pointer", fontFamily: "inherit",
+                padding: "8px 16px", background: C.white, border: "none",
+                borderBottom: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
                 fontSize: 13, fontWeight: 600, color: C.terra, width: "100%",
                 flexShrink: 0,
               }}>
@@ -2092,7 +2076,7 @@ function LogoBanner({ darkBg = true, onLogoClick }) {
 // ===== ロゴヘッダー（認証画面用・縦型）=====
 function LogoHeader({ subtitle = "人生で最高だったものを記録しよう" }) {
   return (
-    <div style={{ background: "linear-gradient(160deg,#201E16 0%,#18160F 60%,#1E1A0F 100%)", padding: "48px 24px 32px", textAlign: "center", boxShadow: "0 4px 24px rgba(24,22,15,0.3), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+    <div style={{ background: C.ink, padding: "48px 24px 32px", textAlign: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginBottom: 10 }}>
         <LJIcon size={72} darkBg={true} />
         <div style={{ textAlign: "center" }}>
@@ -2118,7 +2102,7 @@ function EmailVerifyScreen({ email, onBack }) {
     setTimeout(() => setResent(false), 3000);
   }
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       <LogoHeader subtitle="メールアドレスを確認してください" />
       <div style={{ flex: 1, padding: "40px 24px", maxWidth: 400, margin: "0 auto", width: "100%", boxSizing: "border-box", textAlign: "center" }}>
         <div style={{ fontSize: 64, marginBottom: 20 }}>📬</div>
@@ -2193,8 +2177,8 @@ function ProfileSetupScreen({ initialName = "", initialEmail = "", onComplete })
   const age = birthdate ? new Date().getFullYear() - new Date(birthdate).getFullYear() : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", padding: "28px 24px 20px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: C.ink, padding: "28px 24px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
           <span style={{ fontSize: 24 }}>📖</span>
           <div>
@@ -2319,10 +2303,9 @@ function ProfileSetupScreen({ initialName = "", initialEmail = "", onComplete })
         )}
 
         <button onClick={handleSubmit} style={{
-          width: "100%", background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none",
+          width: "100%", background: C.ink, color: C.white, border: "none",
           borderRadius: 12, padding: "16px", fontSize: 16, fontWeight: "bold",
           cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation",
-          boxShadow: "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}>
           人生ノートをはじめる 🎉
         </button>
@@ -2432,7 +2415,7 @@ function AuthScreen({ onLogin, onPendingAuth }) {
   const isLogin = step === "login";
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", display: "flex", flexDirection: "column" }}>
       <LogoHeader />
 
       <div style={{ flex: 1, padding: "28px 24px 40px", maxWidth: 420, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
@@ -2499,10 +2482,9 @@ function AuthScreen({ onLogin, onPendingAuth }) {
         )}
 
         <button onClick={handleSubmit} disabled={loading} style={{
-          width: "100%", background: loading ? "#888" : "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none",
+          width: "100%", background: loading ? "#888" : C.ink, color: C.white, border: "none",
           borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold",
           cursor: loading ? "not-allowed" : "pointer", marginTop: isLogin ? 0 : 8, touchAction: "manipulation",
-          boxShadow: loading ? "none" : "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}>
           {loading ? "処理中..." : isLogin ? "ログイン" : "アカウントを作成 →"}
         </button>
@@ -2516,12 +2498,11 @@ function AuthScreen({ onLogin, onPendingAuth }) {
 
         {/* Googleログイン */}
         <button onClick={handleGoogle} disabled={loading} style={{
-          width: "100%", background: "linear-gradient(180deg,#FFFFFF,#F5F2EE)", color: C.ink, border: `1.5px solid ${C.border}`,
+          width: "100%", background: C.white, color: C.ink, border: `1.5px solid ${C.border}`,
           borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation",
           opacity: loading ? 0.6 : 1,
-          boxShadow: "0 2px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)",
         }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -2534,11 +2515,10 @@ function AuthScreen({ onLogin, onPendingAuth }) {
 
         {/* Appleログイン（準備済み・近日対応）*/}
         <button onClick={handleApple} style={{
-          width: "100%", background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none",
+          width: "100%", background: C.ink, color: C.white, border: "none",
           borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           fontFamily: "inherit", opacity: 0.6, touchAction: "manipulation",
-          boxShadow: "0 3px 0 rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}>
           <svg width="17" height="20" viewBox="0 0 17 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M13.769 10.625c-.022-2.3 1.878-3.412 1.963-3.468-1.07-1.565-2.733-1.778-3.322-1.8-1.408-.143-2.762.833-3.477.833-.727 0-1.841-.816-3.03-.793-1.549.023-2.984.9-3.782 2.278C.345 10.204 1.472 14.51 3.16 16.85c.84 1.194 1.832 2.53 3.133 2.483 1.263-.05 1.737-.806 3.263-.806 1.511 0 1.948.806 3.264.783 1.355-.022 2.21-1.213 3.04-2.414.963-1.378 1.355-2.724 1.373-2.794-.03-.013-2.627-1.006-2.664-3.977zM11.45 3.535C12.11 2.727 12.56 1.617 12.43.5c-.942.038-2.1.625-2.783 1.415-.604.695-1.142 1.83-1.002 2.904 1.058.081 2.137-.534 2.805-1.284z" fill="white"/>
@@ -2646,8 +2626,7 @@ function BottomNav({ activeTab, onTabChange }) {
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: "linear-gradient(180deg,#FDFCFB,#FFFFFF)", borderTop: `1px solid ${C.border}`,
-      boxShadow: "0 -2px 16px rgba(24,22,15,0.1), inset 0 1px 0 rgba(255,255,255,0.7)",
+      background: C.white, borderTop: `1px solid ${C.border}`,
       display: "flex", alignItems: "center",
       paddingBottom: "env(safe-area-inset-bottom, 8px)",
     }}>
@@ -2666,10 +2645,10 @@ function BottomNav({ activeTab, onTabChange }) {
           {item.primary ? (
             <div style={{
               width: 50, height: 50, borderRadius: "50%",
-              background: "linear-gradient(160deg, #F5B090 0%, #E8935A 45%, #C87038 100%)",
+              background: "linear-gradient(145deg, #F5A878, #E8935A 45%, #C87038)",
               display: "flex", alignItems: "center", justifyContent: "center",
               marginTop: -22,
-              boxShadow: S.fab,
+              boxShadow: "0 6px 20px rgba(232,147,90,0.55), 0 2px 6px rgba(200,112,56,0.4), inset 0 2px 0 rgba(255,255,255,0.3)",
             }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <line x1="11" y1="4" x2="11" y2="18" stroke="white" strokeWidth="2.6" strokeLinecap="round"/>
@@ -2741,7 +2720,7 @@ function AddFollowModal({ user, onClose, onAdded }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
-      <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, maxHeight: "80vh", overflowY: "auto", boxShadow: S.modal }}>
+      <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, maxHeight: "80vh", overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: "bold", color: C.ink }}>ユーザーをフォロー</div>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, color: C.muted, cursor: "pointer" }}>✕</button>
@@ -2806,7 +2785,7 @@ function AddFollowModal({ user, onClose, onAdded }) {
               {inviteUrl}
             </div>
             <button onClick={() => { navigator.clipboard?.writeText(inviteUrl); alert("コピーしました！"); }}
-              style={{ width: "100%", background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation", boxShadow: "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+              style={{ width: "100%", background: C.ink, color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", marginBottom: 10, touchAction: "manipulation" }}>
               📋 リンクをコピー
             </button>
             {navigator.share && (
@@ -2932,7 +2911,7 @@ function FriendsView({ user, onOpenMenu }) {
   function UserCard({ profile, action }) {
     if (!profile) return null;
     return (
-      <div style={{ background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 8px rgba(24,22,15,0.08), 0 6px 20px rgba(24,22,15,0.05)" }}>
+      <div style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: C.white, flexShrink: 0 }}>
           {profile.name?.charAt(0) || "?"}
         </div>
@@ -2946,8 +2925,8 @@ function FriendsView({ user, onOpenMenu }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 20px 16px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} />
           <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
@@ -2958,7 +2937,7 @@ function FriendsView({ user, onOpenMenu }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
           <div style={{ fontSize: 20, fontWeight: "bold" }}>👥 フォロー</div>
-          <button onClick={() => setShowAdd(true)} style={{ background: "linear-gradient(160deg,#F0A070,#E8935A,#D07840)", border: "none", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "bold", color: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 0 rgba(140,60,10,0.4), 0 4px 12px rgba(232,147,90,0.4), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
+          <button onClick={() => setShowAdd(true)} style={{ background: C.terra, border: "none", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "bold", color: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
             ＋ フォロー
           </button>
         </div>
@@ -3043,7 +3022,7 @@ function FriendsView({ user, onOpenMenu }) {
                     <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 8 }}>承認待ち</div>
                   )}
                   {pendingIn.map(f => (
-                    <div key={`pi-${f.id}`} style={{ background: "linear-gradient(180deg,#FFFFFF,#FFF8F5)", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1.5px solid ${C.terra}`, boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 3px 12px rgba(232,147,90,0.12)" }}>
+                    <div key={`pi-${f.id}`} style={{ background: C.white, borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: `1.5px solid ${C.terra}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                         <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#7F77DD", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.white, flexShrink: 0 }}>
                           {f.profile?.name?.charAt(0) || "?"}
@@ -3054,7 +3033,7 @@ function FriendsView({ user, onOpenMenu }) {
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button onClick={() => acceptFollow(f.id)} style={{ flex: 1, background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                        <button onClick={() => acceptFollow(f.id)} style={{ flex: 1, background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
                           ✓ 承認する
                         </button>
                         <button onClick={() => rejectFollow(f.id)} style={{ flex: 1, background: "#FFF5F5", color: "#E57373", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
@@ -3077,7 +3056,7 @@ function FriendsView({ user, onOpenMenu }) {
                           <span style={{ fontSize: 12, color: C.muted, background: "#F5F5F5", borderRadius: 10, padding: "4px 10px" }}>申請中</span>
                         ) : (
                           <button onClick={() => followUser(f.follower_id)}
-                            style={{ background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                            style={{ background: C.ink, color: C.white, border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
                             フォロー
                           </button>
                         )
@@ -3098,8 +3077,8 @@ function FriendsView({ user, onOpenMenu }) {
 
 function FriendMapView({ user, onOpenMenu }) {
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", color: C.white, padding: "28px 20px 20px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 80 }}>
+      <div style={{ background: C.ink, color: C.white, padding: "28px 20px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <LogoBanner darkBg={true} />
           <button onClick={onOpenMenu} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
@@ -3148,8 +3127,8 @@ function ProfileEditScreen({ user, onSave, onClose }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 40 }}>
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", padding: "20px 20px 20px", boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans','Meiryo',sans-serif", paddingBottom: 40 }}>
+      <div style={{ background: C.ink, padding: "20px 20px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <LogoBanner darkBg={true} />
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#E8DDD0", fontSize: 15, cursor: "pointer", padding: "8px 14px", borderRadius: 20, touchAction: "manipulation" }}>✕ 閉じる</button>
@@ -3211,7 +3190,7 @@ function ProfileEditScreen({ user, onSave, onClose }) {
           <div style={{ color: "#E57373", fontSize: 13, marginBottom: 14, background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 8, padding: "10px 14px" }}>⚠️ {error}</div>
         )}
 
-        <button onClick={handleSave} disabled={saving} style={{ width: "100%", background: saving ? "#888" : "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: saving ? "none" : "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+        <button onClick={handleSave} disabled={saving} style={{ width: "100%", background: saving ? "#888" : C.ink, color: C.white, border: "none", borderRadius: 12, padding: "15px", fontSize: 16, fontWeight: "bold", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
           {saving ? "保存中..." : "保存する"}
         </button>
       </div>
@@ -3225,7 +3204,7 @@ function UserMenu({ user, onEdit, onLogout, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
-      <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, boxShadow: S.modal }}>
+      <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
         {/* プロフィールサマリー */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
           <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: C.white, flexShrink: 0 }}>
@@ -3282,7 +3261,7 @@ export default function App() {
   const [showFriendList, setShowFriendList] = useState(false); // フレンド選択モーダル
   const [allFriendData, setAllFriendData] = useState([]); // 全フレンドのデータ
   const [selectedCategory, setSelectedCategory] = useState(null); // カテゴリ横断選択
-  const [activeBigCat, setActiveBigCat] = useState("all"); // 大カテゴリフィルター
+  const [activeBigCat, setActiveBigCat] = useState("eat"); // 大カテゴリフィルター
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
   const [showAllFriends, setShowAllFriends] = useState(false);
@@ -3517,7 +3496,7 @@ export default function App() {
   }
 
   if (!authChecked) return (
-    <div style={{ minHeight: "100vh", background: C.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📖</div>
         <div style={{ fontSize: 14, color: C.muted }}>読み込み中...</div>
@@ -3566,8 +3545,8 @@ export default function App() {
       {addEntryForCat && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
-          <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
-            <div style={{ padding: "16px 16px 0", background: "linear-gradient(180deg,#282018,#18160F)", borderRadius: "20px 20px 0 0", boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)" }}>
+          <div style={{ position: "relative", background: "#F2EDE4", borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
+            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>＋ 人生{addEntryForCat.name}を追加</div>
             </div>
             <div style={{ padding: "16px" }}>
@@ -3716,34 +3695,64 @@ export default function App() {
     .filter(e => !friendViewSortRec || e.rec === friendViewSortRec);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.cream, fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
+    <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       {/* ヘッダー */}
-      <div style={{ background: "linear-gradient(180deg,#201E16,#18160F)", padding: "28px 20px 16px", color: C.white, boxShadow: S.header }}>
-        <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: "linear-gradient(160deg,#2C1F0E 0%,#1A1208 50%,#251A0C 100%)", color: C.white, boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 20 }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", padding: "28px 16px 0", position: "relative" }}>
+          {/* レザーテクスチャ */}
+          <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.008) 3px,rgba(255,255,255,0.008) 4px)", pointerEvents: "none" }}/>
+          {/* ゴールドライン */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,#C8A050 30%,#E8C870 50%,#C8A050 70%,transparent)", zIndex: 1 }}/>
+
+          {/* ロゴ＋ユーザー */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, position: "relative", zIndex: 2 }}>
             <LogoBanner darkBg={true} onLogoClick={() => { setActiveBigCat("all"); setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); setExpandedEntryId(null); }} />
-            <button onClick={() => setShowUserMenu(true)} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 12, color: "#9A8A7A", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontSize: 16 }}>👤</span>
+            <button onClick={() => setShowUserMenu(true)} style={{ background: "rgba(255,255,255,0.07)", border: "0.5px solid rgba(255,255,255,0.15)", borderRadius: 20, padding: "5px 12px", fontSize: 11, color: "#A89880", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 14 }}>👤</span>
               <span>{user.name?.split(" ")[0] || "メニュー"}</span>
-              <span>▾</span>
+              <span style={{ fontSize: 10 }}>▾</span>
             </button>
           </div>
 
-          {/* 自分 / フレンド タブ */}
-          <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 2, marginTop: 10, gap: 2 }}>
-            <button onClick={() => { setViewingUser(null); setFriendCategories([]); setFriendTabMode("self"); setSelectedCategory(null); setActiveBigCat("all"); }}
-              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: !isFriendMode ? "bold" : "normal", background: !isFriendMode ? C.white : "transparent", color: !isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation" }}>
-              自分
-            </button>
-            <button onClick={() => { setFriendTabMode("select"); setViewingUser(null); setFriendCategories([]); setSelectedCategory(null); loadAllFriendData(); }}
-              style={{ flex: 1, padding: "6px", borderRadius: 8, border: "none", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: isFriendMode ? "bold" : "normal", background: isFriendMode ? C.white : "transparent", color: isFriendMode ? C.ink : "rgba(255,255,255,0.7)", touchAction: "manipulation", opacity: followingUsers.length === 0 ? 0.4 : 1 }}>
-              フレンド {followingUsers.length > 0 ? `(${followingUsers.length})` : ""}
-            </button>
+          {/* 統計4数字 */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 14, position: "relative", zIndex: 2 }}>
+            {[
+              { num: totalEntries, lbl: "総記録数", col: "#E8DDD0" },
+              { num: categories.length, lbl: "カテゴリ", col: "#E8DDD0" },
+              { num: categories.flatMap(c=>c.entries||[]).filter(e=>e.rec===3).length, lbl: "人生で必ず", col: "#E8C870" },
+              { num: [...new Set(categories.flatMap(c=>c.entries||[]).map(e=>e.prefecture).filter(Boolean))].length, lbl: "都道府県", col: "#C89870" },
+            ].map(({ num, lbl, col }) => (
+              <div key={lbl} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "0.5px solid rgba(200,160,80,0.2)", borderRadius: 10, padding: "8px 4px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,168,80,0.4),transparent)" }}/>
+                <div style={{ fontFamily: "Georgia,serif", fontSize: 20, fontWeight: 700, color: col, lineHeight: 1 }}>{num}</div>
+                <div style={{ fontSize: 8, color: "#A89880", marginTop: 3, letterSpacing: 0.5 }}>{lbl}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 大カテゴリタブ */}
+          <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", position: "relative", zIndex: 2, borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
+            {BIG_CATS.map((bc) => {
+              const isOn = activeBigCat === bc.id;
+              const emojis = { eat:"🍜", see:"🌅", do:"🏄", relax:"♨️", enjoy:"🎭", stay:"🏨" };
+              return (
+                <button key={bc.id} onClick={() => { setActiveBigCat(bc.id); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{
+                  flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                  padding: "10px 14px 12px", cursor: "pointer", position: "relative",
+                  fontSize: 9, color: isOn ? "#E8C870" : "rgba(255,255,255,0.45)",
+                  background: "none", border: "none", fontFamily: "inherit", touchAction: "manipulation",
+                }}>
+                  <span style={{ fontSize: 18, filter: isOn ? "drop-shadow(0 0 4px rgba(200,160,80,0.5))" : "none" }}>{emojis[bc.id]}</span>
+                  <span style={{ whiteSpace: "nowrap" }}>{bc.label.split("・")[0]}</span>
+                  {isOn && <div style={{ position: "absolute", bottom: 0, left: "20%", right: "20%", height: 2, background: "linear-gradient(90deg,transparent,#C8A050,transparent)", borderRadius: 2 }}/>}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div style={{ padding: "16px", maxWidth: 600, margin: "0 auto" }}>
+      <div style={{ padding: "14px 14px", maxWidth: 600, margin: "0 auto" }}>
 
         {/* ===== 自分タブ ===== */}
         {!isFriendMode && (
@@ -3753,7 +3762,7 @@ export default function App() {
                 <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
                 <div style={{ fontSize: 14 }}>読み込み中...</div>
               </div>
-            ) : categories.length === 0 ? (
+            ) : categories.length === 0 && activeBigCat !== "__all_entries__" ? (
               <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
                 <div style={{ fontSize: 56, marginBottom: 16 }}>📖</div>
                 <div style={{ fontSize: 16, fontWeight: "bold", color: "#555", marginBottom: 8 }}>人生ノートをはじめよう</div>
@@ -3762,230 +3771,241 @@ export default function App() {
             ) : (
               <>
                 {/* 大カテゴリ一覧 */}
-                {activeBigCat === "all" && (
-                  <>
-                    {/* 総記録数 */}
-                    <button onClick={() => setActiveBigCat("__all_entries__")} style={{
-                      width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "16px", background: C.white, borderRadius: 16, border: `1px solid ${C.border}`,
-                      marginBottom: 12, cursor: "pointer", fontFamily: "inherit",
-                      boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 3px 12px rgba(24,22,15,0.1), 0 8px 28px rgba(24,22,15,0.06)",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📝</div>
-                        <div style={{ textAlign: "left" }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>すべての記録</div>
-                          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>訪問日の新しい順</div>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 18, fontWeight: 800, color: C.terra }}>{totalEntries}</span>
-                        <span style={{ fontSize: 11, color: C.sub }}>件</span>
-                        <span style={{ color: C.muted }}>›</span>
-                      </div>
-                    </button>
+                {activeBigCat === "all" && null
 
-                    {/* 大カテゴリ別 */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {BIG_CATS.map((bc, idx) => {
-                        const count = categories.filter(c => (c.bigCat || c.big_cat || "eat") === bc.id)
-                          .reduce((s, c) => s + (c.entries?.length || 0), 0);
-                        const grad = ["#D4845A,#C8A040","#6890C8,#8870C0","#50A888,#3890B0","#C86878,#B05090","#78A850,#50A870","#8878C8,#C878A8"][idx] || "#999,#666";
-                        const [gs, ge] = grad.split(",");
-                        return (
-                          <button key={bc.id} onClick={() => setActiveBigCat(bc.id)} style={{
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
-                            padding: "14px 16px", background: C.white, borderRadius: 16,
-                            border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit",
-                            boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 3px 10px rgba(24,22,15,0.09), 0 8px 24px rgba(24,22,15,0.05)",
-                          }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${gs},${ge})`, display: "flex", alignItems: "center", justifyContent: "center" }}><BigCatIcon id={bc.id} size={28}/></div>
-                              <div style={{ textAlign: "left" }}>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{bc.label}</div>
-                                <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>★順で見る</div>
-                              </div>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontSize: 18, fontWeight: 800, color: gs }}>{count}</span>
-                              <span style={{ fontSize: 11, color: C.sub }}>件</span>
-                              <span style={{ color: C.muted }}>›</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
+                                {/* 大カテゴリ別ランキング（メダル形式） */}
+                {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (() => {
+                  const bc = BIG_CATS.find(b => b.id === activeBigCat);
+                  const bcEmojis = { eat:"🍜", see:"🌅", do:"🏄", relax:"♨️", enjoy:"🎭", stay:"🏨" };
+                  const bcColors = {
+                    eat:   ["#C87040","#A05020"],
+                    see:   ["#185FA5","#0C4080"],
+                    do:    ["#0F6E56","#085040"],
+                    relax: ["#534AB7","#3A2880"],
+                    enjoy: ["#993556","#782870"],
+                    stay:  ["#185FA5","#0C4878"],
+                  };
+                  const [c1, c2] = bcColors[activeBigCat] || ["#888","#444"];
 
-                {/* 全記録一覧（訪問日順）*/}
-                {activeBigCat === "__all_entries__" && (() => {
-                  const sorted = [...allEntriesByStar].sort((a,b)=>(b.visitDate||"").localeCompare(a.visitDate||""));
-                  // 訪問日なしのエントリーを分ける
-                  const withDate = sorted.filter(e => e.visitDate);
-                  const noDate = sorted.filter(e => !e.visitDate);
+                  // このカテゴリに属する全エントリー（★降順）
+                  const catEntries = categories
+                    .filter(c => (c.bigCat || c.big_cat || "eat") === activeBigCat)
+                    .flatMap(cat =>
+                      (cat.entries || []).map(e => ({
+                        ...e,
+                        categoryName: cat.name,
+                        catId: cat.id,
+                      }))
+                    )
+                    .sort((a, b) => (b.star ?? 0) - (a.star ?? 0));
 
-                  // 年→月→エントリーのグループ化
-                  const byYear = {};
-                  withDate.forEach(e => {
-                    const [y, m] = e.visitDate.split("-");
-                    if (!byYear[y]) byYear[y] = {};
-                    if (!byYear[y][m]) byYear[y][m] = [];
-                    byYear[y][m].push(e);
-                  });
-                  const years = Object.keys(byYear).sort((a,b) => b-a);
+                  // 小カテゴリ一覧
+                  const smallCats = categories.filter(c => (c.bigCat || c.big_cat || "eat") === activeBigCat);
 
-                  function EntryCard({ entry }) {
-                    const catObj = categories.find(c => c.name === entry.categoryName);
-                    return (
-                      <EntryCardDisplay
-                        entry={entry}
-                        isSelf={true}
-                        expanded={expandedEntryId === entry.id}
-                        onToggle={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}
-                        onEdit={() => setEditingHomeEntry({ ...entry, categoryId: catObj?.id })}
-                        onDelete={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}}
-                      />
-                    );
-                  }
+                  // 小カテゴリフィルター後
+                  const filtered = activeCatFilter
+                    ? catEntries.filter(e => e.categoryName === activeCatFilter)
+                    : catEntries;
+
+                  const top3 = filtered.slice(0, 3);
+                  const rest = filtered.slice(3);
+
+                  const medalStyles = [
+                    { bg: "linear-gradient(135deg,#C8A050,#E8C060)", bar: "linear-gradient(90deg,#C8A050,#E8C870,#C8A050)", label: "1ST", shadow: "0 3px 0 rgba(100,70,10,0.4),0 6px 16px rgba(200,160,80,0.4),inset 0 1px 0 rgba(255,255,255,0.4)" },
+                    { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", bar: "linear-gradient(90deg,#9AA8B8,#C8D0D8,#9AA8B8)", label: "2ND", shadow: "0 3px 0 rgba(60,80,100,0.3),0 5px 10px rgba(150,170,190,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
+                    { bg: "linear-gradient(135deg,#A06030,#C08050)", bar: "linear-gradient(90deg,#A06030,#C08050,#A06030)", label: "3RD", shadow: "0 3px 0 rgba(80,40,10,0.35),0 5px 10px rgba(160,100,50,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
+                  ];
+
+                  // 表示順: 2位・1位・3位
+                  const podiumOrder = top3.length >= 2 ? [
+                    { entry: top3[1], medal: medalStyles[1], rank: 2, shrink: true },
+                    { entry: top3[0], medal: medalStyles[0], rank: 1, shrink: false },
+                    { entry: top3[2], medal: medalStyles[2], rank: 3, shrink: true },
+                  ] : top3.map((e, i) => ({ entry: e, medal: medalStyles[i], rank: i+1, shrink: false }));
 
                   return (
                     <div>
-                      <button onClick={() => { setActiveBigCat("all"); setExpandedEntryId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
-
-                      {/* 年グループ */}
-                      {years.map(year => {
-                        const isYearOpen = expandedYears[year] !== false; // デフォルト開く
-                        const months = Object.keys(byYear[year]).sort((a,b) => b-a);
-                        const yearCount = months.reduce((s, m) => s + byYear[year][m].length, 0);
-                        return (
-                          <div key={year} style={{ marginBottom: 12 }}>
-                            {/* 年ヘッダー */}
-                            <button onClick={() => setExpandedYears(prev => ({ ...prev, [year]: !isYearOpen }))}
-                              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: C.ink, borderRadius: isYearOpen ? "14px 14px 0 0" : 14, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 16, fontWeight: 800, color: C.white }}>{year}年</span>
-                                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>{yearCount}件</span>
-                              </div>
-                              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>{isYearOpen ? "▲" : "▼"}</span>
-                            </button>
-
-                            {/* 月グループ */}
-                            {isYearOpen && (
-                              <div style={{ border: `1px solid ${C.border}`, borderTop: "none", borderRadius: "0 0 14px 14px", overflow: "hidden" }}>
-                                {months.map((month, mi) => {
-                                  const monthKey = `${year}-${month}`;
-                                  const isMonthOpen = expandedMonths[monthKey] !== false; // デフォルト開く
-                                  const monthEntries = byYear[year][month];
-                                  const monthName = parseInt(month) + "月";
-                                  return (
-                                    <div key={month} style={{ borderTop: mi > 0 ? `1px solid ${C.border}` : "none" }}>
-                                      {/* 月ヘッダー */}
-                                      <button onClick={() => setExpandedMonths(prev => ({ ...prev, [monthKey]: !isMonthOpen }))}
-                                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#F5F2EF", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                          <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{year}年{monthName}</span>
-                                          <span style={{ fontSize: 11, color: C.sub }}>{monthEntries.length}件</span>
-                                        </div>
-                                        <span style={{ color: C.muted, fontSize: 11 }}>{isMonthOpen ? "▲" : "▼"}</span>
-                                      </button>
-                                      {/* エントリー */}
-                                      {isMonthOpen && (
-                                        <div style={{ padding: "8px 10px" }}>
-                                          {monthEntries.map(entry => <EntryCard key={entry.id} entry={entry}/>)}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
+                      {/* ヘッダー行 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 22 }}>{bcEmojis[activeBigCat]}</span>
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, fontFamily: "Georgia,serif" }}>{bc?.label}</div>
+                            <div style={{ fontSize: 10, color: C.sub }}>{filtered.length}件</div>
                           </div>
-                        );
-                      })}
+                        </div>
+                        {/* 訪問日順で見るボタン */}
+                        <button onClick={() => setActiveBigCat("__all_entries__")} style={{
+                          display: "flex", alignItems: "center", gap: 4,
+                          background: "rgba(160,120,60,0.1)", border: "0.5px solid rgba(160,120,60,0.25)",
+                          borderRadius: 20, padding: "5px 10px", fontSize: 10, color: C.sub,
+                          cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation",
+                        }}>
+                          <span>📅</span><span>訪問日順</span>
+                        </button>
+                      </div>
 
-                      {/* 訪問日なし */}
-                      {noDate.length > 0 && (
-                        <div style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 8, letterSpacing: 0.5 }}>訪問日未設定</div>
-                          {noDate.map(entry => <EntryCard key={entry.id} entry={entry}/>)}
+                      {/* 小カテゴリ横スクロール */}
+                      {smallCats.length > 1 && (
+                        <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16, scrollbarWidth: "none", paddingBottom: 2 }}>
+                          <button onClick={() => setActiveCatFilter(null)} style={{
+                            flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: "none",
+                            background: !activeCatFilter ? C.leather : "rgba(160,120,60,0.1)",
+                            color: !activeCatFilter ? C.goldLight : C.sub,
+                            fontSize: 10, fontWeight: !activeCatFilter ? 700 : 400,
+                            cursor: "pointer", fontFamily: "inherit",
+                            boxShadow: !activeCatFilter ? "0 2px 0 rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.08)" : "none",
+                          }}>すべて</button>
+                          {smallCats.map(cat => (
+                            <button key={cat.id} onClick={() => setActiveCatFilter(cat.name)} style={{
+                              flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: "none",
+                              background: activeCatFilter === cat.name ? C.leather : "rgba(160,120,60,0.1)",
+                              color: activeCatFilter === cat.name ? C.goldLight : C.sub,
+                              fontSize: 10, fontWeight: activeCatFilter === cat.name ? 700 : 400,
+                              cursor: "pointer", fontFamily: "inherit",
+                              boxShadow: activeCatFilter === cat.name ? "0 2px 0 rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.08)" : "none",
+                            }}>{cat.name}</button>
+                          ))}
                         </div>
                       )}
+
+                      {/* エントリーなし */}
+                      {filtered.length === 0 && (
+                        <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
+                          <div style={{ fontSize: 40, marginBottom: 12 }}>{bcEmojis[activeBigCat]}</div>
+                          <div style={{ fontSize: 14, color: "#666", marginBottom: 6 }}>まだ記録がありません</div>
+                          <button onClick={() => setShowAddModal(true)} style={{
+                            background: `linear-gradient(135deg,${c1},${c2})`, color: C.white, border: "none",
+                            borderRadius: 20, padding: "10px 20px", fontSize: 13, fontWeight: 700,
+                            cursor: "pointer", fontFamily: "inherit",
+                            boxShadow: `0 3px 0 rgba(0,0,0,0.2),0 6px 16px ${c1}40,inset 0 1px 0 rgba(255,255,255,0.2)`,
+                          }}>＋ 最初の記録を追加</button>
+                        </div>
+                      )}
+
+                      {/* 1〜3位メダルポジウム */}
+                      {top3.length > 0 && (
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 16 }}>
+                          {podiumOrder.map(({ entry, medal, rank, shrink }) => entry ? (
+                            <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginBottom: shrink ? 12 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
+                              onClick={() => setEditingHomeEntry({ ...entry, categoryId: entry.catId })}>
+                              {/* 上部カラーバー */}
+                              <div style={{ height: 4, background: medal.bar }}/>
+                              {/* カード本体 */}
+                              <div style={{ background: "linear-gradient(160deg,#FDF8F0,#F5EEE2)", border: "0.5px solid rgba(160,120,60,0.22)", borderTop: "none" }}>
+                                {/* メダルバッジ */}
+                                <div style={{
+                                  width: 30, height: 30, borderRadius: "50%",
+                                  background: medal.bg, boxShadow: medal.shadow,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  margin: "10px auto 6px", position: "relative", overflow: "hidden",
+                                  fontSize: 8, fontWeight: 900, color: "#fff",
+                                }}>
+                                  {medal.label}
+                                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.3),transparent)", borderRadius: "50%" }}/>
+                                </div>
+                                {/* コンテンツ */}
+                                <div style={{ padding: "0 8px 12px", textAlign: "center" }}>
+                                  <div style={{ fontSize: 20, marginBottom: 4 }}>{bcEmojis[activeBigCat]}</div>
+                                  <div style={{ fontFamily: "Georgia,serif", fontSize: shrink ? 10 : 11, color: C.ink, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, minHeight: 28 }}>{entry.name}</div>
+                                  <div style={{ fontSize: 10, color: "#C8A050", fontWeight: 700, marginBottom: 2 }}>★ {(entry.star ?? 0).toFixed(1)}</div>
+                                  {entry.prefecture && <div style={{ fontSize: 8, color: C.sub, marginBottom: 4 }}>{entry.prefecture}</div>}
+                                  {(() => {
+                                    const rec = REC_LEVELS.find(r => r.value === entry.rec);
+                                    return rec ? (
+                                      <span style={{ display: "inline-flex", padding: "2px 6px", borderRadius: 10, fontSize: 7, fontWeight: 700, background: rec.bg, color: rec.color, border: `0.5px solid ${rec.color}40` }}>{rec.short}</span>
+                                    ) : null;
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div key={`empty-${rank}`} style={{ flex: 1 }}/>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 4位以降リスト */}
+                      {rest.length > 0 && (
+                        <>
+                          <div style={{ fontSize: 9, color: C.sub, letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                            4位以降
+                            <div style={{ flex: 1, height: "0.5px", background: "linear-gradient(90deg,rgba(160,120,60,0.3),transparent)" }}/>
+                          </div>
+                          {rest.map((entry, i) => {
+                            const rec = REC_LEVELS.find(r => r.value === entry.rec);
+                            return (
+                              <div key={entry.id} style={{
+                                background: "linear-gradient(160deg,#FDF8F0,#F5EEE2)",
+                                borderRadius: 12, border: "0.5px solid rgba(160,120,60,0.22)",
+                                padding: "10px 12px 10px 14px", marginBottom: 7,
+                                position: "relative", overflow: "hidden",
+                                boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 2px 8px rgba(100,70,20,0.08)",
+                                display: "flex", gap: 8, alignItems: "center",
+                                cursor: "pointer",
+                              }} onClick={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}>
+                                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,160,80,0.3),transparent)" }}/>
+                                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, borderRadius: "12px 0 0 12px", background: `linear-gradient(180deg,${c1},${c2})` }}/>
+                                {/* 順位 */}
+                                <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C8A078", minWidth: 24, textAlign: "center", flexShrink: 0 }}>{i + 4}</div>
+                                {/* アイコン */}
+                                <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${c1},${c2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, boxShadow: `0 3px 6px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.2)`, position: "relative", overflow: "hidden" }}>
+                                  {bcEmojis[activeBigCat]}
+                                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.2),transparent)", borderRadius: "8px 8px 0 0" }}/>
+                                </div>
+                                {/* 情報 */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 8, color: C.sub }}>人生{entry.categoryName}</div>
+                                  <div style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.ink, fontWeight: 700 }}>{entry.name}</div>
+                                  <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
+                                    <span style={{ fontSize: 9, color: "#C8A050", fontWeight: 700 }}>★ {(entry.star ?? 0).toFixed(1)}</span>
+                                    {entry.prefecture && <span style={{ fontSize: 8, color: C.sub }}>· {entry.prefecture}</span>}
+                                    {rec && <span style={{ display: "inline-flex", padding: "1px 5px", borderRadius: 10, fontSize: 7, fontWeight: 700, background: rec.bg, color: rec.color, border: `0.5px solid ${rec.color}30` }}>{rec.short}</span>}
+                                  </div>
+                                </div>
+                                {/* 地図ボタン */}
+                                {entry.placeData?.lat && (
+                                  <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name)}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontSize: 8, color: "#6A90C8", background: "#EEF4FF", border: "0.5px solid rgba(106,144,200,0.3)", borderRadius: 7, padding: "5px 7px", flexShrink: 0, textDecoration: "none", boxShadow: "0 2px 0 rgba(40,80,160,0.1),inset 0 1px 0 rgba(255,255,255,0.8)" }}>
+                                    <span style={{ fontSize: 14 }}>🗺</span>
+                                    <span>地図</span>
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+
+                      {/* カテゴリ削除ボタン（小カテゴリ選択中） */}
+                      {activeCatFilter && (() => {
+                        const cat = categories.find(c => c.name === activeCatFilter);
+                        if (!cat) return null;
+                        return (
+                          <div style={{ textAlign: "center", marginTop: 16 }}>
+                            <button onClick={() => deleteCategory(cat.id, cat.name, cat.entries?.length || 0)}
+                              style={{ fontSize: 12, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 20, padding: "6px 16px", cursor: "pointer", fontFamily: "inherit" }}>
+                              🗑 「{cat.name}」カテゴリを削除
+                            </button>
+                          </div>
+                        );
+                      })()}
+
+                      {/* ＋追加ボタン */}
+                      <div style={{ marginTop: 16, textAlign: "center" }}>
+                        <button onClick={() => setShowAddModal(true)} style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          background: `linear-gradient(135deg,${c1},${c2})`,
+                          color: C.white, border: "none", borderRadius: 20, padding: "10px 20px",
+                          fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                          boxShadow: `0 3px 0 rgba(0,0,0,0.2),0 6px 16px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.25)`,
+                        }}>＋ 新しい{bc?.label.split("・")[0]}を追加</button>
+                      </div>
                     </div>
                   );
                 })()}
-
-                {/* 大カテゴリ別★順 */}
-                {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (
-                  <div>
-                    <button onClick={() => { setActiveBigCat("all"); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
-                        {activeBigCat && <BigCatIcon id={activeBigCat} size={22}/>} {BIG_CATS.find(b=>b.id===activeBigCat)?.label}（★順）
-                      </div>
-                      <button onClick={() => {
-                        if (activeCatFilter) {
-                          const cat = categories.find(c => c.name === activeCatFilter);
-                          if (cat) setAddEntryForCat(cat);
-                        } else {
-                          setShowAddModal(true);
-                        }
-                      }} style={{ display: "flex", alignItems: "center", gap: 5, background: `linear-gradient(135deg,${C.terra},${C.gold})`, border: "none", borderRadius: 20, padding: "7px 14px", fontSize: 12, fontWeight: 700, color: C.white, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 3px 10px rgba(232,147,90,0.35)` }}>
-                        ＋ 追加
-                      </button>
-                    </div>
-                    {/* 小カテゴリ選択中はカテゴリ削除ボタンを表示 */}
-                    {activeCatFilter && (() => {
-                      const cat = categories.find(c => c.name === activeCatFilter);
-                      if (!cat) return null;
-                      return (
-                        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-                          <button onClick={() => deleteCategory(cat.id, cat.name, cat.entries?.length || 0)}
-                            style={{ fontSize: 12, color: "#E06060", background: "#FFF5F5", border: "1px solid #FFCDD2", borderRadius: 20, padding: "5px 14px", cursor: "pointer", fontFamily: "inherit" }}>
-                            🗑 「{cat.name}」カテゴリを削除
-                          </button>
-                        </div>
-                      );
-                    })()}
-                    {/* 小カテゴリ絞り込みタブ */}
-                    <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
-                      <button onClick={() => setActiveCatFilter(null)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${!activeCatFilter ? C.ink : C.border}`, background: !activeCatFilter ? C.ink : C.white, color: !activeCatFilter ? C.white : C.sub, fontSize: 12, fontWeight: !activeCatFilter ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
-                      {categories.filter(c => (c.bigCat||c.big_cat||"eat") === activeBigCat).map(cat => (
-                        <button key={cat.id} onClick={() => setActiveCatFilter(cat.name)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${activeCatFilter===cat.name ? C.ink : C.border}`, background: activeCatFilter===cat.name ? C.ink : C.white, color: activeCatFilter===cat.name ? C.white : C.sub, fontSize: 12, fontWeight: activeCatFilter===cat.name ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>
-                          {cat.name}
-                        </button>
-                      ))}
-                    </div>
-                    {/* エントリーリスト（アコーディオン）*/}
-                    {(() => {
-                      const filtered = activeCatFilter
-                        ? bigCatEntries.filter(e => e.categoryName === activeCatFilter)
-                        : bigCatEntries;
-                      if (filtered.length === 0) return <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>記録がありません</div>;
-                      return filtered.map((entry, i) => {
-                        const isOpen = expandedEntryId === entry.id;
-                        const catObj = categories.find(c => c.name === entry.categoryName);
-                        return (
-                          <EntryCardDisplay
-                            key={`${entry.id}-${i}`}
-                            entry={entry}
-                            rank={!activeCatFilter ? i+1 : null}
-                            isSelf={true}
-                            expanded={expandedEntryId === entry.id}
-                            onToggle={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}
-                            onEdit={() => setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: catObj?.id })}
-                            onDelete={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}}
-                          />
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
 
         {/* ===== フレンドタブ ===== */}
         {isFriendMode && (
@@ -4016,7 +4036,7 @@ export default function App() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {(friendSearchQuery.trim() || showAllFriends ? filteredFriendUsers : filteredFriendUsers.slice(0, 5)).sort((a,b) => getFriendCount(b.id)-getFriendCount(a.id)).map(fu => (
                         <button key={fu.id} onClick={async () => { await loadFriendData(fu); setFriendTabMode("friend"); setViewingUser(fu); setFriendViewSortCat(null); setFriendViewSortRec(null); }}
-                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: S.card }}>
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                           <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
                             {fu.name?.charAt(0)}
                           </div>
@@ -4064,7 +4084,7 @@ export default function App() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {(catSearchQuery.trim() || showAllCats ? friendCatList : friendCatList.slice(0, 5)).map(([name, stat]) => (
                         <button key={name} onClick={() => { setSelectedCategory(name); setFriendTabMode("category"); setCrossCatFilterUser(null); setCrossCatFilterRec(null); }}
-                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: S.card }}>
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                           <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                             {getTagEmoji(name)}
                           </div>
@@ -4162,7 +4182,7 @@ export default function App() {
       {showAddModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowAddModal(false)} />
-          <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, boxShadow: S.modal }}>
+          <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
             <div style={{ fontWeight: "bold", fontSize: 16, color: C.ink, marginBottom: 16 }}>新しいカテゴリを追加</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
               <button onClick={() => { setShowAddModal(false); setShowBrowse(true); }}
@@ -4181,7 +4201,7 @@ export default function App() {
       {showAddModal === "input" && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowAddModal(false)} />
-          <div style={{ position: "relative", background: "linear-gradient(180deg,#FFFFFF,#FDFCFB)", borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1, boxShadow: S.modal }}>
+          <div style={{ position: "relative", background: C.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 40px", zIndex: 1 }}>
             <div style={{ fontWeight: "bold", fontSize: 16, color: C.ink, marginBottom: 16 }}>カテゴリ名を入力</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <span style={{ fontSize: 14, color: "#888", whiteSpace: "nowrap" }}>人生</span>
@@ -4208,7 +4228,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <button onClick={() => addCategory(newCatInput)}
-                style={{ flex: 2, background: "linear-gradient(180deg,#282018,#18160F)", color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 3px 0 rgba(0,0,0,0.25), 0 6px 16px rgba(24,22,15,0.2), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                style={{ flex: 2, background: C.ink, color: C.white, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
                 作成
               </button>
               <button onClick={() => { setShowAddModal(false); setNewCatInput(""); }}
@@ -4225,8 +4245,8 @@ export default function App() {
       {addEntryForCat && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
-          <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
-            <div style={{ padding: "16px 16px 0", background: "linear-gradient(180deg,#282018,#18160F)", borderRadius: "20px 20px 0 0", boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)" }}>
+          <div style={{ position: "relative", background: "#F2EDE4", borderRadius: "20px 20px 0 0", maxHeight: "92vh", overflowY: "auto", zIndex: 1 }}>
+            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>
                 ＋ 人生{addEntryForCat.name}を追加
               </div>
@@ -4274,8 +4294,8 @@ export default function App() {
       {editingHomeEntry && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setEditingHomeEntry(null)}/>
-          <div style={{ position: "relative", background: C.cream, borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto", zIndex: 1 }}>
-            <div style={{ padding: "16px 16px 0", background: "linear-gradient(180deg,#282018,#18160F)", borderRadius: "20px 20px 0 0", boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)" }}>
+          <div style={{ position: "relative", background: "#F2EDE4", borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto", zIndex: 1 }}>
+            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>
                 ✏️ {editingHomeEntry.categoryName} を編集
               </div>
