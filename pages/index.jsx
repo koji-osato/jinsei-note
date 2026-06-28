@@ -4093,7 +4093,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ===== フレンドタブ ===== */}}
+        {/* ===== フレンドタブ ===== */}
         {isFriendMode && (
           <div>
             {/* フレンド選択画面 */}
