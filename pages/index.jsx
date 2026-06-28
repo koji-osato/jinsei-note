@@ -353,16 +353,10 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
           </div>
         </div>
       )}
-      {/* フレンドのみ：コメント・住所リンク */}
-      {!isSelf && (entry.comment || entry.placeData?.address) && (
+      {/* フレンドのみ：コメント表示 */}
+      {!isSelf && entry.comment && (
         <div style={{ borderTop: `1px solid ${C.border}`, padding: "8px 14px 10px", background: "#FAFAF8" }}>
-          {entry.comment && <div style={{ fontSize: 12, color: "#5A4E44", fontStyle: "italic", marginBottom: 6 }}>「{entry.comment}」</div>}
-          {entry.placeData?.address && (
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#4A90D9", background: "#F0F6FF", border: "1px solid #C5DCF5", borderRadius: 8, padding: "4px 10px", textDecoration: "none" }}>
-              🗺 Google Mapsで見る
-            </a>
-          )}
+          <div style={{ fontSize: 12, color: "#5A4E44", fontStyle: "italic" }}>「{entry.comment}」</div>
         </div>
       )}
     </div>
@@ -1723,16 +1717,19 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user }) {
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {(selectedPlace ? [selectedPlace, ...displayEntries.filter(e => e.id !== selectedPlace.id)] : displayEntries).map((entry, i) => (
-                      <div key={`${entry.id}-${i}`} onClick={() => { setSelectedPlace(entry); if (!mapOpen) setMapOpen(true); }}>
-                        <EntryCardDisplay
-                          entry={entry}
-                          isSelf={mapMode === "self"}
-                          expanded={expandedMapEntryId === entry.id}
-                          onToggle={() => setExpandedMapEntryId(expandedMapEntryId === entry.id ? null : entry.id)}
-                          onEdit={null}
-                          onDelete={null}
-                        />
-                      </div>
+                      <EntryCardDisplay
+                        key={`${entry.id}-${i}`}
+                        entry={entry}
+                        isSelf={mapMode === "self"}
+                        expanded={expandedMapEntryId === entry.id}
+                        onToggle={() => {
+                          setSelectedPlace(entry);
+                          if (!mapOpen) setMapOpen(true);
+                          setExpandedMapEntryId(expandedMapEntryId === entry.id ? null : entry.id);
+                        }}
+                        onEdit={null}
+                        onDelete={null}
+                      />
                     ))}
                   </div>
                 )}
