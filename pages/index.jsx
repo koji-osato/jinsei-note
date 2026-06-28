@@ -3771,9 +3771,7 @@ export default function App() {
             ) : (
               <>
                 {/* 大カテゴリ一覧 */}
-                {activeBigCat === "all" && null
-
-                                {/* 大カテゴリ別ランキング（メダル形式） */}
+                {/* 大カテゴリ別ランキング（メダル形式） */}
                 {activeBigCat !== "all" && activeBigCat !== "__all_entries__" && (() => {
                   const bc = BIG_CATS.find(b => b.id === activeBigCat);
                   const bcEmojis = { eat:"🍜", see:"🌅", do:"🏄", relax:"♨️", enjoy:"🎭", stay:"🏨" };
