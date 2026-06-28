@@ -4005,7 +4005,95 @@ export default function App() {
                   );
                 })()}
 
-        {/* ===== フレンドタブ ===== */}
+                {/* 全記録一覧（訪問日順）*/}
+                {activeBigCat === "__all_entries__" && (() => {
+                  const sorted = categories.flatMap(cat =>
+                    (cat.entries || []).map(e => ({ ...e, categoryName: cat.name, bigCat: cat.bigCat || cat.big_cat }))
+                  ).sort((a,b) => (b.visitDate||"").localeCompare(a.visitDate||""));
+                  const withDate = sorted.filter(e => e.visitDate);
+                  const noDate = sorted.filter(e => !e.visitDate);
+                  const byYear = {};
+                  withDate.forEach(e => {
+                    const [y, m] = e.visitDate.split("-");
+                    if (!byYear[y]) byYear[y] = {};
+                    if (!byYear[y][m]) byYear[y][m] = [];
+                    byYear[y][m].push(e);
+                  });
+                  const years = Object.keys(byYear).sort((a,b) => b-a);
+                  function EntryCard({ entry }) {
+                    const catObj = categories.find(c => c.name === entry.categoryName);
+                    return (
+                      <EntryCardDisplay
+                        entry={entry} isSelf={true}
+                        expanded={expandedEntryId === entry.id}
+                        onToggle={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}
+                        onEdit={() => setEditingHomeEntry({ ...entry, categoryId: catObj?.id })}
+                        onDelete={async () => { if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? {...c, entries: c.entries.filter(e => e.id !== entry.id)} : c)); setExpandedEntryId(null); }}}
+                      />
+                    );
+                  }
+                  return (
+                    <div>
+                      <button onClick={() => { setActiveBigCat("eat"); setExpandedEntryId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: C.sub, fontSize: 13, cursor: "pointer", padding: "0 0 14px", fontFamily: "inherit" }}>‹ 戻る</button>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 14 }}>すべての記録（訪問日順）</div>
+                      {years.map(year => {
+                        const isYearOpen = expandedYears[year] !== false;
+                        const months = Object.keys(byYear[year]).sort((a,b) => b-a);
+                        const yearCount = months.reduce((s, m) => s + byYear[year][m].length, 0);
+                        return (
+                          <div key={year} style={{ marginBottom: 12 }}>
+                            <button onClick={() => setExpandedYears(prev => ({ ...prev, [year]: !isYearOpen }))}
+                              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "linear-gradient(180deg,#2C1F0E,#1A1208)", borderRadius: isYearOpen ? "14px 14px 0 0" : 14, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 16, fontWeight: 800, color: C.white }}>{year}年</span>
+                                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>{yearCount}件</span>
+                              </div>
+                              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>{isYearOpen ? "▲" : "▼"}</span>
+                            </button>
+                            {isYearOpen && (
+                              <div style={{ border: `1px solid ${C.border}`, borderTop: "none", borderRadius: "0 0 14px 14px", overflow: "hidden" }}>
+                                {months.map((month, mi) => {
+                                  const monthKey = `${year}-${month}`;
+                                  const isMonthOpen = expandedMonths[monthKey] !== false;
+                                  const monthEntries = byYear[year][month];
+                                  return (
+                                    <div key={month} style={{ borderTop: mi > 0 ? `1px solid ${C.border}` : "none" }}>
+                                      <button onClick={() => setExpandedMonths(prev => ({ ...prev, [monthKey]: !isMonthOpen }))}
+                                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#F5F2EF", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{year}年{parseInt(month)}月</span>
+                                          <span style={{ fontSize: 11, color: C.sub }}>{monthEntries.length}件</span>
+                                        </div>
+                                        <span style={{ color: C.muted, fontSize: 11 }}>{isMonthOpen ? "▲" : "▼"}</span>
+                                      </button>
+                                      {isMonthOpen && (
+                                        <div style={{ padding: "8px 10px" }}>
+                                          {monthEntries.map(entry => <EntryCard key={entry.id} entry={entry}/>)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {noDate.length > 0 && (
+                        <div style={{ marginBottom: 12 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 8 }}>訪問日未設定</div>
+                          {noDate.map(entry => <EntryCard key={entry.id} entry={entry}/>)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ===== フレンドタブ ===== */}}
         {isFriendMode && (
           <div>
             {/* フレンド選択画面 */}
