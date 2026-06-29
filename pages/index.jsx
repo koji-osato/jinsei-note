@@ -3904,7 +3904,7 @@ export default function App() {
                                 </div>
                                 {/* コンテンツ */}
                                 <div style={{ padding: "0 8px 12px", textAlign: "center" }}>
-                                  <div style={{ fontSize: 20, marginBottom: 4 }}>{bcEmojis[activeBigCat]}</div>
+                                  <div style={{ fontSize: shrink ? 26 : 32, marginBottom: 6, lineHeight: 1 }}>{bcEmojis[activeBigCat]}</div>
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: shrink ? 10 : 11, color: C.ink, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, minHeight: 28 }}>{entry.name}</div>
                                   <div style={{ fontSize: 10, color: "#C8A050", fontWeight: 700, marginBottom: 2 }}>★ {(entry.star ?? 0).toFixed(1)}</div>
                                   {entry.prefecture && <div style={{ fontSize: 8, color: C.sub, marginBottom: 4 }}>{entry.prefecture}</div>}
@@ -3916,7 +3916,6 @@ export default function App() {
                                   })()}
                                 </div>
                               </div>
-                            </div>
                               {/* 展開パネル：編集・削除 */}
                               {expandedEntryId === entry.id && (
                                 <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 12px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
