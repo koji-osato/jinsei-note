@@ -3918,15 +3918,36 @@ export default function App() {
                               </div>
                               {/* 展開パネル：編集・削除 */}
                               {expandedEntryId === entry.id && (
-                                <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 12px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
-                                  <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
-                                    style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
-                                    ✏️ 編集
-                                  </button>
-                                  <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
-                                    style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
-                                    🗑 削除
-                                  </button>
+                                <div style={{ borderTop: `1px solid ${C.border}`, background: "#FAF7F2", padding: "10px 12px 12px" }}>
+                                  {/* タグ */}
+                                  {entry.tags?.length > 0 && (
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                                      {entry.tags.map(t => (
+                                        <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "rgba(160,120,60,0.1)", color: C.sub, border: "0.5px solid rgba(160,120,60,0.2)" }}>{t}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {/* コメント */}
+                                  {entry.comment && (
+                                    <div style={{ fontSize: 12, color: "#5A4E44", lineHeight: 1.7, padding: "8px 10px", background: "#FFF", borderRadius: 8, borderLeft: `3px solid ${C.gold}`, fontStyle: "italic", marginBottom: 8 }}>
+                                      「{entry.comment}」
+                                    </div>
+                                  )}
+                                  {/* 訪問日 */}
+                                  {entry.visitDate && (
+                                    <div style={{ fontSize: 10, color: C.sub, marginBottom: 8 }}>📅 {entry.visitDate}</div>
+                                  )}
+                                  {/* 編集・削除ボタン */}
+                                  <div style={{ display: "flex", gap: 8 }}>
+                                    <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#2C1F0E,#1A1208)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.1)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                                      ✏️ 編集
+                                    </button>
+                                    <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#C84040,#A02828)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(140,20,20,0.35),inset 0 1px 0 rgba(255,255,255,0.15)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                                      🗑 削除
+                                    </button>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -3990,15 +4011,36 @@ export default function App() {
                                 </div>
                                 {/* 展開パネル：編集・削除 */}
                                 {isOpen && (
-                                  <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 14px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
-                                    <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
-                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
-                                      ✏️ 編集
-                                    </button>
-                                    <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
-                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
-                                      🗑 削除
-                                    </button>
+                                  <div style={{ borderTop: `1px solid ${C.border}`, background: "#FAF7F2", padding: "10px 14px 12px" }}>
+                                    {/* タグ */}
+                                    {entry.tags?.length > 0 && (
+                                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                                        {entry.tags.map(t => (
+                                          <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "rgba(160,120,60,0.1)", color: C.sub, border: "0.5px solid rgba(160,120,60,0.2)" }}>{t}</span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {/* コメント */}
+                                    {entry.comment && (
+                                      <div style={{ fontSize: 12, color: "#5A4E44", lineHeight: 1.7, padding: "8px 10px", background: "#FFF", borderRadius: 8, borderLeft: `3px solid ${C.gold}`, fontStyle: "italic", marginBottom: 8 }}>
+                                        「{entry.comment}」
+                                      </div>
+                                    )}
+                                    {/* 訪問日 */}
+                                    {entry.visitDate && (
+                                      <div style={{ fontSize: 10, color: C.sub, marginBottom: 8 }}>📅 {entry.visitDate}</div>
+                                    )}
+                                    {/* 編集・削除ボタン */}
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                      <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                        style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#2C1F0E,#1A1208)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.1)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                                        ✏️ 編集
+                                      </button>
+                                      <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                        style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#C84040,#A02828)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(140,20,20,0.35),inset 0 1px 0 rgba(255,255,255,0.15)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                                        🗑 削除
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
