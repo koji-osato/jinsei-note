@@ -3883,9 +3883,9 @@ export default function App() {
 
                       {/* 1〜3位メダルポジウム */}
                       {top3.length > 0 && (
-                        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 16 }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
                           {podiumOrder.map(({ entry, medal, rank, shrink }) => entry ? (
-                            <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginBottom: shrink ? 12 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
+                            <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginTop: shrink ? 24 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
                               onClick={() => setEditingHomeEntry({ ...entry, categoryId: entry.catId })}>
                               {/* 上部カラーバー */}
                               <div style={{ height: 4, background: medal.bar }}/>
