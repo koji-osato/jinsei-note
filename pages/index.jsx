@@ -3886,7 +3886,7 @@ export default function App() {
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
                           {podiumOrder.map(({ entry, medal, rank, shrink }) => entry ? (
                             <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginTop: shrink ? 24 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
-                              onClick={() => setEditingHomeEntry({ ...entry, categoryId: entry.catId })}>
+                              onClick={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}>
                               {/* 上部カラーバー */}
                               <div style={{ height: 4, background: medal.bar }}/>
                               {/* カード本体 */}
@@ -3916,6 +3916,20 @@ export default function App() {
                                   })()}
                                 </div>
                               </div>
+                            </div>
+                              {/* 展開パネル：編集・削除 */}
+                              {expandedEntryId === entry.id && (
+                                <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 12px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
+                                  <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                    style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                    ✏️ 編集
+                                  </button>
+                                  <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                    style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                    🗑 削除
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div key={`empty-${rank}`} style={{ flex: 1 }}/>
@@ -3972,6 +3986,19 @@ export default function App() {
                                   </a>
                                 )}
                               </div>
+                              {/* 展開パネル：編集・削除 */}
+                              {expandedEntryId === entry.id && (
+                                <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 14px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
+                                  <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                    style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                    ✏️ 編集
+                                  </button>
+                                  <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                    style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                    🗑 削除
+                                  </button>
+                                </div>
+                              )}
                             );
                           })}
                         </>
