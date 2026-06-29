@@ -3945,61 +3945,65 @@ export default function App() {
                           </div>
                           {rest.map((entry, i) => {
                             const rec = REC_LEVELS.find(r => r.value === entry.rec);
+                            const isOpen = expandedEntryId === entry.id;
                             return (
                               <div key={entry.id} style={{
                                 background: "linear-gradient(160deg,#FDF8F0,#F5EEE2)",
                                 borderRadius: 12, border: "0.5px solid rgba(160,120,60,0.22)",
-                                padding: "10px 12px 10px 14px", marginBottom: 7,
-                                position: "relative", overflow: "hidden",
+                                marginBottom: 7, position: "relative", overflow: "hidden",
                                 boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 2px 8px rgba(100,70,20,0.08)",
-                                display: "flex", gap: 8, alignItems: "center",
                                 cursor: "pointer",
-                              }} onClick={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}>
+                              }} onClick={() => setExpandedEntryId(isOpen ? null : entry.id)}>
+                                {/* 上部ライン */}
                                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,160,80,0.3),transparent)" }}/>
+                                {/* 左カラーバー */}
                                 <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, borderRadius: "12px 0 0 12px", background: `linear-gradient(180deg,${c1},${c2})` }}/>
-                                {/* 順位 */}
-                                <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C8A078", minWidth: 24, textAlign: "center", flexShrink: 0 }}>{i + 4}</div>
-                                {/* アイコン */}
-                                <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${c1},${c2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, boxShadow: `0 3px 6px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.2)`, position: "relative", overflow: "hidden" }}>
-                                  {bcEmojis[activeBigCat]}
-                                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.2),transparent)", borderRadius: "8px 8px 0 0" }}/>
-                                </div>
-                                {/* 情報 */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 8, color: C.sub }}>人生{entry.categoryName}</div>
-                                  <div style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.ink, fontWeight: 700 }}>{entry.name}</div>
-                                  <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
-                                    <span style={{ fontSize: 9, color: "#C8A050", fontWeight: 700 }}>★ {(entry.star ?? 0).toFixed(1)}</span>
-                                    {entry.prefecture && <span style={{ fontSize: 8, color: C.sub }}>· {entry.prefecture}</span>}
-                                    {rec && <span style={{ display: "inline-flex", padding: "1px 5px", borderRadius: 10, fontSize: 7, fontWeight: 700, background: rec.bg, color: rec.color, border: `0.5px solid ${rec.color}30` }}>{rec.short}</span>}
+                                {/* メインコンテンツ行 */}
+                                <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 12px 10px 14px" }}>
+                                  {/* 順位 */}
+                                  <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C8A078", minWidth: 24, textAlign: "center", flexShrink: 0 }}>{i + 4}</div>
+                                  {/* アイコン */}
+                                  <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${c1},${c2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, boxShadow: `0 3px 6px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.2)`, position: "relative", overflow: "hidden" }}>
+                                    {bcEmojis[activeBigCat]}
+                                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.2),transparent)", borderRadius: "8px 8px 0 0" }}/>
                                   </div>
+                                  {/* 情報 */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 8, color: C.sub }}>人生{entry.categoryName}</div>
+                                    <div style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.ink, fontWeight: 700 }}>{entry.name}</div>
+                                    <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
+                                      <span style={{ fontSize: 9, color: "#C8A050", fontWeight: 700 }}>★ {(entry.star ?? 0).toFixed(1)}</span>
+                                      {entry.prefecture && <span style={{ fontSize: 8, color: C.sub }}>· {entry.prefecture}</span>}
+                                      {rec && <span style={{ display: "inline-flex", padding: "1px 5px", borderRadius: 10, fontSize: 7, fontWeight: 700, background: rec.bg, color: rec.color, border: `0.5px solid ${rec.color}30` }}>{rec.short}</span>}
+                                    </div>
+                                  </div>
+                                  {/* 地図ボタン */}
+                                  {entry.placeData?.lat && (
+                                    <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name)}`}
+                                      target="_blank" rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontSize: 8, color: "#6A90C8", background: "#EEF4FF", border: "0.5px solid rgba(106,144,200,0.3)", borderRadius: 7, padding: "5px 7px", flexShrink: 0, textDecoration: "none", boxShadow: "0 2px 0 rgba(40,80,160,0.1),inset 0 1px 0 rgba(255,255,255,0.8)" }}>
+                                      <span style={{ fontSize: 14 }}>🗺</span>
+                                      <span>地図</span>
+                                    </a>
+                                  )}
                                 </div>
-                                {/* 地図ボタン */}
-                                {entry.placeData?.lat && (
-                                  <a href={entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name)}`}
-                                    target="_blank" rel="noopener noreferrer"
-                                    onClick={e => e.stopPropagation()}
-                                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontSize: 8, color: "#6A90C8", background: "#EEF4FF", border: "0.5px solid rgba(106,144,200,0.3)", borderRadius: 7, padding: "5px 7px", flexShrink: 0, textDecoration: "none", boxShadow: "0 2px 0 rgba(40,80,160,0.1),inset 0 1px 0 rgba(255,255,255,0.8)" }}>
-                                    <span style={{ fontSize: 14 }}>🗺</span>
-                                    <span>地図</span>
-                                  </a>
+                                {/* 展開パネル：編集・削除 */}
+                                {isOpen && (
+                                  <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 14px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
+                                    <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                      ✏️ 編集
+                                    </button>
+                                    <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                      🗑 削除
+                                    </button>
+                                  </div>
                                 )}
                               </div>
-                              {/* 展開パネル：編集・削除 */}
-                              {expandedEntryId === entry.id && (
-                                <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 14px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
-                                  <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
-                                    style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
-                                    ✏️ 編集
-                                  </button>
-                                  <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
-                                    style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
-                                    🗑 削除
-                                  </button>
-                                </div>
-                              )}
-                               </div>
                             );
+                          })}
                           })}
                         </>
                       )}
