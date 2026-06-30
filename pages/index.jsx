@@ -1864,6 +1864,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
   const [viewingFriend, setViewingFriend] = useState(null);
   const [friendEntries, setFriendEntries] = useState([]);
   const [selectedCatName, setSelectedCatName] = useState(null);
+  const [crossCatPrefFilter, setCrossCatPrefFilter] = useState(null); // 全フレンド横断モードの都道府県フィルター
   const [loadingFriend, setLoadingFriend] = useState(false);
   const [mapOpen, setMapOpen] = useState(true); // 地図の開閉（デフォルト開）
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
@@ -1922,13 +1923,19 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
       .map(e => e.categoryName))];
 
   // カテゴリ横断（小カテゴリが選ばれている＝絞り込み状態なので、常におすすめ度の高い順）
-  const crossCatEntries = selectedCatName
+  const crossCatEntriesRaw = selectedCatName
     ? allFriendData.flatMap((fd, fi) =>
         (fd.categories.find(c => c.name === selectedCatName)?.entries || [])
           .filter(e => e.placeData?.lat && e.placeData?.lng)
           .map((e, idx) => ({ ...e, categoryName: selectedCatName, ownerName: fd.user.name, rank: idx + 1, accentColor: getAccentColor(fi) }))
       ).sort((a, b) => (b.rec ?? 0) - (a.rec ?? 0))
     : [];
+  // 都道府県の選択肢（全フレンドの該当カテゴリ記録から重複なしで抽出）
+  const crossCatPrefsAvailable = [...new Set(crossCatEntriesRaw.map(e => e.prefecture).filter(Boolean))];
+  // 都道府県で絞り込み
+  const crossCatEntries = crossCatPrefFilter
+    ? crossCatEntriesRaw.filter(e => e.prefecture === crossCatPrefFilter)
+    : crossCatEntriesRaw;
 
   // フレンドカテゴリ集計
   const friendCatStats = {};
@@ -2055,10 +2062,23 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
           </div>
         )}
         {mapMode === "category" && selectedCatName && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "#9A8A7A" }}>📂 人生{selectedCatName}</span>
-            <button onClick={() => { setMapMode("select"); setSelectedCatName(null); }}
-              style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: "#9A8A7A" }}>📂 人生{selectedCatName}</span>
+              <button onClick={() => { setMapMode("select"); setSelectedCatName(null); setCrossCatPrefFilter(null); }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
+            </div>
+            {/* 都道府県（場所）で絞り込み：このカテゴリでみんなが何をおすすめしているか県別に見る */}
+            {crossCatPrefsAvailable.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>📍</span>
+                <select value={crossCatPrefFilter || ""} onChange={e => { setCrossCatPrefFilter(e.target.value || null); setSelectedPlace(null); }}
+                  style={{ flex: 1, maxWidth: 180, background: crossCatPrefFilter ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.12)", color: crossCatPrefFilter ? C.ink : "rgba(255,255,255,0.85)", border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontFamily: "inherit", cursor: "pointer" }}>
+                  <option value="">すべての都道府県</option>
+                  {crossCatPrefsAvailable.map(pref => <option key={pref} value={pref}>{pref}</option>)}
+                </select>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -2077,7 +2097,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {filteredFriendUsers.map(fu => (
-                <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); setMapOpen(true); }}
+                <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); setMapOpen(true); setFriendBigFilter("all"); setFriendSmallFilter(null); }}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
                     {fu.name?.charAt(0)}
@@ -2103,7 +2123,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {friendCatList.map(([name, count]) => (
-                <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setMapOpen(true); setSelectedPlace(null); }}
+                <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setMapOpen(true); setSelectedPlace(null); setCrossCatPrefFilter(null); }}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                     {getTagEmoji(name)}
