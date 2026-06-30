@@ -1621,17 +1621,27 @@ function CategoryView({ category, data, accentColor, onUpdate, onBack, userId, r
 }
 
 // ===== ブラウズビュー =====
-function BrowseView({ onSelect, onBack }) {
+function BrowseView({ onSelect, onBack, initialBigCat }) {
   const [query, setQuery] = useState("");
-  const groups = [...new Set(TAG_DICTIONARY.map(t => t.group))];
+  // 初期表示は呼び出し元の大カテゴリに絞り込み。nullなら「すべて」表示
+  const [bigCatFilter, setBigCatFilter] = useState(initialBigCat || null);
+
+  // 大カテゴリで絞り込んだタグ辞書（絞り込みなしなら全件）
+  const dictForBigCat = bigCatFilter
+    ? TAG_DICTIONARY.filter(t => GROUP_TO_BIGCAT[t.group] === bigCatFilter)
+    : TAG_DICTIONARY;
+  const groups = [...new Set(dictForBigCat.map(t => t.group))];
+
   const filtered = query.trim()
     ? [
-        ...TAG_DICTIONARY.filter(t => [t.tag, ...t.aliases].some(a => a.toLowerCase().includes(query.toLowerCase()))),
+        ...dictForBigCat.filter(t => [t.tag, ...t.aliases].some(a => a.toLowerCase().includes(query.toLowerCase()))),
         ..._dynamicSuggestions
           .filter(s => s.name.toLowerCase().includes(query.toLowerCase()) && !TAG_DICTIONARY.find(t => t.tag === s.name))
           .map(s => ({ tag: s.name, aliases: [], group: `👥 みんなの人気（${s.count}人）`, _dynamic: true }))
       ]
     : null;
+
+  const bigCatLabel = bigCatFilter ? (BIG_CATS.find(b => b.id === bigCatFilter)?.label || "") : null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
@@ -1641,9 +1651,33 @@ function BrowseView({ onSelect, onBack }) {
         </div>
         <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer", padding: "0 0 8px", fontFamily: "inherit", touchAction: "manipulation" }}>‹ 戻る</button>
         <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>カテゴリを選ぶ</div>
+
+        {/* 大カテゴリ絞り込みタブ */}
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 10, scrollbarWidth: "none", paddingBottom: 2 }}>
+          <button onClick={() => setBigCatFilter(null)} style={{
+            flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none",
+            background: !bigCatFilter ? "#FFFFFF" : "rgba(255,255,255,0.12)",
+            color: !bigCatFilter ? C.ink : "rgba(255,255,255,0.75)",
+            fontSize: 12, fontWeight: !bigCatFilter ? 700 : 400,
+            cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation",
+          }}>すべて</button>
+          {BIG_CATS.map(bc => (
+            <button key={bc.id} onClick={() => setBigCatFilter(bc.id)} style={{
+              flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: "none",
+              background: bigCatFilter === bc.id ? "#FFFFFF" : "rgba(255,255,255,0.12)",
+              color: bigCatFilter === bc.id ? C.ink : "rgba(255,255,255,0.75)",
+              fontSize: 12, fontWeight: bigCatFilter === bc.id ? 700 : 400,
+              cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation",
+              display: "flex", alignItems: "center", gap: 4,
+            }}>
+              <BigCatIcon id={bc.id} size={14}/>{bc.label.split("・")[0]}
+            </button>
+          ))}
+        </div>
+
         <div style={{ position: "relative" }}>
           <input value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="カテゴリを検索..."
+            placeholder={bigCatLabel ? `${bigCatLabel}の中から検索...` : "カテゴリを検索..."}
             style={{ width: "100%", padding: "11px 36px 11px 14px", borderRadius: 10, border: "none", fontSize: 16, fontFamily: "inherit", background: "rgba(255,255,255,0.12)", color: C.white, outline: "none", boxSizing: "border-box", touchAction: "manipulation" }} />
           <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "rgba(255,255,255,0.5)", pointerEvents: "none" }}>🔍</span>
         </div>
@@ -1655,7 +1689,7 @@ function BrowseView({ onSelect, onBack }) {
             <div style={{ textAlign: "center", color: C.muted, padding: "60px 0" }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
               <div style={{ fontSize: 14 }}>「{query}」に一致するカテゴリがありません</div>
-              <button onClick={() => onSelect(query)}
+              <button onClick={() => onSelect(query, bigCatFilter)}
                 style={{ marginTop: 16, background: C.terra, color: C.white, border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation" }}>
                 ＋「{query}」を新しく追加
               </button>
@@ -1665,7 +1699,7 @@ function BrowseView({ onSelect, onBack }) {
               <div style={{ fontSize: 11, fontWeight: "bold", color: C.muted, letterSpacing: 1, marginBottom: 10 }}>{filtered.length}件見つかりました</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {filtered.map(t => (
-                  <button key={t.tag} onClick={() => onSelect(t.tag)}
+                  <button key={t.tag} onClick={() => onSelect(t.tag, bigCatFilter)}
                     style={{ background: C.white, border: `1.5px solid ${t._dynamic ? C.terra + "40" : C.border}`, borderRadius: 20, padding: "9px 16px", fontSize: 14, cursor: "pointer", color: "#333", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 4 }}>
                     {t._dynamic ? "👥" : GROUP_EMOJIS[t.group]} {t.tag}
                     {t._dynamic && <span style={{ fontSize: 11, color: C.terra }}>{t.group.match(/\d+/)?.[0]}人</span>}
@@ -1674,13 +1708,17 @@ function BrowseView({ onSelect, onBack }) {
               </div>
             </div>
           )
+        ) : groups.length === 0 ? (
+          <div style={{ textAlign: "center", color: C.muted, padding: "60px 0" }}>
+            <div style={{ fontSize: 14 }}>{bigCatLabel}に登録済みのカテゴリはまだありません</div>
+          </div>
         ) : (
           groups.map(group => (
             <div key={group} style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 10, letterSpacing: 0.5 }}>{group}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {TAG_DICTIONARY.filter(t => t.group === group).map(t => (
-                  <button key={t.tag} onClick={() => onSelect(t.tag)}
+                {dictForBigCat.filter(t => t.group === group).map(t => (
+                  <button key={t.tag} onClick={() => onSelect(t.tag, bigCatFilter)}
                     style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 20, padding: "9px 16px", fontSize: 14, cursor: "pointer", color: "#333", fontFamily: "inherit", touchAction: "manipulation" }}>
                     {GROUP_EMOJIS[group]} {t.tag}
                   </button>
@@ -1690,15 +1728,15 @@ function BrowseView({ onSelect, onBack }) {
           ))
         )}
 
-        {/* 👥 みんなの人気カテゴリ（30人以上） */}
-        {!query.trim() && _dynamicSuggestions.length > 0 && (
+        {/* 👥 みんなの人気カテゴリ（30人以上、大カテゴリ絞り込み中は対象外） */}
+        {!query.trim() && !bigCatFilter && _dynamicSuggestions.length > 0 && (
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 10, letterSpacing: 0.5 }}>👥 みんなの人気カテゴリ</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {_dynamicSuggestions
                 .filter(s => !TAG_DICTIONARY.find(t => t.tag === s.name))
                 .map(s => (
-                  <button key={s.name} onClick={() => onSelect(s.name)}
+                  <button key={s.name} onClick={() => onSelect(s.name, bigCatFilter)}
                     style={{ background: C.white, border: `1.5px solid ${C.terra}40`, borderRadius: 20, padding: "9px 16px", fontSize: 14, cursor: "pointer", color: "#333", fontFamily: "inherit", touchAction: "manipulation", display: "flex", alignItems: "center", gap: 6 }}>
                     <span>👥</span> {s.name}
                     <span style={{ fontSize: 11, color: C.terra }}>{s.count}人</span>
@@ -3623,7 +3661,7 @@ export default function App() {
     setCategories([]);
   }
 
-  async function addCategory(name) {
+  async function addCategory(name, forceBigCat) {
     const normalized = normalizeTag(name);
     if (!normalized) return;
     if (categories.find(c => c.name === normalized)) {
@@ -3632,10 +3670,11 @@ export default function App() {
       setShowAddModal(false); setShowBrowse(false); setNewCatInput("");
       return;
     }
-    // タグ辞書に登録済みのカテゴリ名なら、辞書のグループから大カテゴリを自動推定（一覧から選んだ場合など）
-    // 推定できなければ、ユーザーが手動で選択した newCatBigCat を使う（自由入力の場合）
+    // 優先順位: ①一覧画面で絞り込んでいた大カテゴリ（明示的な指定）
+    //          ②タグ辞書に登録済みのカテゴリ名なら、辞書のグループから自動推定
+    //          ③どちらもなければ、自由入力時にユーザーが選んだ newCatBigCat
     const inferredBigCat = inferBigCatFromTagName(normalized);
-    const finalBigCat = inferredBigCat || newCatBigCat;
+    const finalBigCat = forceBigCat || inferredBigCat || newCatBigCat;
     // Supabaseに保存
     const { data: newCat, error } = await supabase
       .from("categories")
@@ -3719,7 +3758,7 @@ export default function App() {
 
   if (showBrowse) return (
     <>
-      <BrowseView onSelect={name => addCategory(name)} onBack={() => setShowBrowse(false)} />
+      <BrowseView onSelect={(name, bigCat) => addCategory(name, bigCat)} onBack={() => setShowBrowse(false)} initialBigCat={activeBigCat !== "all" && activeBigCat !== "__all_entries__" ? activeBigCat : null} />
       {addEntryForCat && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setAddEntryForCat(null)}/>
