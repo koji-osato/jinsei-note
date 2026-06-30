@@ -1712,17 +1712,27 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   const markersRef = useRef([]);
   const [mapReady, setMapReady] = useState(false);
 
-  // カスタムピンSVGを生成（吹き出し型）
-  function createPinIcon(color, isSelected = false) {
+  // 大カテゴリごとの簡易ピクトグラム（ピン内に収まるシンプルな白抜き図形）
+  const BIGCAT_PIN_GLYPH = {
+    eat:   `<path d="M-6 -4 Q-6 4 0 4 Q6 4 6 -4 L5 -7 L-5 -7 Z M-5 -9 L-5 -2 M-3 -9 L-3 -2 M-1 -9 L-1 -2" stroke="white" stroke-width="1.3" fill="white" stroke-linecap="round" stroke-linejoin="round"/>`,
+    see:   `<path d="M-9 0 Q0 -8 9 0 Q0 8 -9 0 Z" stroke="white" stroke-width="1.3" fill="none"/><circle cx="0" cy="0" r="3.3" fill="white"/>`,
+    do:    `<path d="M-9 3 Q-4 -2 0 3 Q4 -2 9 3" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="2" cy="-6" r="2.6" fill="white"/>`,
+    relax: `<path d="M-7 -8 Q-9 -3 -6 1 M0 -9 Q-2 -3 1 2 M7 -8 Q9 -3 6 1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.9"/><path d="M-7 2 Q0 -1 7 2 L7 7 Q0 9 -7 7 Z" fill="white"/>`,
+    enjoy: `<path d="M-7 -6 Q0 -10 7 -6 L7 2 Q0 6 -7 2 Z" stroke="white" stroke-width="1.4" fill="none"/><circle cx="-3" cy="-2" r="1.4" fill="white"/><circle cx="3" cy="-2" r="1.4" fill="white"/>`,
+    stay:  `<path d="M-8 4 L-8 -3 L0 -8 L8 -3 L8 4 Z" stroke="white" stroke-width="1.4" fill="none" stroke-linejoin="round"/><rect x="-3" y="-1" width="6" height="5" fill="white"/>`,
+  };
+
+  // カスタムピンSVGを生成（吹き出し型＋大カテゴリの絵柄）
+  function createPinIcon(color, isSelected = false, bigCat = "eat") {
     const size = isSelected ? 44 : 36;
+    const glyph = BIGCAT_PIN_GLYPH[bigCat] || BIGCAT_PIN_GLYPH.eat;
     const svg = `<svg width="${size}" height="${size + 8}" viewBox="0 0 44 52" xmlns="http://www.w3.org/2000/svg">
       <filter id="shadow">
         <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/>
       </filter>
       <circle cx="22" cy="20" r="${isSelected ? 18 : 15}" fill="${color}" filter="url(#shadow)"/>
-      <circle cx="22" cy="20" r="${isSelected ? 14 : 11}" fill="white" opacity="0.25"/>
       <polygon points="16,30 28,30 22,42" fill="${color}" filter="url(#shadow)"/>
-      ${isSelected ? `<circle cx="22" cy="20" r="6" fill="white"/>` : `<circle cx="22" cy="20" r="5" fill="white"/>`}
+      <g transform="translate(22,20)">${glyph}</g>
     </svg>`;
     return {
       url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
@@ -1760,7 +1770,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
         position: { lat: entry.placeData.lat, lng: entry.placeData.lng },
         map: mapInstanceRef.current,
         title: entry.name,
-        icon: createPinIcon(color, isSelected),
+        icon: createPinIcon(color, isSelected, entry.bigCat),
         zIndex: isSelected ? 100 : 1,
       });
       marker.addListener("click", () => {
@@ -1825,7 +1835,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
     if (activeSmallFilter && cat.name !== activeSmallFilter) return [];
     return (cat.entries || [])
       .filter(e => e.placeData?.lat && e.placeData?.lng)
-      .map((e, idx) => ({ ...e, categoryName: cat.name, categoryId: cat.id, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }));
+      .map((e, idx) => ({ ...e, categoryName: cat.name, categoryId: cat.id, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)), bigCat: catBig }));
   });
 
   // 現在の大カテゴリに属する小カテゴリ一覧
@@ -4076,7 +4086,7 @@ export default function App() {
                       {/* エントリーなし */}
                       {filtered.length === 0 && (
                         <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
-                          <div style={{ fontSize: 40, marginBottom: 12 }}>{bcEmojis[activeBigCat]}</div>
+                          <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><BigCatIcon id={activeBigCat} size={48}/></div>
                           <div style={{ fontSize: 14, color: "#666", marginBottom: 6 }}>まだ記録がありません</div>
                           <button onClick={() => setShowAddModal(true)} style={{
                             background: `linear-gradient(135deg,${c1},${c2})`, color: C.white, border: "none",
@@ -4099,18 +4109,18 @@ export default function App() {
                               <div style={{ background: "linear-gradient(160deg,#FDF8F0,#F5EEE2)", border: "0.5px solid rgba(160,120,60,0.22)", borderTop: "none" }}>
                                 {/* メダルバッジ */}
                                 <div style={{
-                                  width: 30, height: 30, borderRadius: "50%",
+                                  width: 44, height: 44, borderRadius: "50%",
                                   background: medal.bg, boxShadow: medal.shadow,
                                   display: "flex", alignItems: "center", justifyContent: "center",
                                   margin: "10px auto 6px", position: "relative", overflow: "hidden",
-                                  fontSize: 8, fontWeight: 900, color: "#fff",
+                                  fontSize: 14, fontWeight: 900, color: "#fff",
                                 }}>
                                   {medal.label}
                                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.3),transparent)", borderRadius: "50%" }}/>
                                 </div>
                                 {/* コンテンツ */}
                                 <div style={{ padding: "0 8px 12px", textAlign: "center" }}>
-                                  <div style={{ fontSize: shrink ? 26 : 32, marginBottom: 6, lineHeight: 1 }}>{bcEmojis[activeBigCat]}</div>
+                                  <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><BigCatIcon id={activeBigCat} size={shrink ? 30 : 38}/></div>
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: shrink ? 10 : 11, color: C.ink, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, minHeight: 28 }}>{entry.name}</div>
                                   <div style={{ fontSize: 10, color: "#C8A050", fontWeight: 700, marginBottom: 2 }}>★ {(entry.star ?? 0).toFixed(1)}</div>
                                   {entry.prefecture && <div style={{ fontSize: 8, color: C.sub, marginBottom: 4 }}>{entry.prefecture}</div>}
@@ -4170,7 +4180,7 @@ export default function App() {
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C8A078", minWidth: 24, textAlign: "center", flexShrink: 0 }}>{i + 4}</div>
                                   {/* アイコン */}
                                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${c1},${c2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, boxShadow: `0 3px 6px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.2)`, position: "relative", overflow: "hidden" }}>
-                                    {bcEmojis[activeBigCat]}
+                                    <BigCatIcon id={activeBigCat} size={18}/>
                                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.2),transparent)", borderRadius: "8px 8px 0 0" }}/>
                                   </div>
                                   {/* 情報 */}
