@@ -483,7 +483,7 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
   const medal = rank ? medalStyles[rank] : null;
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 99999, display: "flex", alignItems: "flex-end" }}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: 600, margin: "0 auto", background: "#FAF7F2",
         borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto",
@@ -2065,28 +2065,29 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
 
               {/* 地図（折りたたみ）*/}
               {mapOpen && (
-                <div style={{ flexShrink: 0, position: "relative" }}>
+                <div style={{ flexShrink: 0 }}>
                   <MapCore entries={displayEntries} onSelectPlace={e => { setSelectedPlace(e); }} selectedPlace={selectedPlace}/>
-                  {/* ピンタップ時の小プレビュー（地図は隠さない） */}
-                  {selectedPlace && (
-                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, background: "#FFF", borderRadius: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.18)", border: `0.5px solid ${C.border}`, zIndex: 9999 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
-                        📍
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
-                        <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
-                          {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
-                          {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
-                        </div>
-                      </div>
-                      <button id="map-detail-btn" onClick={() => { alert("詳細ボタン押されました: " + selectedPlace.name); setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" }); }}
-                        style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                        詳細
-                      </button>
-                      <button onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
+                </div>
+              )}
+
+              {/* ピンタップ時の小プレビュー（地図DOM外・確実にクリック可能） */}
+              {selectedPlace && (
+                <div style={{ flexShrink: 0, background: "#FFF", padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.12)", borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
+                    📍
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
+                    <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
+                      {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
+                      {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
                     </div>
-                  )}
+                  </div>
+                  <button type="button" onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
+                    style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    詳細
+                  </button>
+                  <button type="button" onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
                 </div>
               )}
 
