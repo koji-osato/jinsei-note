@@ -1777,7 +1777,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
     }, 150);
   }, [selectedPlace]);
 
-  return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4" }} />;
+  return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4", position: "relative", zIndex: 1 }} />;
 }
 
 function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu, onEditEntry, onDeleteEntry }) {
@@ -2065,28 +2065,29 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
 
               {/* 地図（折りたたみ）*/}
               {mapOpen && (
-                <div style={{ flexShrink: 0, position: "relative" }}>
+                <div style={{ flexShrink: 0 }}>
                   <MapCore entries={displayEntries} onSelectPlace={e => { setSelectedPlace(e); }} selectedPlace={selectedPlace}/>
-                  {/* ピンタップ時の小プレビュー（地図は隠さない） */}
-                  {selectedPlace && (
-                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, background: "#FFF", borderRadius: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.18)", border: `0.5px solid ${C.border}`, zIndex: 50 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
-                        📍
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
-                        <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
-                          {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
-                          {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
-                        </div>
-                      </div>
-                      <button onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
-                        style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                        詳細
-                      </button>
-                      <button onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
+                </div>
+              )}
+
+              {/* ピンタップ時の小プレビュー（地図の下に独立して表示） */}
+              {mapOpen && selectedPlace && (
+                <div style={{ flexShrink: 0, background: "#FFF", padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", borderBottom: `0.5px solid ${C.border}` }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
+                    📍
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
+                    <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
+                      {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
+                      {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
                     </div>
-                  )}
+                  </div>
+                  <button onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
+                    style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    詳細
+                  </button>
+                  <button onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
                 </div>
               )}
 
