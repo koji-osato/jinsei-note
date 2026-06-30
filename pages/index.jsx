@@ -473,6 +473,12 @@ const labelStyle = {
 // isSelf=false: フレンドのリスト（★非表示・展開なし）
 function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCatEmoji }) {
   if (!entry) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "red", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 30 }}>
+      テスト表示中：{entry.name || "名前なし"}
+    </div>
+  );
+  // eslint-disable-next-line no-unreachable
   const rec = REC_LEVELS.find(r => r.value === entry.rec);
   const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
   const medalStyles = {
