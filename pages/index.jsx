@@ -2089,7 +2089,13 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                       {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
                     </div>
                   </div>
-                  <button type="button" onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
+                  <button type="button" onClick={() => {
+                    console.log("詳細ボタン押下, selectedPlace=", selectedPlace);
+                    const newVal = { entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" };
+                    console.log("setDetailModalEntryに渡す値=", newVal);
+                    setDetailModalEntry(newVal);
+                    alert("detailModalEntryセット完了: " + JSON.stringify(newVal).substring(0, 100));
+                  }}
                     style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
                     詳細
                   </button>
@@ -2929,6 +2935,7 @@ function AddFollowModal({ user, onClose, onAdded }) {
           </div>
         )}
       </div>
+      {console.log("MapView render: detailModalEntry=", detailModalEntry)}
       {detailModalEntry && (
         <EntryDetailModal
           entry={detailModalEntry.entry}
@@ -4596,6 +4603,7 @@ export default function App() {
       )}
 
       {/* ホームから直接編集モーダル */}
+      {console.log("MapView render: detailModalEntry=", detailModalEntry)}
       {detailModalEntry && (
         <EntryDetailModal
           entry={detailModalEntry.entry}
