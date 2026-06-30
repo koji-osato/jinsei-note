@@ -1876,7 +1876,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
   const [friendSmallFilter, setFriendSmallFilter] = useState(null); // フレンド小カテゴリフィルター
 
   // 自分のエントリー（座標付き・大カテゴリ・小カテゴリフィルター）
-  const myEntries = categories.flatMap(cat => {
+  const myEntriesRaw = categories.flatMap(cat => {
     const catBig = cat.bigCat || cat.big_cat || "eat";
     if (activeBigFilter !== "all" && catBig !== activeBigFilter) return [];
     if (activeSmallFilter && cat.name !== activeSmallFilter) return [];
@@ -1884,13 +1884,17 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
       .filter(e => e.placeData?.lat && e.placeData?.lng)
       .map((e, idx) => ({ ...e, categoryName: cat.name, categoryId: cat.id, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)), bigCat: catBig }));
   });
+  // 表示順: 大カテゴリで絞り込んでいる場合は★の高い順、「すべて」表示中は登録の新しい順
+  const myEntries = activeBigFilter !== "all"
+    ? [...myEntriesRaw].sort((a, b) => (b.star ?? 0) - (a.star ?? 0))
+    : [...myEntriesRaw].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
 
   // 現在の大カテゴリに属する小カテゴリ一覧
   const smallCatsInBig = activeBigFilter === "all" ? [] :
     categories.filter(c => (c.bigCat || c.big_cat || "eat") === activeBigFilter);
 
   // フレンド個別エントリー（大カテゴリ・小カテゴリフィルター）
-  const filteredFriendEntries = friendEntries.filter(e => {
+  const filteredFriendEntriesRaw = friendEntries.filter(e => {
     if (!e.placeData?.lat || !e.placeData?.lng) return false;
     if (friendBigFilter !== "all") {
       // カテゴリ名からbig_catを推定
@@ -1901,6 +1905,11 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
     if (friendSmallFilter && e.categoryName !== friendSmallFilter) return false;
     return true;
   });
+  // 表示順: 大カテゴリ/小カテゴリで絞り込んでいる場合はおすすめ度の高い順（★はフレンドには非公開のため）、絞り込みなしは登録の新しい順
+  const isFriendFiltered = friendBigFilter !== "all" || !!friendSmallFilter;
+  const filteredFriendEntries = isFriendFiltered
+    ? [...filteredFriendEntriesRaw].sort((a, b) => (b.rec ?? 0) - (a.rec ?? 0))
+    : [...filteredFriendEntriesRaw].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
 
   // フレンドの小カテゴリ一覧（大カテゴリフィルター後）
   const friendSmallCatsInBig = friendBigFilter === "all" ? [] :
@@ -1912,13 +1921,13 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
       })
       .map(e => e.categoryName))];
 
-  // カテゴリ横断
+  // カテゴリ横断（小カテゴリが選ばれている＝絞り込み状態なので、常におすすめ度の高い順）
   const crossCatEntries = selectedCatName
     ? allFriendData.flatMap((fd, fi) =>
         (fd.categories.find(c => c.name === selectedCatName)?.entries || [])
           .filter(e => e.placeData?.lat && e.placeData?.lng)
           .map((e, idx) => ({ ...e, categoryName: selectedCatName, ownerName: fd.user.name, rank: idx + 1, accentColor: getAccentColor(fi) }))
-      )
+      ).sort((a, b) => (b.rec ?? 0) - (a.rec ?? 0))
     : [];
 
   // フレンドカテゴリ集計
