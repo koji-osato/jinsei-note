@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 
 const STORAGE_KEY = "jinsei-note-v3";
@@ -482,7 +483,9 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
   };
   const medal = rank ? medalStyles[rank] : null;
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 99999, display: "flex", alignItems: "flex-end" }}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: 600, margin: "0 auto", background: "#FAF7F2",
@@ -571,7 +574,8 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1782,14 +1786,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
 
 function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu, onEditEntry, onDeleteEntry }) {
   const [mapMode, setMapMode] = useState("self");
-  const [detailModalEntry, _setDetailModalEntry] = useState(null);
-  function setDetailModalEntry(v) {
-    console.log("=== setDetailModalEntry呼び出し ===", v);
-    _setDetailModalEntry(v);
-  }
-  useEffect(() => {
-    console.log("=== detailModalEntry変化を検知 ===", detailModalEntry);
-  }, [detailModalEntry]);
+  const [detailModalEntry, setDetailModalEntry] = useState(null);
   const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
