@@ -5,7 +5,7 @@ const STORAGE_KEY = "jinsei-note-v3";
 
 // ===== カラー定数 =====
 const C = {
-  ink:    "#1A1208",
+  ink:    "#2C4A3E",
   terra:  "#C87040",
   gold:   "#C8A050",
   cream:  "#F2EDE4",
@@ -13,7 +13,7 @@ const C = {
   border: "#E0D5C0",
   muted:  "#B09878",
   sub:    "#A08060",
-  leather:"#2C1F0E",
+  leather:"#3A5C4E",
   goldLight:"#E8C870",
 };
 
@@ -4125,7 +4125,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: "#F2EDE4", fontFamily: "'Hiragino Sans', 'Meiryo', sans-serif", paddingBottom: 80 }}>
       {/* ヘッダー */}
-      <div style={{ background: "linear-gradient(160deg,#2C1F0E 0%,#1A1208 50%,#251A0C 100%)", color: C.white, boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 20 }}>
+      <div style={{ background: "linear-gradient(160deg,#3A5C4E 0%,#2C4A3E 50%,#284238 100%)", color: C.white, boxShadow: "0 2px 16px rgba(24,22,15,0.25), inset 0 1px 0 rgba(255,255,255,0.05)", position: "sticky", top: 0, zIndex: 20 }}>
         <div style={{ maxWidth: 600, margin: "0 auto", padding: "28px 16px 0", position: "relative" }}>
           {/* レザーテクスチャ */}
           <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.008) 3px,rgba(255,255,255,0.008) 4px)", pointerEvents: "none" }}/>
@@ -4501,7 +4501,7 @@ export default function App() {
                         return (
                           <div key={year} style={{ marginBottom: 12 }}>
                             <button onClick={() => setExpandedYears(prev => ({ ...prev, [year]: !isYearOpen }))}
-                              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "linear-gradient(180deg,#2C1F0E,#1A1208)", borderRadius: isYearOpen ? "14px 14px 0 0" : 14, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "linear-gradient(180deg,#3A5C4E,#2C4A3E)", borderRadius: isYearOpen ? "14px 14px 0 0" : 14, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <span style={{ fontSize: 16, fontWeight: 800, color: C.white }}>{year}年</span>
                                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>{yearCount}件</span>
