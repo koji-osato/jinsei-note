@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 
 const STORAGE_KEY = "jinsei-note-v3";
@@ -483,9 +482,7 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
   };
   const medal = rank ? medalStyles[rank] : null;
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
+  return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 99999, display: "flex", alignItems: "flex-end" }}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: 600, margin: "0 auto", background: "#FAF7F2",
@@ -574,8 +571,7 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
           )}
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
 
@@ -2927,16 +2923,12 @@ function AddFollowModal({ user, onClose, onAdded }) {
           </div>
         )}
       </div>
-      {detailModalEntry && (
-        <EntryDetailModal
-          entry={detailModalEntry.entry}
-          isSelf={detailModalEntry.isSelf}
-          bigCatEmoji={detailModalEntry.bigCatEmoji}
-          onClose={() => setDetailModalEntry(null)}
-          onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
-          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); }}
-        />
-      )}
+      {detailModalEntry ? (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "lime", zIndex: 999999 }}>
+          <h1 style={{ color: "black", fontSize: 40 }}>インラインテスト：{String(detailModalEntry.entry?.name)}</h1>
+          <button onClick={() => setDetailModalEntry(null)} style={{ fontSize: 30, padding: 20 }}>閉じる</button>
+        </div>
+      ) : null}
     </div>
   );
 }
