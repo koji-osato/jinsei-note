@@ -2122,6 +2122,16 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
           )}
         </div>
       )}
+      {detailModalEntry && (
+        <EntryDetailModal
+          entry={detailModalEntry.entry}
+          isSelf={detailModalEntry.isSelf}
+          bigCatEmoji={detailModalEntry.bigCatEmoji}
+          onClose={() => setDetailModalEntry(null)}
+          onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
+          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); }}
+        />
+      )}
     </div>
   );
 }
@@ -2923,12 +2933,6 @@ function AddFollowModal({ user, onClose, onAdded }) {
           </div>
         )}
       </div>
-      {detailModalEntry ? (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "lime", zIndex: 999999 }}>
-          <h1 style={{ color: "black", fontSize: 40 }}>インラインテスト：{String(detailModalEntry.entry?.name)}</h1>
-          <button onClick={() => setDetailModalEntry(null)} style={{ fontSize: 30, padding: 20 }}>閉じる</button>
-        </div>
-      ) : null}
     </div>
   );
 }
