@@ -1873,6 +1873,9 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
   const [prefSearchQuery, setPrefSearchQuery] = useState("");
+  const [showAllFriendsList, setShowAllFriendsList] = useState(false);
+  const [showAllPrefList, setShowAllPrefList] = useState(false);
+  const [showAllCatListMap, setShowAllCatListMap] = useState(false);
   const [showAllFriends, setShowAllFriends] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [expandedMapEntryId, setExpandedMapEntryId] = useState(null);
@@ -2177,7 +2180,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {filteredFriendUsers.map(fu => (
+              {(friendSearchQuery.trim() || showAllFriendsList ? filteredFriendUsers : filteredFriendUsers.slice(0, 4)).map(fu => (
                 <button key={fu.id} onClick={() => { loadFriendEntries(fu); setMapMode("friend"); setMapOpen(true); setFriendBigFilter("all"); setFriendSmallFilter(null); }}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", textAlign: "left", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg,${C.terra},${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.white, flexShrink: 0, fontWeight: 700 }}>
@@ -2190,6 +2193,12 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                   <span style={{ color: C.muted }}>›</span>
                 </button>
               ))}
+              {!friendSearchQuery.trim() && !showAllFriendsList && filteredFriendUsers.length > 4 && (
+                <button onClick={() => setShowAllFriendsList(true)}
+                  style={{ textAlign: "center", padding: "8px", fontSize: 12, color: C.sub, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                  すべて見る（{filteredFriendUsers.length}人）▾
+                </button>
+              )}
             </div>
           </div>
 
@@ -2203,7 +2212,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {friendPrefList.map(([name, count]) => (
+              {(prefSearchQuery.trim() || showAllPrefList ? friendPrefList : friendPrefList.slice(0, 4)).map(([name, count]) => (
                 <button key={name} onClick={() => { setSelectedPref(name); setMapMode("prefecture"); setMapOpen(true); setSelectedPlace(null); setPrefBigFilter("all"); setPrefSmallFilter(null); }}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
@@ -2216,6 +2225,12 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                   <span style={{ color: C.muted }}>›</span>
                 </button>
               ))}
+              {!prefSearchQuery.trim() && !showAllPrefList && friendPrefList.length > 4 && (
+                <button onClick={() => setShowAllPrefList(true)}
+                  style={{ textAlign: "center", padding: "8px", fontSize: 12, color: C.sub, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                  すべて見る（{friendPrefList.length}件）▾
+                </button>
+              )}
               {friendPrefList.length === 0 && (
                 <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>座標付きの記録がありません</div>
               )}
@@ -2232,7 +2247,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {friendCatList.map(([name, count]) => (
+              {(catSearchQuery.trim() || showAllCatListMap ? friendCatList : friendCatList.slice(0, 4)).map(([name, count]) => (
                 <button key={name} onClick={() => { setSelectedCatName(name); setMapMode("category"); setMapOpen(true); setSelectedPlace(null); setCrossCatPrefFilter(null); }}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
@@ -2245,6 +2260,12 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                   <span style={{ color: C.muted }}>›</span>
                 </button>
               ))}
+              {!catSearchQuery.trim() && !showAllCatListMap && friendCatList.length > 4 && (
+                <button onClick={() => setShowAllCatListMap(true)}
+                  style={{ textAlign: "center", padding: "8px", fontSize: 12, color: C.sub, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                  すべて見る（{friendCatList.length}件）▾
+                </button>
+              )}
               {friendCatList.length === 0 && (
                 <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>座標付きの記録がありません</div>
               )}
@@ -3616,6 +3637,9 @@ export default function App() {
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
   const [prefSearchQuery, setPrefSearchQuery] = useState("");
+  const [showAllFriendsList, setShowAllFriendsList] = useState(false);
+  const [showAllPrefList, setShowAllPrefList] = useState(false);
+  const [showAllCatListMap, setShowAllCatListMap] = useState(false);
   const [showAllFriends, setShowAllFriends] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
