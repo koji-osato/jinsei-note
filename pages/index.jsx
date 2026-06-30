@@ -390,6 +390,25 @@ const GROUP_EMOJIS = {
   "🎵 エンタメ":"🎵","🐾 動物・生き物":"🐾","🚂 乗り物体験":"🚂",
 };
 
+// グループ名 → 大カテゴリ(big_cat) の対応表
+const GROUP_TO_BIGCAT = {
+  "🍜 麺": "eat", "🍱 和食": "eat", "🌍 各国料理": "eat", "🍔 カジュアル": "eat",
+  "🍰 スイーツ": "eat", "☕ 飲む": "eat",
+  "🌅 景色": "see", "🌿 自然": "see",
+  "🎿 アクティビティ": "do", "🎪 体験": "do", "🏟️ スポーツ観戦": "do",
+  "🐾 動物・生き物": "do", "🚂 乗り物体験": "do",
+  "♨️ 癒し": "relax",
+  "🎡 施設": "enjoy", "🎭 文化・歴史": "enjoy", "🛍️ 買う": "enjoy", "🎵 エンタメ": "enjoy",
+  "🏨 泊まる": "stay",
+};
+
+// タグ名から大カテゴリ(big_cat)を推定（TAG_DICTIONARYに存在すれば対応表から、なければnull）
+function inferBigCatFromTagName(tagName) {
+  const entry = TAG_DICTIONARY.find(e => e.tag === tagName);
+  if (!entry) return null;
+  return GROUP_TO_BIGCAT[entry.group] || null;
+}
+
 const ACCENT_COLORS = [
   "#F5A623","#5DCAA5","#7F77DD","#D85A30","#4A90D9","#E91E8C",
   "#26A69A","#8D6E63","#78909C","#66BB6A",
@@ -939,7 +958,7 @@ function PlacesInput({ onSelect, initialName = "" }) {
         </span>
       </div>
       {open && suggestions.length > 0 && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 300, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 300, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", maxHeight: 280, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           {suggestions.map(s => (
             <div key={s.place_id}
               onMouseDown={() => handleSelect(s)}
@@ -3595,10 +3614,14 @@ export default function App() {
       setShowAddModal(false); setShowBrowse(false); setNewCatInput("");
       return;
     }
+    // タグ辞書に登録済みのカテゴリ名なら、辞書のグループから大カテゴリを自動推定（一覧から選んだ場合など）
+    // 推定できなければ、ユーザーが手動で選択した newCatBigCat を使う（自由入力の場合）
+    const inferredBigCat = inferBigCatFromTagName(normalized);
+    const finalBigCat = inferredBigCat || newCatBigCat;
     // Supabaseに保存
     const { data: newCat, error } = await supabase
       .from("categories")
-      .insert({ user_id: user.id, name: normalized, big_cat: newCatBigCat })
+      .insert({ user_id: user.id, name: normalized, big_cat: finalBigCat })
       .select()
       .single();
     if (error || !newCat) return;
