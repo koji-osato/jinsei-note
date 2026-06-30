@@ -473,12 +473,6 @@ const labelStyle = {
 // isSelf=false: フレンドのリスト（★非表示・展開なし）
 function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCatEmoji }) {
   if (!entry) return null;
-  return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "red", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 30 }}>
-      テスト表示中：{entry.name || "名前なし"}
-    </div>
-  );
-  // eslint-disable-next-line no-unreachable
   const rec = REC_LEVELS.find(r => r.value === entry.rec);
   const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
   const medalStyles = {
@@ -1788,7 +1782,14 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
 
 function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu, onEditEntry, onDeleteEntry }) {
   const [mapMode, setMapMode] = useState("self");
-  const [detailModalEntry, setDetailModalEntry] = useState(null);
+  const [detailModalEntry, _setDetailModalEntry] = useState(null);
+  function setDetailModalEntry(v) {
+    console.log("=== setDetailModalEntry呼び出し ===", v);
+    _setDetailModalEntry(v);
+  }
+  useEffect(() => {
+    console.log("=== detailModalEntry変化を検知 ===", detailModalEntry);
+  }, [detailModalEntry]);
   const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
@@ -2089,13 +2090,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                       {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
                     </div>
                   </div>
-                  <button type="button" onClick={() => {
-                    console.log("詳細ボタン押下, selectedPlace=", selectedPlace);
-                    const newVal = { entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" };
-                    console.log("setDetailModalEntryに渡す値=", newVal);
-                    setDetailModalEntry(newVal);
-                    alert("detailModalEntryセット完了: " + JSON.stringify(newVal).substring(0, 100));
-                  }}
+                  <button type="button" onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
                     style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
                     詳細
                   </button>
@@ -2935,7 +2930,6 @@ function AddFollowModal({ user, onClose, onAdded }) {
           </div>
         )}
       </div>
-      {console.log("MapView render: detailModalEntry=", detailModalEntry)}
       {detailModalEntry && (
         <EntryDetailModal
           entry={detailModalEntry.entry}
@@ -4603,7 +4597,6 @@ export default function App() {
       )}
 
       {/* ホームから直接編集モーダル */}
-      {console.log("MapView render: detailModalEntry=", detailModalEntry)}
       {detailModalEntry && (
         <EntryDetailModal
           entry={detailModalEntry.entry}
