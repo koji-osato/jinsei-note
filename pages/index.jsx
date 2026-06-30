@@ -28,7 +28,7 @@ const REC_LEVELS = [
 const BIG_CATS = [
   { id:"eat",   label:"食べる・飲む" },
   { id:"see",   label:"見る・感じる" },
-  { id:"do",    label:"やる・体験"   },
+  { id:"do",    label:"体験・やる"   },
   { id:"relax", label:"整う・癒し"   },
   { id:"enjoy", label:"楽しむ"       },
   { id:"stay",  label:"泊まる"       },
@@ -451,7 +451,7 @@ function getSuggestions(input) {
   for (const s of _dynamicSuggestions) {
     if (seen.has(s.name)) continue;
     if (s.name.toLowerCase().includes(lower)) {
-      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"やる・体験", relax:"整う・癒し", enjoy:"楽しむ", stay:"泊まる" }[s.big_cat] || "その他";
+      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"体験・やる", relax:"整う・癒し", enjoy:"楽しむ", stay:"泊まる" }[s.big_cat] || "その他";
       results.push({ tag: s.name, aliases: [], group: `👥 みんなの人気（${s.count}人）`, _dynamic: true });
       seen.add(s.name);
       if (results.length >= 10) break;
@@ -495,9 +495,9 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
   const rec = REC_LEVELS.find(r => r.value === entry.rec);
   const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
   const medalStyles = {
-    1: { bg: "linear-gradient(135deg,#C8A050,#E8C060)", label: "1ST" },
-    2: { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", label: "2ND" },
-    3: { bg: "linear-gradient(135deg,#A06030,#C08050)", label: "3RD" },
+    1: { bg: "linear-gradient(135deg,#C8A050,#E8C060)", label: "1位" },
+    2: { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", label: "2位" },
+    3: { bg: "linear-gradient(135deg,#A06030,#C08050)", label: "3位" },
   };
   const medal = rank ? medalStyles[rank] : null;
 
@@ -527,7 +527,7 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
           {/* メダル＋カテゴリ */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             {medal && (
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: medal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, color: "#fff", flexShrink: 0, boxShadow: "0 3px 8px rgba(200,160,80,0.4)" }}>{medal.label}</div>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: medal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#fff", flexShrink: 0, boxShadow: "0 3px 8px rgba(200,160,80,0.4)" }}>{medal.label}</div>
             )}
             <div style={{ fontSize: 11, color: C.sub }}>人生{entry.categoryName}{entry.prefecture ? ` · ${entry.prefecture}` : ""}</div>
           </div>
@@ -610,7 +610,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
           {rank && (
             <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: rank <= 3 ? rankBgs[rank-1] : C.border, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: rank <= 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none", alignSelf: "flex-start", marginTop: 2 }}>
               <span style={{ fontSize: 8, fontWeight: 900, color: rank <= 3 ? "#FFF" : C.muted }}>
-                {["1ST","2ND","3RD"][rank-1] || rank}
+                {["1位","2位","3位"][rank-1] || rank}
               </span>
             </div>
           )}
@@ -711,7 +711,7 @@ function RankBar({ rank, rec }) {
   const r = REC_LEVELS.find(rv => rv.value === rec) || REC_LEVELS[1];
   const ws = [100, 72, 54, 42, 34];
   const w = ws[Math.min(rank - 1, 4)];
-  const labels = ["1ST","2ND","3RD","4TH","5TH"];
+  const labels = ["1位","2位","3位","4位","5位"];
   const rankBgs = [
     "linear-gradient(135deg,#D4A843,#E8C060)",
     "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
@@ -743,7 +743,7 @@ function RankBadge({ rank }) {
     "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
     "linear-gradient(135deg,#A06030,#C08050)",
   ];
-  const labels = ["1ST","2ND","3RD"];
+  const labels = ["1位","2位","3位"];
   if (rank <= 3) return (
     <div style={{
       width:38, height:38, borderRadius:12, flexShrink:0,
@@ -3937,18 +3937,18 @@ export default function App() {
           </div>
 
           {/* 大カテゴリタブ */}
-          <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", position: "relative", zIndex: 2, borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "center", overflowX: "auto", scrollbarWidth: "none", position: "relative", zIndex: 2, borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
             {BIG_CATS.map((bc) => {
               const isOn = activeBigCat === bc.id;
-              const emojis = { eat:"🍜", see:"🌅", do:"🏄", relax:"♨️", enjoy:"🎭", stay:"🏨" };
               return (
                 <button key={bc.id} onClick={() => { setActiveBigCat(bc.id); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{
                   flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
                   padding: "10px 14px 12px", cursor: "pointer", position: "relative",
                   fontSize: 9, color: isOn ? "#E8C870" : "rgba(255,255,255,0.45)",
                   background: "none", border: "none", fontFamily: "inherit", touchAction: "manipulation",
+                  opacity: isOn ? 1 : 0.55,
                 }}>
-                  <span style={{ fontSize: 18, filter: isOn ? "drop-shadow(0 0 4px rgba(200,160,80,0.5))" : "none" }}>{emojis[bc.id]}</span>
+                  <span style={{ filter: isOn ? "drop-shadow(0 0 4px rgba(200,160,80,0.5))" : "none" }}><BigCatIcon id={bc.id} size={22}/></span>
                   <span style={{ whiteSpace: "nowrap" }}>{bc.label.split("・")[0]}</span>
                   {isOn && <div style={{ position: "absolute", bottom: 0, left: "20%", right: "20%", height: 2, background: "linear-gradient(90deg,transparent,#C8A050,transparent)", borderRadius: 2 }}/>}
                 </button>
@@ -4015,9 +4015,9 @@ export default function App() {
                   const rest = filtered.slice(3);
 
                   const medalStyles = [
-                    { bg: "linear-gradient(135deg,#C8A050,#E8C060)", bar: "linear-gradient(90deg,#C8A050,#E8C870,#C8A050)", label: "1ST", shadow: "0 3px 0 rgba(100,70,10,0.4),0 6px 16px rgba(200,160,80,0.4),inset 0 1px 0 rgba(255,255,255,0.4)" },
-                    { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", bar: "linear-gradient(90deg,#9AA8B8,#C8D0D8,#9AA8B8)", label: "2ND", shadow: "0 3px 0 rgba(60,80,100,0.3),0 5px 10px rgba(150,170,190,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
-                    { bg: "linear-gradient(135deg,#A06030,#C08050)", bar: "linear-gradient(90deg,#A06030,#C08050,#A06030)", label: "3RD", shadow: "0 3px 0 rgba(80,40,10,0.35),0 5px 10px rgba(160,100,50,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
+                    { bg: "linear-gradient(135deg,#C8A050,#E8C060)", bar: "linear-gradient(90deg,#C8A050,#E8C870,#C8A050)", label: "1位", shadow: "0 3px 0 rgba(100,70,10,0.4),0 6px 16px rgba(200,160,80,0.4),inset 0 1px 0 rgba(255,255,255,0.4)" },
+                    { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", bar: "linear-gradient(90deg,#9AA8B8,#C8D0D8,#9AA8B8)", label: "2位", shadow: "0 3px 0 rgba(60,80,100,0.3),0 5px 10px rgba(150,170,190,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
+                    { bg: "linear-gradient(135deg,#A06030,#C08050)", bar: "linear-gradient(90deg,#A06030,#C08050,#A06030)", label: "3位", shadow: "0 3px 0 rgba(80,40,10,0.35),0 5px 10px rgba(160,100,50,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
                   ];
 
                   // 表示順: 2位・1位・3位
@@ -4032,7 +4032,7 @@ export default function App() {
                       {/* ヘッダー行 */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 22 }}>{bcEmojis[activeBigCat]}</span>
+                          <span><BigCatIcon id={activeBigCat} size={26}/></span>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, fontFamily: "Georgia,serif" }}>{bc?.label}</div>
                             <div style={{ fontSize: 10, color: C.sub }}>{filtered.length}件</div>
