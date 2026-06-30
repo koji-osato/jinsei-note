@@ -1865,10 +1865,14 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
   const [friendEntries, setFriendEntries] = useState([]);
   const [selectedCatName, setSelectedCatName] = useState(null);
   const [crossCatPrefFilter, setCrossCatPrefFilter] = useState(null); // 全フレンド横断モードの都道府県フィルター
+  const [selectedPref, setSelectedPref] = useState(null); // 都道府県で探す：選択中の都道府県
+  const [prefBigFilter, setPrefBigFilter] = useState("all"); // 都道府県モードの大カテゴリ絞り込み
+  const [prefSmallFilter, setPrefSmallFilter] = useState(null); // 都道府県モードの小カテゴリ絞り込み
   const [loadingFriend, setLoadingFriend] = useState(false);
   const [mapOpen, setMapOpen] = useState(true); // 地図の開閉（デフォルト開）
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [prefSearchQuery, setPrefSearchQuery] = useState("");
   const [showAllFriends, setShowAllFriends] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [expandedMapEntryId, setExpandedMapEntryId] = useState(null);
@@ -1937,6 +1941,47 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
     ? crossCatEntriesRaw.filter(e => e.prefecture === crossCatPrefFilter)
     : crossCatEntriesRaw;
 
+  // 都道府県で探す：全フレンドの記録から都道府県を集計（記録件数の多い順）
+  const friendPrefStats = {};
+  allFriendData.forEach(fd => {
+    fd.categories.forEach(cat => {
+      (cat.entries || []).forEach(e => {
+        if (!e.placeData?.lat || !e.placeData?.lng || !e.prefecture) return;
+        friendPrefStats[e.prefecture] = (friendPrefStats[e.prefecture] || 0) + 1;
+      });
+    });
+  });
+  const friendPrefList = Object.entries(friendPrefStats)
+    .sort((a, b) => b[1] - a[1])
+    .filter(([name]) => !prefSearchQuery.trim() || name.includes(prefSearchQuery.trim()));
+
+  // 都道府県で探すモード：選択した都道府県＋大小カテゴリ絞り込みの全フレンド横断エントリー
+  const prefEntriesRaw = selectedPref
+    ? allFriendData.flatMap((fd, fi) =>
+        fd.categories.flatMap(cat => {
+          const catBig = cat.big_cat || cat.bigCat || "eat";
+          if (prefBigFilter !== "all" && catBig !== prefBigFilter) return [];
+          if (prefSmallFilter && cat.name !== prefSmallFilter) return [];
+          return (cat.entries || [])
+            .filter(e => e.placeData?.lat && e.placeData?.lng && e.prefecture === selectedPref)
+            .map((e, idx) => ({ ...e, categoryName: cat.name, ownerName: fd.user.name, rank: idx + 1, accentColor: getAccentColor(fi), bigCat: catBig }));
+        })
+      )
+    : [];
+  const prefEntries = [...prefEntriesRaw].sort((a, b) => (b.rec ?? 0) - (a.rec ?? 0));
+
+  // 選択中の都道府県内で存在する大カテゴリ・小カテゴリ（絞り込みの選択肢用）
+  const prefBigCatsAvailable = selectedPref
+    ? [...new Set(allFriendData.flatMap(fd => fd.categories)
+        .filter(cat => (cat.entries || []).some(e => e.placeData?.lat && e.prefecture === selectedPref))
+        .map(cat => cat.big_cat || cat.bigCat || "eat"))]
+    : [];
+  const prefSmallCatsAvailable = selectedPref && prefBigFilter !== "all"
+    ? [...new Set(allFriendData.flatMap(fd => fd.categories)
+        .filter(cat => (cat.big_cat || cat.bigCat || "eat") === prefBigFilter && (cat.entries || []).some(e => e.placeData?.lat && e.prefecture === selectedPref))
+        .map(cat => cat.name))]
+    : [];
+
   // フレンドカテゴリ集計
   const friendCatStats = {};
   allFriendData.forEach(fd => {
@@ -1976,7 +2021,8 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
 
   const displayEntries = mapMode === "self" ? myEntries
     : mapMode === "friend" ? filteredFriendEntries
-    : mapMode === "category" ? crossCatEntries : [];
+    : mapMode === "category" ? crossCatEntries
+    : mapMode === "prefecture" ? prefEntries : [];
 
   const isFriendSelect = mapMode === "select";
 
@@ -2081,6 +2127,41 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             )}
           </div>
         )}
+
+        {/* 都道府県で探す：選択中の都道府県ヘッダー＋大小カテゴリ絞り込み */}
+        {mapMode === "prefecture" && selectedPref && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: "#9A8A7A" }}>📍 {selectedPref}</span>
+              <button onClick={() => { setMapMode("select"); setSelectedPref(null); setPrefBigFilter("all"); setPrefSmallFilter(null); }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>‹ 変更</button>
+            </div>
+            {/* 大カテゴリで絞り込み */}
+            {prefBigCatsAvailable.length > 0 && (
+              <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2, marginTop: 6 }}>
+                <button onClick={() => { setPrefBigFilter("all"); setPrefSmallFilter(null); setSelectedPlace(null); }}
+                  style={{ flexShrink: 0, padding: "4px 10px", borderRadius: 20, border: "none", background: prefBigFilter === "all" ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: prefBigFilter === "all" ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>すべて</button>
+                {BIG_CATS.filter(bc => prefBigCatsAvailable.includes(bc.id)).map(bc => (
+                  <button key={bc.id} onClick={() => { setPrefBigFilter(bc.id); setPrefSmallFilter(null); setSelectedPlace(null); }}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 3, padding: "4px 10px", borderRadius: 20, border: "none", background: prefBigFilter === bc.id ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: prefBigFilter === bc.id ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                    <BigCatIcon id={bc.id} size={12}/>{bc.label.split("・")[0]}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* 小カテゴリで絞り込み */}
+            {prefSmallCatsAvailable.length > 0 && (
+              <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2, marginTop: 4 }}>
+                <button onClick={() => { setPrefSmallFilter(null); setSelectedPlace(null); }}
+                  style={{ flexShrink: 0, padding: "3px 9px", borderRadius: 20, border: "none", background: !prefSmallFilter ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: !prefSmallFilter ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>すべて</button>
+                {prefSmallCatsAvailable.map(name => (
+                  <button key={name} onClick={() => { setPrefSmallFilter(name); setSelectedPlace(null); }}
+                    style={{ flexShrink: 0, padding: "3px 9px", borderRadius: 20, border: "none", background: prefSmallFilter === name ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)", color: prefSmallFilter === name ? C.ink : "rgba(255,255,255,0.8)", fontSize: 10, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>{name}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* フレンド選択画面 */}
@@ -2109,6 +2190,35 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                   <span style={{ color: C.muted }}>›</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* 都道府県で探す */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 10 }}>📍 都道府県で探す</div>
+            <div style={{ position: "relative", marginBottom: 10 }}>
+              <input value={prefSearchQuery} onChange={e=>setPrefSearchQuery(e.target.value)}
+                placeholder="都道府県名で検索"
+                style={{ ...inputStyle, paddingLeft: 36 }}/>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {friendPrefList.map(([name, count]) => (
+                <button key={name} onClick={() => { setSelectedPref(name); setMapMode("prefecture"); setMapOpen(true); setSelectedPlace(null); setPrefBigFilter("all"); setPrefSmallFilter(null); }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `1px solid ${C.border}`, background: C.white, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", boxShadow: "0 2px 8px rgba(24,22,15,0.05)" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F0EDE8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                    📍
+                  </div>
+                  <div style={{ flex: 1, textAlign: "left" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{name}</div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{count}件の記録</div>
+                  </div>
+                  <span style={{ color: C.muted }}>›</span>
+                </button>
+              ))}
+              {friendPrefList.length === 0 && (
+                <div style={{ textAlign: "center", padding: "20px 0", color: C.muted, fontSize: 13 }}>座標付きの記録がありません</div>
+              )}
             </div>
           </div>
 
@@ -3505,6 +3615,7 @@ export default function App() {
   const [activeBigCat, setActiveBigCat] = useState("eat"); // 大カテゴリフィルター
   const [friendSearchQuery, setFriendSearchQuery] = useState("");
   const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [prefSearchQuery, setPrefSearchQuery] = useState("");
   const [showAllFriends, setShowAllFriends] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [activeSmallFilter, setActiveSmallFilter] = useState(null); // 小カテゴリフィルター
