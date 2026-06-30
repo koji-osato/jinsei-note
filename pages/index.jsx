@@ -28,7 +28,7 @@ const REC_LEVELS = [
 const BIG_CATS = [
   { id:"eat",   label:"食べる・飲む" },
   { id:"see",   label:"見る・感じる" },
-  { id:"do",    label:"やる・体験"   },
+  { id:"do",    label:"体験・やる"   },
   { id:"relax", label:"整う・癒し"   },
   { id:"enjoy", label:"楽しむ"       },
   { id:"stay",  label:"泊まる"       },
@@ -189,6 +189,14 @@ function BigCatIcon({ id, size = 28 }) {
   };
   return icons[id] || <span style={{ fontSize: s * 0.6 }}>✦</span>;
 }
+
+// entry（記録）から大カテゴリアイコンを表示する共通コンポーネント
+// アイコン表示箇所が散らばって直し漏れが起きないよう、entry単位のアイコン表示は必ずこれを経由する
+function EntryBigCatIcon({ entry, size = 24, fallback = "📍" }) {
+  if (!entry?.bigCat) return fallback ? <span>{fallback}</span> : null;
+  return <BigCatIcon id={entry.bigCat} size={size}/>;
+}
+
 
 // ===== 体験タグ =====
 const EXPERIENCE_TAGS = {
@@ -390,6 +398,25 @@ const GROUP_EMOJIS = {
   "🎵 エンタメ":"🎵","🐾 動物・生き物":"🐾","🚂 乗り物体験":"🚂",
 };
 
+// グループ名 → 大カテゴリ(big_cat) の対応表
+const GROUP_TO_BIGCAT = {
+  "🍜 麺": "eat", "🍱 和食": "eat", "🌍 各国料理": "eat", "🍔 カジュアル": "eat",
+  "🍰 スイーツ": "eat", "☕ 飲む": "eat",
+  "🌅 景色": "see", "🌿 自然": "see",
+  "🎿 アクティビティ": "do", "🎪 体験": "do", "🏟️ スポーツ観戦": "do",
+  "🐾 動物・生き物": "do", "🚂 乗り物体験": "do",
+  "♨️ 癒し": "relax",
+  "🎡 施設": "enjoy", "🎭 文化・歴史": "enjoy", "🛍️ 買う": "enjoy", "🎵 エンタメ": "enjoy",
+  "🏨 泊まる": "stay",
+};
+
+// タグ名から大カテゴリ(big_cat)を推定（TAG_DICTIONARYに存在すれば対応表から、なければnull）
+function inferBigCatFromTagName(tagName) {
+  const entry = TAG_DICTIONARY.find(e => e.tag === tagName);
+  if (!entry) return null;
+  return GROUP_TO_BIGCAT[entry.group] || null;
+}
+
 const ACCENT_COLORS = [
   "#F5A623","#5DCAA5","#7F77DD","#D85A30","#4A90D9","#E91E8C",
   "#26A69A","#8D6E63","#78909C","#66BB6A",
@@ -432,7 +459,7 @@ function getSuggestions(input) {
   for (const s of _dynamicSuggestions) {
     if (seen.has(s.name)) continue;
     if (s.name.toLowerCase().includes(lower)) {
-      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"やる・体験", relax:"整う・癒し", enjoy:"楽しむ", stay:"泊まる" }[s.big_cat] || "その他";
+      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"体験・やる", relax:"整う・癒し", enjoy:"楽しむ", stay:"泊まる" }[s.big_cat] || "その他";
       results.push({ tag: s.name, aliases: [], group: `👥 みんなの人気（${s.count}人）`, _dynamic: true });
       seen.add(s.name);
       if (results.length >= 10) break;
@@ -471,19 +498,19 @@ const labelStyle = {
 // ===== 共通エントリーカード（デフォルト表示）=====
 // isSelf=true: 自分のリスト（★表示・展開あり）
 // isSelf=false: フレンドのリスト（★非表示・展開なし）
-function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCatEmoji }) {
+function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCat }) {
   if (!entry) return null;
   const rec = REC_LEVELS.find(r => r.value === entry.rec);
   const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
   const medalStyles = {
-    1: { bg: "linear-gradient(135deg,#C8A050,#E8C060)", label: "1ST" },
-    2: { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", label: "2ND" },
-    3: { bg: "linear-gradient(135deg,#A06030,#C08050)", label: "3RD" },
+    1: { bg: "linear-gradient(135deg,#C8A050,#E8C060)", label: "1位" },
+    2: { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", label: "2位" },
+    3: { bg: "linear-gradient(135deg,#A06030,#C08050)", label: "3位" },
   };
   const medal = rank ? medalStyles[rank] : null;
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 99999, display: "flex", alignItems: "flex-end" }}>
       <div onClick={e => e.stopPropagation()} style={{
         width: "100%", maxWidth: 600, margin: "0 auto", background: "#FAF7F2",
         borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto",
@@ -495,11 +522,11 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
         </div>
 
         {/* 写真エリア */}
-        <div style={{ width: "100%", height: entry.photoUrl ? 200 : 140, background: "linear-gradient(135deg,#3A2A18,#2A1E10)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-          {entry.photoUrl ? (
-            <img src={entry.photoUrl} alt={entry.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+        <div style={{ width: "100%", height: entry.photo ? 200 : 140, background: "linear-gradient(135deg,#3A2A18,#2A1E10)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {entry.photo ? (
+            <img src={entry.photo} alt={entry.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
           ) : (
-            <div style={{ fontSize: 64, filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}>{bigCatEmoji || "📍"}</div>
+            <div style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}><EntryBigCatIcon entry={{ bigCat }} size={64}/></div>
           )}
           <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, width: 32, height: 32, borderRadius: "50%", background: "rgba(0,0,0,0.4)", border: "none", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
@@ -508,7 +535,7 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
           {/* メダル＋カテゴリ */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             {medal && (
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: medal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, color: "#fff", flexShrink: 0, boxShadow: "0 3px 8px rgba(200,160,80,0.4)" }}>{medal.label}</div>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: medal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: "#fff", flexShrink: 0, boxShadow: "0 3px 8px rgba(200,160,80,0.4)" }}>{medal.label}</div>
             )}
             <div style={{ fontSize: 11, color: C.sub }}>人生{entry.categoryName}{entry.prefecture ? ` · ${entry.prefecture}` : ""}</div>
           </div>
@@ -591,14 +618,14 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
           {rank && (
             <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: rank <= 3 ? rankBgs[rank-1] : C.border, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: rank <= 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none", alignSelf: "flex-start", marginTop: 2 }}>
               <span style={{ fontSize: 8, fontWeight: 900, color: rank <= 3 ? "#FFF" : C.muted }}>
-                {["1ST","2ND","3RD"][rank-1] || rank}
+                {["1位","2位","3位"][rank-1] || rank}
               </span>
             </div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* カテゴリ名 */}
             {entry.categoryName && (
-              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}><EntryBigCatIcon entry={entry} size={14} fallback={null}/> 人生{entry.categoryName}</div>
             )}
             {/* 店名 */}
             <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
@@ -692,7 +719,7 @@ function RankBar({ rank, rec }) {
   const r = REC_LEVELS.find(rv => rv.value === rec) || REC_LEVELS[1];
   const ws = [100, 72, 54, 42, 34];
   const w = ws[Math.min(rank - 1, 4)];
-  const labels = ["1ST","2ND","3RD","4TH","5TH"];
+  const labels = ["1位","2位","3位","4位","5位"];
   const rankBgs = [
     "linear-gradient(135deg,#D4A843,#E8C060)",
     "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
@@ -724,7 +751,7 @@ function RankBadge({ rank }) {
     "linear-gradient(135deg,#9AA8B8,#B8C4D0)",
     "linear-gradient(135deg,#A06030,#C08050)",
   ];
-  const labels = ["1ST","2ND","3RD"];
+  const labels = ["1位","2位","3位"];
   if (rank <= 3) return (
     <div style={{
       width:38, height:38, borderRadius:12, flexShrink:0,
@@ -939,7 +966,7 @@ function PlacesInput({ onSelect, initialName = "" }) {
         </span>
       </div>
       {open && suggestions.length > 0 && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 300, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 300, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", maxHeight: 280, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           {suggestions.map(s => (
             <div key={s.place_id}
               onMouseDown={() => handleSelect(s)}
@@ -1693,17 +1720,27 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   const markersRef = useRef([]);
   const [mapReady, setMapReady] = useState(false);
 
-  // カスタムピンSVGを生成（吹き出し型）
-  function createPinIcon(color, isSelected = false) {
+  // 大カテゴリごとの簡易ピクトグラム（ピン内に収まるシンプルな白抜き図形）
+  const BIGCAT_PIN_GLYPH = {
+    eat:   `<path d="M-6 -4 Q-6 4 0 4 Q6 4 6 -4 L5 -7 L-5 -7 Z M-5 -9 L-5 -2 M-3 -9 L-3 -2 M-1 -9 L-1 -2" stroke="white" stroke-width="1.3" fill="white" stroke-linecap="round" stroke-linejoin="round"/>`,
+    see:   `<path d="M-9 0 Q0 -8 9 0 Q0 8 -9 0 Z" stroke="white" stroke-width="1.3" fill="none"/><circle cx="0" cy="0" r="3.3" fill="white"/>`,
+    do:    `<path d="M-9 3 Q-4 -2 0 3 Q4 -2 9 3" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="2" cy="-6" r="2.6" fill="white"/>`,
+    relax: `<path d="M-7 -8 Q-9 -3 -6 1 M0 -9 Q-2 -3 1 2 M7 -8 Q9 -3 6 1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.9"/><path d="M-7 2 Q0 -1 7 2 L7 7 Q0 9 -7 7 Z" fill="white"/>`,
+    enjoy: `<path d="M-7 -6 Q0 -10 7 -6 L7 2 Q0 6 -7 2 Z" stroke="white" stroke-width="1.4" fill="none"/><circle cx="-3" cy="-2" r="1.4" fill="white"/><circle cx="3" cy="-2" r="1.4" fill="white"/>`,
+    stay:  `<path d="M-8 4 L-8 -3 L0 -8 L8 -3 L8 4 Z" stroke="white" stroke-width="1.4" fill="none" stroke-linejoin="round"/><rect x="-3" y="-1" width="6" height="5" fill="white"/>`,
+  };
+
+  // カスタムピンSVGを生成（吹き出し型＋大カテゴリの絵柄）
+  function createPinIcon(color, isSelected = false, bigCat = "eat") {
     const size = isSelected ? 44 : 36;
+    const glyph = BIGCAT_PIN_GLYPH[bigCat] || BIGCAT_PIN_GLYPH.eat;
     const svg = `<svg width="${size}" height="${size + 8}" viewBox="0 0 44 52" xmlns="http://www.w3.org/2000/svg">
       <filter id="shadow">
         <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/>
       </filter>
       <circle cx="22" cy="20" r="${isSelected ? 18 : 15}" fill="${color}" filter="url(#shadow)"/>
-      <circle cx="22" cy="20" r="${isSelected ? 14 : 11}" fill="white" opacity="0.25"/>
       <polygon points="16,30 28,30 22,42" fill="${color}" filter="url(#shadow)"/>
-      ${isSelected ? `<circle cx="22" cy="20" r="6" fill="white"/>` : `<circle cx="22" cy="20" r="5" fill="white"/>`}
+      <g transform="translate(22,20)">${glyph}</g>
     </svg>`;
     return {
       url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
@@ -1741,7 +1778,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
         position: { lat: entry.placeData.lat, lng: entry.placeData.lng },
         map: mapInstanceRef.current,
         title: entry.name,
-        icon: createPinIcon(color, isSelected),
+        icon: createPinIcon(color, isSelected, entry.bigCat),
         zIndex: isSelected ? 100 : 1,
       });
       marker.addListener("click", () => {
@@ -1777,7 +1814,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
     }, 150);
   }, [selectedPlace]);
 
-  return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4" }} />;
+  return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4", position: "relative", zIndex: 1 }} />;
 }
 
 function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu, onEditEntry, onDeleteEntry }) {
@@ -1806,7 +1843,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
     if (activeSmallFilter && cat.name !== activeSmallFilter) return [];
     return (cat.entries || [])
       .filter(e => e.placeData?.lat && e.placeData?.lng)
-      .map((e, idx) => ({ ...e, categoryName: cat.name, categoryId: cat.id, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }));
+      .map((e, idx) => ({ ...e, categoryName: cat.name, categoryId: cat.id, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)), bigCat: catBig }));
   });
 
   // 現在の大カテゴリに属する小カテゴリ一覧
@@ -2065,28 +2102,29 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
 
               {/* 地図（折りたたみ）*/}
               {mapOpen && (
-                <div style={{ flexShrink: 0, position: "relative" }}>
+                <div style={{ flexShrink: 0 }}>
                   <MapCore entries={displayEntries} onSelectPlace={e => { setSelectedPlace(e); }} selectedPlace={selectedPlace}/>
-                  {/* ピンタップ時の小プレビュー（地図は隠さない） */}
-                  {selectedPlace && (
-                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, background: "#FFF", borderRadius: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.18)", border: `0.5px solid ${C.border}`, zIndex: 50 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
-                        📍
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
-                        <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
-                          {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
-                          {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
-                        </div>
-                      </div>
-                      <button onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
-                        style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                        詳細
-                      </button>
-                      <button onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
+                </div>
+              )}
+
+              {/* ピンタップ時の小プレビュー（地図DOM外・確実にクリック可能） */}
+              {selectedPlace && (
+                <div style={{ flexShrink: 0, background: "#FFF", padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.12)", borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
+                    📍
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
+                    <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
+                      {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
+                      {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
                     </div>
-                  )}
+                  </div>
+                  <button type="button" onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCat: selectedPlace.bigCat })}
+                    style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                    詳細
+                  </button>
+                  <button type="button" onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
                 </div>
               )}
 
@@ -2120,6 +2158,16 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
             </>
           )}
         </div>
+      )}
+      {detailModalEntry && (
+        <EntryDetailModal
+          entry={detailModalEntry.entry}
+          isSelf={detailModalEntry.isSelf}
+          bigCat={detailModalEntry.bigCat}
+          onClose={() => setDetailModalEntry(null)}
+          onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
+          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); setSelectedPlace(null); }}
+        />
       )}
     </div>
   );
@@ -2922,16 +2970,6 @@ function AddFollowModal({ user, onClose, onAdded }) {
           </div>
         )}
       </div>
-      {detailModalEntry && (
-        <EntryDetailModal
-          entry={detailModalEntry.entry}
-          isSelf={detailModalEntry.isSelf}
-          bigCatEmoji={detailModalEntry.bigCatEmoji}
-          onClose={() => setDetailModalEntry(null)}
-          onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
-          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); }}
-        />
-      )}
     </div>
   );
 }
@@ -3594,10 +3632,14 @@ export default function App() {
       setShowAddModal(false); setShowBrowse(false); setNewCatInput("");
       return;
     }
+    // タグ辞書に登録済みのカテゴリ名なら、辞書のグループから大カテゴリを自動推定（一覧から選んだ場合など）
+    // 推定できなければ、ユーザーが手動で選択した newCatBigCat を使う（自由入力の場合）
+    const inferredBigCat = inferBigCatFromTagName(normalized);
+    const finalBigCat = inferredBigCat || newCatBigCat;
     // Supabaseに保存
     const { data: newCat, error } = await supabase
       .from("categories")
-      .insert({ user_id: user.id, name: normalized, big_cat: newCatBigCat })
+      .insert({ user_id: user.id, name: normalized, big_cat: finalBigCat })
       .select()
       .single();
     if (error || !newCat) return;
@@ -3913,18 +3955,18 @@ export default function App() {
           </div>
 
           {/* 大カテゴリタブ */}
-          <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", position: "relative", zIndex: 2, borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "center", overflowX: "auto", scrollbarWidth: "none", position: "relative", zIndex: 2, borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
             {BIG_CATS.map((bc) => {
               const isOn = activeBigCat === bc.id;
-              const emojis = { eat:"🍜", see:"🌅", do:"🏄", relax:"♨️", enjoy:"🎭", stay:"🏨" };
               return (
                 <button key={bc.id} onClick={() => { setActiveBigCat(bc.id); setActiveCatFilter(null); setExpandedEntryId(null); }} style={{
                   flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
                   padding: "10px 14px 12px", cursor: "pointer", position: "relative",
                   fontSize: 9, color: isOn ? "#E8C870" : "rgba(255,255,255,0.45)",
                   background: "none", border: "none", fontFamily: "inherit", touchAction: "manipulation",
+                  opacity: isOn ? 1 : 0.55,
                 }}>
-                  <span style={{ fontSize: 18, filter: isOn ? "drop-shadow(0 0 4px rgba(200,160,80,0.5))" : "none" }}>{emojis[bc.id]}</span>
+                  <span style={{ filter: isOn ? "drop-shadow(0 0 4px rgba(200,160,80,0.5))" : "none" }}><BigCatIcon id={bc.id} size={22}/></span>
                   <span style={{ whiteSpace: "nowrap" }}>{bc.label.split("・")[0]}</span>
                   {isOn && <div style={{ position: "absolute", bottom: 0, left: "20%", right: "20%", height: 2, background: "linear-gradient(90deg,transparent,#C8A050,transparent)", borderRadius: 2 }}/>}
                 </button>
@@ -3991,9 +4033,9 @@ export default function App() {
                   const rest = filtered.slice(3);
 
                   const medalStyles = [
-                    { bg: "linear-gradient(135deg,#C8A050,#E8C060)", bar: "linear-gradient(90deg,#C8A050,#E8C870,#C8A050)", label: "1ST", shadow: "0 3px 0 rgba(100,70,10,0.4),0 6px 16px rgba(200,160,80,0.4),inset 0 1px 0 rgba(255,255,255,0.4)" },
-                    { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", bar: "linear-gradient(90deg,#9AA8B8,#C8D0D8,#9AA8B8)", label: "2ND", shadow: "0 3px 0 rgba(60,80,100,0.3),0 5px 10px rgba(150,170,190,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
-                    { bg: "linear-gradient(135deg,#A06030,#C08050)", bar: "linear-gradient(90deg,#A06030,#C08050,#A06030)", label: "3RD", shadow: "0 3px 0 rgba(80,40,10,0.35),0 5px 10px rgba(160,100,50,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
+                    { bg: "linear-gradient(135deg,#C8A050,#E8C060)", bar: "linear-gradient(90deg,#C8A050,#E8C870,#C8A050)", label: "1位", shadow: "0 3px 0 rgba(100,70,10,0.4),0 6px 16px rgba(200,160,80,0.4),inset 0 1px 0 rgba(255,255,255,0.4)" },
+                    { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", bar: "linear-gradient(90deg,#9AA8B8,#C8D0D8,#9AA8B8)", label: "2位", shadow: "0 3px 0 rgba(60,80,100,0.3),0 5px 10px rgba(150,170,190,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
+                    { bg: "linear-gradient(135deg,#A06030,#C08050)", bar: "linear-gradient(90deg,#A06030,#C08050,#A06030)", label: "3位", shadow: "0 3px 0 rgba(80,40,10,0.35),0 5px 10px rgba(160,100,50,0.35),inset 0 1px 0 rgba(255,255,255,0.3)" },
                   ];
 
                   // 表示順: 2位・1位・3位
@@ -4008,7 +4050,7 @@ export default function App() {
                       {/* ヘッダー行 */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 22 }}>{bcEmojis[activeBigCat]}</span>
+                          <span><BigCatIcon id={activeBigCat} size={26}/></span>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, fontFamily: "Georgia,serif" }}>{bc?.label}</div>
                             <div style={{ fontSize: 10, color: C.sub }}>{filtered.length}件</div>
@@ -4052,7 +4094,7 @@ export default function App() {
                       {/* エントリーなし */}
                       {filtered.length === 0 && (
                         <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
-                          <div style={{ fontSize: 40, marginBottom: 12 }}>{bcEmojis[activeBigCat]}</div>
+                          <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><EntryBigCatIcon entry={{ bigCat: activeBigCat }} size={48}/></div>
                           <div style={{ fontSize: 14, color: "#666", marginBottom: 6 }}>まだ記録がありません</div>
                           <button onClick={() => setShowAddModal(true)} style={{
                             background: `linear-gradient(135deg,${c1},${c2})`, color: C.white, border: "none",
@@ -4068,25 +4110,25 @@ export default function App() {
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
                           {podiumOrder.map(({ entry, medal, rank, shrink }) => entry ? (
                             <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginTop: shrink ? 24 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
-                              onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank, isSelf: true, bigCatEmoji: bcEmojis[activeBigCat] })}>
+                              onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank, isSelf: true, bigCat: activeBigCat })}>
                               {/* 上部カラーバー */}
                               <div style={{ height: 4, background: medal.bar }}/>
                               {/* カード本体 */}
                               <div style={{ background: "linear-gradient(160deg,#FDF8F0,#F5EEE2)", border: "0.5px solid rgba(160,120,60,0.22)", borderTop: "none" }}>
                                 {/* メダルバッジ */}
                                 <div style={{
-                                  width: 30, height: 30, borderRadius: "50%",
+                                  width: 44, height: 44, borderRadius: "50%",
                                   background: medal.bg, boxShadow: medal.shadow,
                                   display: "flex", alignItems: "center", justifyContent: "center",
                                   margin: "10px auto 6px", position: "relative", overflow: "hidden",
-                                  fontSize: 8, fontWeight: 900, color: "#fff",
+                                  fontSize: 14, fontWeight: 900, color: "#fff",
                                 }}>
                                   {medal.label}
                                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.3),transparent)", borderRadius: "50%" }}/>
                                 </div>
                                 {/* コンテンツ */}
                                 <div style={{ padding: "0 8px 12px", textAlign: "center" }}>
-                                  <div style={{ fontSize: shrink ? 26 : 32, marginBottom: 6, lineHeight: 1 }}>{bcEmojis[activeBigCat]}</div>
+                                  <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><EntryBigCatIcon entry={{ bigCat: activeBigCat }} size={shrink ? 30 : 38}/></div>
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: shrink ? 10 : 11, color: C.ink, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, minHeight: 28 }}>{entry.name}</div>
                                   <div style={{ fontSize: 10, color: "#C8A050", fontWeight: 700, marginBottom: 2 }}>★ {(entry.star ?? 0).toFixed(1)}</div>
                                   {entry.prefecture && <div style={{ fontSize: 8, color: C.sub, marginBottom: 4 }}>{entry.prefecture}</div>}
@@ -4135,7 +4177,7 @@ export default function App() {
                                 marginBottom: 7, position: "relative", overflow: "hidden",
                                 boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 2px 8px rgba(100,70,20,0.08)",
                                 cursor: "pointer",
-                              }} onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank: i + 4, isSelf: true, bigCatEmoji: bcEmojis[activeBigCat] })}>
+                              }} onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank: i + 4, isSelf: true, bigCat: activeBigCat })}>
                                 {/* 上部ライン */}
                                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,160,80,0.3),transparent)" }}/>
                                 {/* 左カラーバー */}
@@ -4146,7 +4188,7 @@ export default function App() {
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C8A078", minWidth: 24, textAlign: "center", flexShrink: 0 }}>{i + 4}</div>
                                   {/* アイコン */}
                                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${c1},${c2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, boxShadow: `0 3px 6px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.2)`, position: "relative", overflow: "hidden" }}>
-                                    {bcEmojis[activeBigCat]}
+                                    <EntryBigCatIcon entry={{ bigCat: activeBigCat }} size={18}/>
                                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.2),transparent)", borderRadius: "8px 8px 0 0" }}/>
                                   </div>
                                   {/* 情報 */}
@@ -4594,7 +4636,7 @@ export default function App() {
           entry={detailModalEntry.entry}
           rank={detailModalEntry.rank}
           isSelf={detailModalEntry.isSelf}
-          bigCatEmoji={detailModalEntry.bigCatEmoji}
+          bigCat={detailModalEntry.bigCat}
           onClose={() => setDetailModalEntry(null)}
           onEdit={() => setEditingHomeEntry(detailModalEntry.entry)}
           onDelete={async () => {
