@@ -1718,7 +1718,8 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
       mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
         zoom: 5, center: { lat: 36.5, lng: 137.0 },
         mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
-        styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
+        styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }, { featureType: "poi", stylers: [{ visibility: "off" }] }],
+        clickableIcons: false,
       });
       setMapReady(true);
     }
@@ -2104,11 +2105,10 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                         key={`${entry.id}-${i}`}
                         entry={entry}
                         isSelf={mapMode === "self"}
-                        expanded={expandedMapEntryId === entry.id}
+                        expanded={false}
                         onToggle={() => {
                           setSelectedPlace(entry);
                           if (!mapOpen) setMapOpen(true);
-                          setExpandedMapEntryId(expandedMapEntryId === entry.id ? null : entry.id);
                         }}
                         onEdit={null}
                         onDelete={null}
