@@ -190,6 +190,14 @@ function BigCatIcon({ id, size = 28 }) {
   return icons[id] || <span style={{ fontSize: s * 0.6 }}>✦</span>;
 }
 
+// entry（記録）から大カテゴリアイコンを表示する共通コンポーネント
+// アイコン表示箇所が散らばって直し漏れが起きないよう、entry単位のアイコン表示は必ずこれを経由する
+function EntryBigCatIcon({ entry, size = 24, fallback = "📍" }) {
+  if (!entry?.bigCat) return fallback ? <span>{fallback}</span> : null;
+  return <BigCatIcon id={entry.bigCat} size={size}/>;
+}
+
+
 // ===== 体験タグ =====
 const EXPERIENCE_TAGS = {
   "シーン": ["#一人旅","#デート","#家族","#友達","#仕事後"],
@@ -518,7 +526,7 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
           {entry.photo ? (
             <img src={entry.photo} alt={entry.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
           ) : (
-            <div style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}>{bigCat ? <BigCatIcon id={bigCat} size={64}/> : "📍"}</div>
+            <div style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}><EntryBigCatIcon entry={{ bigCat }} size={64}/></div>
           )}
           <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, width: 32, height: 32, borderRadius: "50%", background: "rgba(0,0,0,0.4)", border: "none", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
@@ -617,7 +625,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* カテゴリ名 */}
             {entry.categoryName && (
-              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}>{entry.bigCat && <BigCatIcon id={entry.bigCat} size={14}/>} 人生{entry.categoryName}</div>
+              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}><EntryBigCatIcon entry={entry} size={14} fallback={null}/> 人生{entry.categoryName}</div>
             )}
             {/* 店名 */}
             <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
@@ -4086,7 +4094,7 @@ export default function App() {
                       {/* エントリーなし */}
                       {filtered.length === 0 && (
                         <div style={{ textAlign: "center", padding: "40px 0", color: C.muted }}>
-                          <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><BigCatIcon id={activeBigCat} size={48}/></div>
+                          <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><EntryBigCatIcon entry={{ bigCat: activeBigCat }} size={48}/></div>
                           <div style={{ fontSize: 14, color: "#666", marginBottom: 6 }}>まだ記録がありません</div>
                           <button onClick={() => setShowAddModal(true)} style={{
                             background: `linear-gradient(135deg,${c1},${c2})`, color: C.white, border: "none",
@@ -4120,7 +4128,7 @@ export default function App() {
                                 </div>
                                 {/* コンテンツ */}
                                 <div style={{ padding: "0 8px 12px", textAlign: "center" }}>
-                                  <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><BigCatIcon id={activeBigCat} size={shrink ? 30 : 38}/></div>
+                                  <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}><EntryBigCatIcon entry={{ bigCat: activeBigCat }} size={shrink ? 30 : 38}/></div>
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: shrink ? 10 : 11, color: C.ink, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, minHeight: 28 }}>{entry.name}</div>
                                   <div style={{ fontSize: 10, color: "#C8A050", fontWeight: 700, marginBottom: 2 }}>★ {(entry.star ?? 0).toFixed(1)}</div>
                                   {entry.prefecture && <div style={{ fontSize: 8, color: C.sub, marginBottom: 4 }}>{entry.prefecture}</div>}
@@ -4180,7 +4188,7 @@ export default function App() {
                                   <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C8A078", minWidth: 24, textAlign: "center", flexShrink: 0 }}>{i + 4}</div>
                                   {/* アイコン */}
                                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${c1},${c2})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, boxShadow: `0 3px 6px ${c1}50,inset 0 1px 0 rgba(255,255,255,0.2)`, position: "relative", overflow: "hidden" }}>
-                                    <BigCatIcon id={activeBigCat} size={18}/>
+                                    <EntryBigCatIcon entry={{ bigCat: activeBigCat }} size={18}/>
                                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(180deg,rgba(255,255,255,0.2),transparent)", borderRadius: "8px 8px 0 0" }}/>
                                   </div>
                                   {/* 情報 */}
