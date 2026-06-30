@@ -2129,7 +2129,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
           bigCatEmoji={detailModalEntry.bigCatEmoji}
           onClose={() => setDetailModalEntry(null)}
           onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
-          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); }}
+          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); setSelectedPlace(null); }}
         />
       )}
     </div>
