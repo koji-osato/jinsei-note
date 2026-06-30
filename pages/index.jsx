@@ -28,9 +28,9 @@ const REC_LEVELS = [
 const BIG_CATS = [
   { id:"eat",   label:"食べる・飲む" },
   { id:"see",   label:"見る・感じる" },
-  { id:"do",    label:"体験・やる"   },
+  { id:"do",    label:"アクティブ"   },
   { id:"relax", label:"整う・癒し"   },
-  { id:"enjoy", label:"楽しむ"       },
+  { id:"enjoy", label:"文化・エンタメ" },
   { id:"stay",  label:"泊まる"       },
 ];
 
@@ -403,10 +403,11 @@ const GROUP_TO_BIGCAT = {
   "🍜 麺": "eat", "🍱 和食": "eat", "🌍 各国料理": "eat", "🍔 カジュアル": "eat",
   "🍰 スイーツ": "eat", "☕ 飲む": "eat",
   "🌅 景色": "see", "🌿 自然": "see",
-  "🎿 アクティビティ": "do", "🎪 体験": "do", "🏟️ スポーツ観戦": "do",
+  "🎿 アクティビティ": "do", "🏟️ スポーツ観戦": "do",
   "🐾 動物・生き物": "do", "🚂 乗り物体験": "do",
   "♨️ 癒し": "relax",
   "🎡 施設": "enjoy", "🎭 文化・歴史": "enjoy", "🛍️ 買う": "enjoy", "🎵 エンタメ": "enjoy",
+  "🎪 体験": "enjoy",
   "🏨 泊まる": "stay",
 };
 
@@ -459,7 +460,7 @@ function getSuggestions(input) {
   for (const s of _dynamicSuggestions) {
     if (seen.has(s.name)) continue;
     if (s.name.toLowerCase().includes(lower)) {
-      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"体験・やる", relax:"整う・癒し", enjoy:"楽しむ", stay:"泊まる" }[s.big_cat] || "その他";
+      const bigCatLabel = { eat:"食べる・飲む", see:"見る・感じる", do:"アクティブ", relax:"整う・癒し", enjoy:"文化・エンタメ", stay:"泊まる" }[s.big_cat] || "その他";
       results.push({ tag: s.name, aliases: [], group: `👥 みんなの人気（${s.count}人）`, _dynamic: true });
       seen.add(s.name);
       if (results.length >= 10) break;
