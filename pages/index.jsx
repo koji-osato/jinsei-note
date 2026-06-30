@@ -471,6 +471,110 @@ const labelStyle = {
 // ===== 共通エントリーカード（デフォルト表示）=====
 // isSelf=true: 自分のリスト（★表示・展開あり）
 // isSelf=false: フレンドのリスト（★非表示・展開なし）
+function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCatEmoji }) {
+  if (!entry) return null;
+  const rec = REC_LEVELS.find(r => r.value === entry.rec);
+  const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
+  const medalStyles = {
+    1: { bg: "linear-gradient(135deg,#C8A050,#E8C060)", label: "1ST" },
+    2: { bg: "linear-gradient(135deg,#9AA8B8,#B8C4D0)", label: "2ND" },
+    3: { bg: "linear-gradient(135deg,#A06030,#C08050)", label: "3RD" },
+  };
+  const medal = rank ? medalStyles[rank] : null;
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.55)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 600, margin: "0 auto", background: "#FAF7F2",
+        borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto",
+        boxShadow: "0 -4px 30px rgba(20,12,4,0.3)",
+      }}>
+        {/* ハンドル */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(160,120,60,0.3)" }}/>
+        </div>
+
+        {/* 写真エリア */}
+        <div style={{ width: "100%", height: entry.photoUrl ? 200 : 140, background: "linear-gradient(135deg,#3A2A18,#2A1E10)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {entry.photoUrl ? (
+            <img src={entry.photoUrl} alt={entry.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+          ) : (
+            <div style={{ fontSize: 64, filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}>{bigCatEmoji || "📍"}</div>
+          )}
+          <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, width: 32, height: 32, borderRadius: "50%", background: "rgba(0,0,0,0.4)", border: "none", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        </div>
+
+        <div style={{ padding: 16 }}>
+          {/* メダル＋カテゴリ */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            {medal && (
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: medal.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, color: "#fff", flexShrink: 0, boxShadow: "0 3px 8px rgba(200,160,80,0.4)" }}>{medal.label}</div>
+            )}
+            <div style={{ fontSize: 11, color: C.sub }}>人生{entry.categoryName}{entry.prefecture ? ` · ${entry.prefecture}` : ""}</div>
+          </div>
+
+          {/* 名前 */}
+          <div style={{ fontFamily: "Georgia,serif", fontSize: 20, color: C.ink, fontWeight: 700, marginBottom: 8 }}>{entry.name}</div>
+
+          {/* ★・おすすめ度 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            {isSelf && <span style={{ fontSize: 17, color: "#C8A050", fontWeight: 700 }}>★ {(entry.star ?? 0).toFixed(1)}</span>}
+            {rec && <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: rec.bg, color: rec.color, border: `0.5px solid ${rec.color}40` }}>{rec.short}</span>}
+          </div>
+
+          {/* 訪問日 */}
+          {entry.visitDate && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `0.5px solid ${C.border}`, fontSize: 13, color: "#5A4E44" }}>
+              <span style={{ fontSize: 15, width: 20, textAlign: "center" }}>📅</span>{entry.visitDate} 訪問
+            </div>
+          )}
+          {/* 住所 */}
+          {entry.placeData?.address && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `0.5px solid ${C.border}`, fontSize: 13, color: "#5A4E44" }}>
+              <span style={{ fontSize: 15, width: 20, textAlign: "center" }}>📍</span>{entry.placeData.address}
+            </div>
+          )}
+
+          {/* タグ */}
+          {entry.tags?.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, margin: "12px 0" }}>
+              {entry.tags.map(t => (
+                <span key={t} style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: "rgba(160,120,60,0.1)", color: "#8A7050", border: "0.5px solid rgba(160,120,60,0.2)" }}>{t}</span>
+              ))}
+            </div>
+          )}
+
+          {/* コメント */}
+          {entry.comment && (
+            <div style={{ fontSize: 13, color: "#5A4E44", lineHeight: 1.8, padding: "12px 14px", background: "#FFF", borderRadius: 10, borderLeft: "3px solid #C8A050", fontStyle: "italic", margin: "12px 0" }}>
+              「{entry.comment}」
+            </div>
+          )}
+
+          {/* Googleマップで開く */}
+          {entry.placeData?.lat && (
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px", borderRadius: 10, background: "#EEF4FF", border: "0.5px solid rgba(106,144,200,0.3)", color: "#185FA5", fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 4, marginBottom: 4 }}>
+              🗺 Googleマップで開く
+            </a>
+          )}
+
+          {/* 編集・削除（自分の記録のみ） */}
+          {isSelf && (
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button onClick={() => { onEdit(); onClose(); }} style={{ flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 700, border: "1px solid #E0D5C0", background: "#FFFFFF", color: C.ink, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                ✏️ 編集
+              </button>
+              <button onClick={async () => { if (confirm("削除しますか？")) { await onDelete(); onClose(); } }} style={{ flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 700, border: "1px solid #FFCDD2", background: "#FFF5F5", color: "#D85050", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                🗑 削除
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onDelete }) {
   const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
   const rankBgs = [
@@ -1677,6 +1781,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
 
 function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu }) {
   const [mapMode, setMapMode] = useState("self");
+  const [detailModalEntry, setDetailModalEntry] = useState(null);
   const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
@@ -1959,8 +2064,28 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
 
               {/* 地図（折りたたみ）*/}
               {mapOpen && (
-                <div style={{ flexShrink: 0 }}>
+                <div style={{ flexShrink: 0, position: "relative" }}>
                   <MapCore entries={displayEntries} onSelectPlace={e => { setSelectedPlace(e); }} selectedPlace={selectedPlace}/>
+                  {/* ピンタップ時の小プレビュー（地図は隠さない） */}
+                  {selectedPlace && (
+                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, background: "#FFF", borderRadius: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.18)", border: `0.5px solid ${C.border}` }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
+                        📍
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedPlace.name}</div>
+                        <div style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
+                          {selectedPlace.star != null && <span style={{ color: "#C8A050", fontWeight: 700 }}>★ {selectedPlace.star.toFixed(1)}</span>}
+                          {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
+                        style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+                        詳細
+                      </button>
+                      <button onClick={() => setSelectedPlace(null)} style={{ flexShrink: 0, background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2797,6 +2922,16 @@ function AddFollowModal({ user, onClose, onAdded }) {
           </div>
         )}
       </div>
+      {detailModalEntry && (
+        <EntryDetailModal
+          entry={detailModalEntry.entry}
+          isSelf={detailModalEntry.isSelf}
+          bigCatEmoji={detailModalEntry.bigCatEmoji}
+          onClose={() => setDetailModalEntry(null)}
+          onEdit={() => {}}
+          onDelete={async () => {}}
+        />
+      )}
     </div>
   );
 }
@@ -3273,6 +3408,7 @@ export default function App() {
   const [friendViewSortRec, setFriendViewSortRec] = useState(null);
   const [activeCatFilter, setActiveCatFilter] = useState(null); // 小カテゴリ絞り込み
   const [expandedEntryId, setExpandedEntryId] = useState(null); // 展開エントリー
+  const [detailModalEntry, setDetailModalEntry] = useState(null); // 詳細モーダル表示中のエントリー（{entry, rank, isSelf, bigCatEmoji}）
   const [editingHomeEntry, setEditingHomeEntry] = useState(null); // ホームから直接編集
   const [expandedYears, setExpandedYears] = useState({}); // 年アコーディオン
   const [expandedMonths, setExpandedMonths] = useState({}); // 月アコーディオン
@@ -3886,7 +4022,7 @@ export default function App() {
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
                           {podiumOrder.map(({ entry, medal, rank, shrink }) => entry ? (
                             <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginTop: shrink ? 24 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
-                              onClick={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}>
+                              onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank, isSelf: true, bigCatEmoji: bcEmojis[activeBigCat] })}>
                               {/* 上部カラーバー */}
                               <div style={{ height: 4, background: medal.bar }}/>
                               {/* カード本体 */}
@@ -3918,36 +4054,15 @@ export default function App() {
                               </div>
                               {/* 展開パネル：編集・削除 */}
                               {expandedEntryId === entry.id && (
-                                <div style={{ borderTop: `1px solid ${C.border}`, background: "#FAF7F2", padding: "10px 12px 12px" }}>
-                                  {/* タグ */}
-                                  {entry.tags?.length > 0 && (
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
-                                      {entry.tags.map(t => (
-                                        <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "rgba(160,120,60,0.1)", color: C.sub, border: "0.5px solid rgba(160,120,60,0.2)" }}>{t}</span>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {/* コメント */}
-                                  {entry.comment && (
-                                    <div style={{ fontSize: 12, color: "#5A4E44", lineHeight: 1.7, padding: "8px 10px", background: "#FFF", borderRadius: 8, borderLeft: `3px solid ${C.gold}`, fontStyle: "italic", marginBottom: 8 }}>
-                                      「{entry.comment}」
-                                    </div>
-                                  )}
-                                  {/* 訪問日 */}
-                                  {entry.visitDate && (
-                                    <div style={{ fontSize: 10, color: C.sub, marginBottom: 8 }}>📅 {entry.visitDate}</div>
-                                  )}
-                                  {/* 編集・削除ボタン */}
-                                  <div style={{ display: "flex", gap: 8 }}>
-                                    <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
-                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#2C1F0E,#1A1208)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.1)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                      ✏️ 編集
-                                    </button>
-                                    <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
-                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#C84040,#A02828)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(140,20,20,0.35),inset 0 1px 0 rgba(255,255,255,0.15)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                      🗑 削除
-                                    </button>
-                                  </div>
+                                <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 12px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
+                                  <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                    style={{ flex: 1, fontSize: 12, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                    ✏️ 編集
+                                  </button>
+                                  <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                    style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "9px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                    🗑 削除
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -3974,7 +4089,7 @@ export default function App() {
                                 marginBottom: 7, position: "relative", overflow: "hidden",
                                 boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 2px 8px rgba(100,70,20,0.08)",
                                 cursor: "pointer",
-                              }} onClick={() => setExpandedEntryId(isOpen ? null : entry.id)}>
+                              }} onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank: i + 4, isSelf: true, bigCatEmoji: bcEmojis[activeBigCat] })}>
                                 {/* 上部ライン */}
                                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,160,80,0.3),transparent)" }}/>
                                 {/* 左カラーバー */}
@@ -4011,36 +4126,15 @@ export default function App() {
                                 </div>
                                 {/* 展開パネル：編集・削除 */}
                                 {isOpen && (
-                                  <div style={{ borderTop: `1px solid ${C.border}`, background: "#FAF7F2", padding: "10px 14px 12px" }}>
-                                    {/* タグ */}
-                                    {entry.tags?.length > 0 && (
-                                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
-                                        {entry.tags.map(t => (
-                                          <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "rgba(160,120,60,0.1)", color: C.sub, border: "0.5px solid rgba(160,120,60,0.2)" }}>{t}</span>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {/* コメント */}
-                                    {entry.comment && (
-                                      <div style={{ fontSize: 12, color: "#5A4E44", lineHeight: 1.7, padding: "8px 10px", background: "#FFF", borderRadius: 8, borderLeft: `3px solid ${C.gold}`, fontStyle: "italic", marginBottom: 8 }}>
-                                        「{entry.comment}」
-                                      </div>
-                                    )}
-                                    {/* 訪問日 */}
-                                    {entry.visitDate && (
-                                      <div style={{ fontSize: 10, color: C.sub, marginBottom: 8 }}>📅 {entry.visitDate}</div>
-                                    )}
-                                    {/* 編集・削除ボタン */}
-                                    <div style={{ display: "flex", gap: 8 }}>
-                                      <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
-                                        style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#2C1F0E,#1A1208)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.1)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                        ✏️ 編集
-                                      </button>
-                                      <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
-                                        style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: "linear-gradient(180deg,#C84040,#A02828)", border: "none", borderRadius: 10, padding: "11px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 0 rgba(140,20,20,0.35),inset 0 1px 0 rgba(255,255,255,0.15)", touchAction: "manipulation", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                        🗑 削除
-                                      </button>
-                                    </div>
+                                  <div style={{ borderTop: `1px solid ${C.border}`, padding: "10px 14px 12px", display: "flex", gap: 8, background: "#FAF7F2" }}>
+                                    <button onClick={e => { e.stopPropagation(); setEditingHomeEntry({ ...entry, categoryName: entry.categoryName, categoryId: entry.catId }); setExpandedEntryId(null); }}
+                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.ink, background: "linear-gradient(180deg,#FFFFFF,#F6F3EF)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                      ✏️ 編集
+                                    </button>
+                                    <button onClick={async e => { e.stopPropagation(); if (confirm("削除しますか？")) { await supabase.from("entries").delete().eq("id", entry.id); setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c)); setExpandedEntryId(null); }}}
+                                      style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#E06060", background: "linear-gradient(180deg,#FFF8F8,#FFEEEE)", border: "1px solid #FFCDD2", borderRadius: 10, padding: "10px", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 0 rgba(200,60,60,0.12),inset 0 1px 0 rgba(255,255,255,1)", touchAction: "manipulation" }}>
+                                      🗑 削除
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -4449,6 +4543,21 @@ export default function App() {
       )}
 
       {/* ホームから直接編集モーダル */}
+      {detailModalEntry && (
+        <EntryDetailModal
+          entry={detailModalEntry.entry}
+          rank={detailModalEntry.rank}
+          isSelf={detailModalEntry.isSelf}
+          bigCatEmoji={detailModalEntry.bigCatEmoji}
+          onClose={() => setDetailModalEntry(null)}
+          onEdit={() => setEditingHomeEntry(detailModalEntry.entry)}
+          onDelete={async () => {
+            await supabase.from("entries").delete().eq("id", detailModalEntry.entry.id);
+            setCategories(prev => prev.map(c => c.name === detailModalEntry.entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== detailModalEntry.entry.id) } : c));
+          }}
+        />
+      )}
+
       {editingHomeEntry && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setEditingHomeEntry(null)}/>
