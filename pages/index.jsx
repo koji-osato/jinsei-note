@@ -490,7 +490,7 @@ const labelStyle = {
 // ===== 共通エントリーカード（デフォルト表示）=====
 // isSelf=true: 自分のリスト（★表示・展開あり）
 // isSelf=false: フレンドのリスト（★非表示・展開なし）
-function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCatEmoji }) {
+function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigCat }) {
   if (!entry) return null;
   const rec = REC_LEVELS.find(r => r.value === entry.rec);
   const mapsUrl = entry.placeData?.googleMapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(entry.name + " " + (entry.prefecture || ""))}`;
@@ -514,11 +514,11 @@ function EntryDetailModal({ entry, isSelf, onClose, onEdit, onDelete, rank, bigC
         </div>
 
         {/* 写真エリア */}
-        <div style={{ width: "100%", height: entry.photoUrl ? 200 : 140, background: "linear-gradient(135deg,#3A2A18,#2A1E10)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-          {entry.photoUrl ? (
-            <img src={entry.photoUrl} alt={entry.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+        <div style={{ width: "100%", height: entry.photo ? 200 : 140, background: "linear-gradient(135deg,#3A2A18,#2A1E10)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {entry.photo ? (
+            <img src={entry.photo} alt={entry.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
           ) : (
-            <div style={{ fontSize: 64, filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}>{bigCatEmoji || "📍"}</div>
+            <div style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))" }}>{bigCat ? <BigCatIcon id={bigCat} size={64}/> : "📍"}</div>
           )}
           <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, width: 32, height: 32, borderRadius: "50%", background: "rgba(0,0,0,0.4)", border: "none", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
@@ -617,7 +617,7 @@ function EntryCardDisplay({ entry, rank, isSelf, expanded, onToggle, onEdit, onD
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* カテゴリ名 */}
             {entry.categoryName && (
-              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3 }}>{getTagEmoji(entry.categoryName)} 人生{entry.categoryName}</div>
+              <div style={{ fontSize: 10, color: C.sub, marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}>{entry.bigCat && <BigCatIcon id={entry.bigCat} size={14}/>} 人生{entry.categoryName}</div>
             )}
             {/* 店名 */}
             <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{entry.name}</div>
@@ -2112,7 +2112,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                       {selectedPlace.prefecture && <span>· {selectedPlace.prefecture}</span>}
                     </div>
                   </div>
-                  <button type="button" onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCatEmoji: "📍" })}
+                  <button type="button" onClick={() => setDetailModalEntry({ entry: selectedPlace, isSelf: mapMode === "self", bigCat: selectedPlace.bigCat })}
                     style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#FFF", background: C.ink, border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
                     詳細
                   </button>
@@ -2155,7 +2155,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
         <EntryDetailModal
           entry={detailModalEntry.entry}
           isSelf={detailModalEntry.isSelf}
-          bigCatEmoji={detailModalEntry.bigCatEmoji}
+          bigCat={detailModalEntry.bigCat}
           onClose={() => setDetailModalEntry(null)}
           onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
           onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); setSelectedPlace(null); }}
@@ -4102,7 +4102,7 @@ export default function App() {
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
                           {podiumOrder.map(({ entry, medal, rank, shrink }) => entry ? (
                             <div key={entry.id} style={{ flex: 1, borderRadius: 14, overflow: "hidden", position: "relative", marginTop: shrink ? 24 : 0, boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 3px 10px rgba(100,70,20,0.12),0 8px 24px rgba(100,70,20,0.08)", cursor: "pointer" }}
-                              onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank, isSelf: true, bigCatEmoji: bcEmojis[activeBigCat] })}>
+                              onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank, isSelf: true, bigCat: activeBigCat })}>
                               {/* 上部カラーバー */}
                               <div style={{ height: 4, background: medal.bar }}/>
                               {/* カード本体 */}
@@ -4169,7 +4169,7 @@ export default function App() {
                                 marginBottom: 7, position: "relative", overflow: "hidden",
                                 boxShadow: "0 1px 0 rgba(255,255,255,0.85) inset,0 2px 8px rgba(100,70,20,0.08)",
                                 cursor: "pointer",
-                              }} onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank: i + 4, isSelf: true, bigCatEmoji: bcEmojis[activeBigCat] })}>
+                              }} onClick={() => setDetailModalEntry({ entry: { ...entry, categoryId: entry.catId }, rank: i + 4, isSelf: true, bigCat: activeBigCat })}>
                                 {/* 上部ライン */}
                                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,160,80,0.3),transparent)" }}/>
                                 {/* 左カラーバー */}
@@ -4628,7 +4628,7 @@ export default function App() {
           entry={detailModalEntry.entry}
           rank={detailModalEntry.rank}
           isSelf={detailModalEntry.isSelf}
-          bigCatEmoji={detailModalEntry.bigCatEmoji}
+          bigCat={detailModalEntry.bigCat}
           onClose={() => setDetailModalEntry(null)}
           onEdit={() => setEditingHomeEntry(detailModalEntry.entry)}
           onDelete={async () => {
