@@ -1779,7 +1779,7 @@ function MapCore({ entries, onSelectPlace, selectedPlace }) {
   return <div ref={mapRef} style={{ height: 300, flexShrink: 0, background: "#E8F0E4" }} />;
 }
 
-function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu }) {
+function MapView({ categories, onBack, followingUsers, allFriendData, user, onOpenMenu, onEditEntry, onDeleteEntry }) {
   const [mapMode, setMapMode] = useState("self");
   const [detailModalEntry, setDetailModalEntry] = useState(null);
   const [activeBigFilter, setActiveBigFilter] = useState("all"); // 大カテゴリフィルター
@@ -1805,7 +1805,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
     if (activeSmallFilter && cat.name !== activeSmallFilter) return [];
     return (cat.entries || [])
       .filter(e => e.placeData?.lat && e.placeData?.lng)
-      .map((e, idx) => ({ ...e, categoryName: cat.name, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }));
+      .map((e, idx) => ({ ...e, categoryName: cat.name, categoryId: cat.id, rank: idx + 1, accentColor: getAccentColor(categories.indexOf(cat)) }));
   });
 
   // 現在の大カテゴリに属する小カテゴリ一覧
@@ -2068,7 +2068,7 @@ function MapView({ categories, onBack, followingUsers, allFriendData, user, onOp
                   <MapCore entries={displayEntries} onSelectPlace={e => { setSelectedPlace(e); }} selectedPlace={selectedPlace}/>
                   {/* ピンタップ時の小プレビュー（地図は隠さない） */}
                   {selectedPlace && (
-                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, background: "#FFF", borderRadius: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.18)", border: `0.5px solid ${C.border}` }}>
+                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, background: "#FFF", borderRadius: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.18)", border: `0.5px solid ${C.border}`, zIndex: 50 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedPlace.accentColor || C.terra, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, color: "#fff" }}>
                         📍
                       </div>
@@ -2928,8 +2928,8 @@ function AddFollowModal({ user, onClose, onAdded }) {
           isSelf={detailModalEntry.isSelf}
           bigCatEmoji={detailModalEntry.bigCatEmoji}
           onClose={() => setDetailModalEntry(null)}
-          onEdit={() => {}}
-          onDelete={async () => {}}
+          onEdit={() => onEditEntry && onEditEntry(detailModalEntry.entry)}
+          onDelete={async () => { if (onDeleteEntry) await onDeleteEntry(detailModalEntry.entry); }}
         />
       )}
     </div>
@@ -3742,9 +3742,55 @@ export default function App() {
   // タブ切替で地図・フレンド表示
   if (activeTab === "map") return (
     <>
-      <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} user={user} onOpenMenu={() => setShowUserMenu(true)} />
+      <MapView categories={categories} onBack={() => setActiveTab("list")} followingUsers={followingUsers} allFriendData={allFriendData} user={user} onOpenMenu={() => setShowUserMenu(true)}
+        onEditEntry={(entry) => setEditingHomeEntry(entry)}
+        onDeleteEntry={async (entry) => {
+          await supabase.from("entries").delete().eq("id", entry.id);
+          setCategories(prev => prev.map(c => c.name === entry.categoryName ? { ...c, entries: c.entries.filter(en => en.id !== entry.id) } : c));
+        }}
+      />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       {userMenuElement}
+      {editingHomeEntry && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setEditingHomeEntry(null)}/>
+          <div style={{ position: "relative", background: "#F2EDE4", borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto", zIndex: 1 }}>
+            <div style={{ padding: "16px 16px 0", background: C.ink, borderRadius: "20px 20px 0 0" }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 12 }}>
+                ✏️ {editingHomeEntry.categoryName} を編集
+              </div>
+            </div>
+            <div style={{ padding: "16px" }}>
+              <EntryForm
+                initial={editingHomeEntry}
+                categoryName={editingHomeEntry.categoryName}
+                onSave={async (updated) => {
+                  const dbEntry = {
+                    name: updated.name,
+                    prefecture: updated.prefecture || "",
+                    rec: updated.rec ?? 2,
+                    star: updated.star ?? 0,
+                    tags: updated.tags || [],
+                    comment: updated.comment || "",
+                    visit_date: updated.visitDate || null,
+                    place_data: updated.placeData || null,
+                  };
+                  await supabase.from("entries").update(dbEntry).eq("id", editingHomeEntry.id);
+                  if (updated.photo) { try { localStorage.setItem(`photo_${editingHomeEntry.id}`, updated.photo); } catch {} }
+                  setCategories(prev => prev.map(c =>
+                    c.name === editingHomeEntry.categoryName
+                      ? { ...c, entries: sortEntriesByStar(c.entries.map(e => e.id === editingHomeEntry.id ? { ...e, ...updated, id: e.id } : e)) }
+                      : c
+                  ));
+                  setEditingHomeEntry(null);
+                  setExpandedEntryId(null);
+                }}
+                onCancel={() => setEditingHomeEntry(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
   if (activeTab === "friends") return (
